@@ -1,0 +1,4 @@
+CNPJ Filial,Filial,CNPJ Cliente,Cliente,Sequência,Nº Documento,Cheque,Emissão,Vencimento,Vencimento Original,Competência,Valor Principal,Juros/Desc,Valor Título,Data Baixa,Data Liquidação,Banco Pagto,Conta Pagto,Forma Pagto,Observações,Conta Contábil,Status,Email para fatura
+12.345.678/0001-90,MATRIZ,98.765.432/0001-10,MINERVA FOODS S.A.,001,DOC001,,01/09/2025,30/09/2025,30/09/2025,09/2025,"15.000,00","0,00","15.000,00",,,,,,,110001,ABERTO,contato@minerva.com.br
+12.345.678/0001-90,MATRIZ,98.765.432/0001-10,MINERVA FOODS S.A.,002,DOC002,,15/09/2025,15/10/2025,15/10/2025,10/2025,"25.000,00","0,00","25.000,00",,,,,,,110001,ABERTO,contato@minerva.com.br
+12.345.678/0001-90,MATRIZ,11.222.333/0001-44,CLIENTE TESTE LTDA,003,DOC003,,10/09/2025,10/10/2025,10/10/2025,10/2025,"5.000,00","0,00","5.000,00",,,,,,,110001,ABERTO,teste@cliente.com.br

@@ -10,10 +10,8 @@ venv/
 ENV/
 .env
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Database (apenas dados reais)
+financeiro.db
 backups/
 
 # IDE
@@ -33,21 +31,6 @@ Thumbs.db
 *.tmp
 *.temp
 
-# CSV uploads (dados sensíveis)
-financeiro/uploads/*.csv
-
-# HTML pages de debug/teste
-*_page*.html
-painel_api_response*.json
-
-# Scripts de debug/teste
-debug_*.py
-teste_*.py
-testar_*.py
-verificar_*.py
-investigar_*.py
-diagnostico_*.py
-comparar_*.py
-check_*.py
-analise_*.py
-limpar_*.py
+# CSV uploads com dados sensíveis (manter apenas os templates)
+financeiro/uploads/contas-a-pagar.csv
+financeiro/uploads/contas-a-receber.csv

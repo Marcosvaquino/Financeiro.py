@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Financeiro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
+        <h2 class="sidebar-title">Menu</h2>
+        <ul>
+            <li><a href="/planejamento">Planejamento</a></li>
+            <li><a href="/projecao">Projeção</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/resumo">Resumo</a></li>
+            <li><a href="/consolidacao">Consolidação</a></li>
+            <li><a href="/importacao">📂 Importação</a></li>
+        </ul>
+    </div>
+
+    <!-- botão fixo para abrir quando o menu estiver fechado -->
+    <button id="sidebarOpen" class="sidebar-open" aria-label="Abrir menu">›</button>
+
+    <div class="content">
+        
+<div class="import-box">
+    <h2>📂 Importar Arquivos Financeiros</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="drop-zone" id="dropZone">
+            <div style="text-align:center; padding:18px;">
+                <strong id="dropText">Arraste e solte os arquivos aqui ou clique para selecionar</strong>
+                <div style="font-size:12px; color:#6b7280; margin-top:6px">Suporta CSV e XLSX</div>
+            </div>
+            <input type="file" name="files" id="fileInput" multiple hidden>
+        </div>
+        
+        <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            <button type="submit" class="btn btn-primary">📤 Enviar</button>
+            <button type="button" id="btnClearInput" class="btn btn-secondary">Limpar seleção</button>
+        </div>
+    </form>
+
+    
+      
+    
+
+    <h3 style="margin-top:22px;">Histórico de uploads</h3>
+    
+    <div class="uploads-table-wrapper">
+        <table class="uploads-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Arquivo</th>
+                    <th>Tamanho (KB)</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>2025-09-15 16:57:49</td>
+                    <td><div class="file-name" title="lancamentos-a-receber_12-09-2025_11-59.xlsx">lancamentos-a-receber_12-09-2025_11-59.xlsx</div></td>
+                    <td style="text-align:right">216.7</td>
+                    <td><a href="/uploads/lancamentos-a-receber_12-09-2025_11-59.xlsx" target="_blank">Baixar</a></td>
+                </tr>
+                
+                <tr>
+                    <td>2025-09-15 16:12:25</td>
+                    <td><div class="file-name" title="lancamentos-a-receber_12-09-2025_11-59.csv">lancamentos-a-receber_12-09-2025_11-59.csv</div></td>
+                    <td style="text-align:right">573.8</td>
+                    <td><a href="/uploads/lancamentos-a-receber_12-09-2025_11-59.csv" target="_blank">Baixar</a></td>
+                </tr>
+                
+                <tr>
+                    <td>2025-09-15 16:57:47</td>
+                    <td><div class="file-name" title="lancamentos-a-pagar_12-09-2025_12-03.xlsx">lancamentos-a-pagar_12-09-2025_12-03.xlsx</div></td>
+                    <td style="text-align:right">644.6</td>
+                    <td><a href="/uploads/lancamentos-a-pagar_12-09-2025_12-03.xlsx" target="_blank">Baixar</a></td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+</div>
+
+<script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const dropText = document.getElementById("dropText");
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+        dropText.textContent = "Solte os arquivos aqui";
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+        dropText.textContent = "Arraste e solte os arquivos aqui ou clique para selecionar";
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileInput.files = e.dataTransfer.files;
+        dropZone.classList.remove("dragover");
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+    fileInput.addEventListener("change", () => {
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+  document.getElementById('btnClearInput').addEventListener('click', function(){
+    fileInput.value = null;
+    dropText.textContent = 'Arraste e solte os arquivos aqui ou clique para selecionar';
+  });
+</script>
+
+    </div>
+    <script>
+        // Simple sidebar toggle: adiciona/removes a classe 'collapsed'
+        (function(){
+            const btnClose = document.getElementById('sidebarClose');
+            const btnOpen = document.getElementById('sidebarOpen');
+            const sidebar = document.getElementById('sidebar');
+            if(!sidebar) return;
+
+            // helper to hide/show controls
+            function setClosed(){
+                sidebar.classList.add('collapsed');
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            }
+            function setOpen(){
+                sidebar.classList.remove('collapsed');
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+
+            // wire up buttons
+            if(btnClose){
+                btnClose.addEventListener('click', function(e){
+                    setClosed();
+                    e.stopPropagation();
+                });
+            }
+            if(btnOpen){
+                btnOpen.addEventListener('click', function(e){
+                    setOpen();
+                    e.stopPropagation();
+                });
+            }
+
+            // initialize based on current class
+            if(sidebar.classList.contains('collapsed')){
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            } else {
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>

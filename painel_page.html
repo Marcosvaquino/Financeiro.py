@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Financeiro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
+        <h2 class="sidebar-title">Menu</h2>
+        <ul>
+            <li><a href="/painel">Painel</a></li>
+            <li><a href="/planejamento">Planejamento</a></li>
+            <li><a href="/projecao">Projeção</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/resumo">Resumo</a></li>
+            <li><a href="/consolidacao">Consolidação</a></li>
+            <li><a href="/importacao">📂 Importação</a></li>
+        </ul>
+    </div>
+
+    <!-- botão fixo para abrir quando o menu estiver fechado -->
+    <button id="sidebarOpen" class="sidebar-open" aria-label="Abrir menu">›</button>
+
+    <div class="content">
+        
+<div class="dashboard-header fade-in-up">
+    <h1>📌 Painel</h1>
+    <div class="subtitle">Visão geral rápida dos principais indicadores</div>
+</div>
+
+<!-- Filtros rápidos para o painel -->
+<div style="max-width:1180px; margin: 8px auto 18px; display:flex; align-items:center;">
+    <div style="width:180px;">
+        <div style="font-size:13px; color:#334155;">Período</div>
+        <div id="monthsLabel" style="font-size:13px; color:#64748b; margin-top:6px">Período: (todos)</div>
+    </div>
+
+    <div style="flex:1; display:flex; justify-content:center;">
+        <div id="monthsBar" class="months-bar" aria-label="Seletor de meses - selecione um intervalo"></div>
+    </div>
+
+    <div style="width:260px; display:flex; align-items:center; gap:10px; justify-content:flex-end;">
+        <div>
+            <label for="yearSelect" style="font-size:13px; color:#334155; display:block; margin-bottom:6px">Ano</label>
+            <select id="yearSelect" style="padding:8px; border-radius:8px; border:1px solid #e6e6e6; min-width:96px;">
+                
+                
+                    <option value="2022" >2022</option>
+                
+                    <option value="2023" >2023</option>
+                
+                    <option value="2024" >2024</option>
+                
+                    <option value="2025" >2025</option>
+                
+                    <option value="2026" >2026</option>
+                
+                    <option value="2027" >2027</option>
+                
+                    <option value="2028" >2028</option>
+                
+                    <option value="2029" >2029</option>
+                
+                    <option value="2030" >2030</option>
+                
+            </select>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button id="btnApplyFilter" class="btn btn-primary">Aplicar</button>
+            <button id="btnClearFilter" class="btn btn-secondary">Limpar</button>
+        </div>
+    </div>
+
+    <input type="hidden" id="startInput" name="start">
+    <input type="hidden" id="endInput" name="end">
+</div>
+
+<style>
+.months-bar {
+    display:flex;
+    gap:6px;
+    padding:6px 6px;
+    border-radius:8px;
+    background: #f8fafc;
+    align-items:center;
+    overflow-x:auto;
+}
+.month-cell {
+    min-width:56px;
+    padding:8px 6px;
+    border-radius:6px;
+    text-align:center;
+    font-size:12px;
+    color:#334155;
+    cursor:pointer;
+    user-select:none;
+    border:1px solid transparent;
+}
+.month-cell:hover { border-color: #e2e8f0; background:#fff; }
+.month-cell.selected { background: linear-gradient(90deg,#c7f9ff,#bfe9ff); border-color:#60a5fa; color:#0f172a; }
+.month-cell.in-range { background: linear-gradient(90deg,#dbeffc,#cfeffc); color:#0f172a; }
+.month-cell.selected { box-shadow: inset 0 -3px 0 rgba(0,0,0,0.06); }
+</style>
+
+<!-- Reaproveita a mesma estrutura do planejamento para começar -->
+
+<!-- Cards de Estatísticas -->
+<div class="stats-grid fade-in-up">
+    <div class="stat-card">
+        <div id="stat_total_receber" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Total a Receber</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_total_pagar" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Total a Pagar</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_saldo_projetado" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Saldo Projetado</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_total_lancamentos" class="stat-number">0</div>
+        <div class="stat-label">Lançamentos</div>
+    </div>
+</div>
+
+<!-- Cards Principais (mesma estrutura que o planejamento) -->
+<div class="cards-container fade-in-up">
+    <div class="card card-primary">
+        <div class="card-header">
+            <div class="card-title">Resumo do Mês</div>
+            <div class="card-icon">📊</div>
+        </div>
+    <div id="card_saldo_projetado" class="card-value">R$ 0,00</div>
+        <div class="card-subtitle">Saldo projetado atual</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 25%;"></div>
+        </div>
+    </div>
+
+    <div class="card card-success">
+        <div class="card-header">
+            <div class="card-title">Contas a Receber</div>
+            <div class="card-icon">💰</div>
+        </div>
+    <div id="card_total_receber" class="card-value">R$ 0,00</div>
+        <div class="card-subtitle">Previsão de entradas</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 65%"></div>
+        </div>
+    </div>
+
+    <div class="card card-warning">
+        <div class="card-header">
+            <div class="card-title">Contas a Pagar</div>
+            <div class="card-icon">💸</div>
+        </div>
+    <div id="card_total_pagar" class="card-value">R$ 0,00</div>
+        <div class="card-subtitle">Obrigações pendentes</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 85%"></div>
+        </div>
+    </div>
+
+    <div class="card card-danger">
+        <div class="card-header">
+            <div class="card-title">Alertas</div>
+            <div class="card-icon">⚠️</div>
+        </div>
+    <div id="card_alertas" class="card-value">0</div>
+        <div class="card-subtitle">Vencimentos próximos</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 25%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Dinâmica (reaproveitada) -->
+<div class="table-container slide-in-left">
+    <div class="table-header">
+        <div class="table-title">📋 Lançamentos Financeiros</div>
+        <div class="table-controls">
+            <input type="text" class="search-box" placeholder="Buscar lançamentos..." id="searchInput">
+            <select class="filter-select" id="statusFilter">
+                <option value="">Todos os Status</option>
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Vencido</option>
+            </select>
+            <select class="filter-select" id="monthFilter">
+                <option value="">Todos os Meses</option>
+                <option value="janeiro">Janeiro</option>
+                <option value="fevereiro">Fevereiro</option>
+                <option value="março">Março</option>
+            </select>
+        </div>
+    </div>
+    <table class="dynamic-table" id="financialTable">
+        <thead>
+            <tr>
+                <th class="sortable" data-column="cliente">Cliente/Fornecedor</th>
+                <th class="sortable" data-column="valor">Valor</th>
+                <th class="sortable" data-column="vencimento">Vencimento</th>
+                <th class="sortable" data-column="status">Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                        📊 Nenhum lançamento encontrado. Importe seus dados financeiros na seção de Importação.
+                    </td>
+                </tr>
+            
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Reaplicar scripts do planejamento para busca/ordenacao
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('financialTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    let sortDirection = 1;
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            sortTable(column);
+            sortableHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+            this.classList.add(sortDirection === 1 ? 'sort-asc' : 'sort-desc');
+            sortDirection *= -1;
+        });
+    });
+
+    function sortTable(column) {
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rowsArray = Array.from(tbody.getElementsByTagName('tr'));
+        rowsArray.sort((a, b) => {
+            let aValue, bValue;
+            switch(column) {
+                case 'cliente':
+                    aValue = a.cells[0].textContent;
+                    bValue = b.cells[0].textContent;
+                    break;
+                case 'valor':
+                    aValue = parseFloat(a.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    bValue = parseFloat(b.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    break;
+                case 'vencimento':
+                    aValue = new Date(a.cells[2].textContent.split('/').reverse().join('-'));
+                    bValue = new Date(b.cells[2].textContent.split('/').reverse().join('-'));
+                    break;
+                case 'status':
+                    aValue = a.cells[3].textContent;
+                    bValue = b.cells[3].textContent;
+                    break;
+            }
+            if (aValue < bValue) return -sortDirection;
+            if (aValue > bValue) return sortDirection;
+            return 0;
+        });
+        rowsArray.forEach(row => tbody.appendChild(row));
+    }
+
+    const statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', function() {
+        const filterValue = this.value;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const statusBadge = row.querySelector('.status-badge');
+            if (!filterValue || statusBadge.classList.contains(filterValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const cards = document.querySelectorAll('.card, .stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<style>
+.card, .stat-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+</style>
+
+
+    </div>
+    <script>
+        // Simple sidebar toggle: adiciona/removes a classe 'collapsed'
+        (function(){
+            const btnClose = document.getElementById('sidebarClose');
+            const btnOpen = document.getElementById('sidebarOpen');
+            const sidebar = document.getElementById('sidebar');
+            if(!sidebar) return;
+
+            // helper to hide/show controls
+            function setClosed(){
+                sidebar.classList.add('collapsed');
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            }
+            function setOpen(){
+                sidebar.classList.remove('collapsed');
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+
+            // wire up buttons
+            if(btnClose){
+                btnClose.addEventListener('click', function(e){
+                    setClosed();
+                    e.stopPropagation();
+                });
+            }
+            if(btnOpen){
+                btnOpen.addEventListener('click', function(e){
+                    setOpen();
+                    e.stopPropagation();
+                });
+            }
+
+            // initialize based on current class
+            if(sidebar.classList.contains('collapsed')){
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            } else {
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>

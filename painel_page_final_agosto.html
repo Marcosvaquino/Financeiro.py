@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Financeiro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
+        <h2 class="sidebar-title">Menu</h2>
+        <ul>
+            <li><a href="/painel">Painel</a></li>
+            <li><a href="/planejamento">Planejamento</a></li>
+            <li><a href="/projecao">Projeção</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/resumo">Resumo</a></li>
+            <li><a href="/consolidacao">Consolidação</a></li>
+            <li><a href="/importacao">📂 Importação</a></li>
+        </ul>
+    </div>
+
+    <!-- botão fixo para abrir quando o menu estiver fechado -->
+    <button id="sidebarOpen" class="sidebar-open" aria-label="Abrir menu">›</button>
+
+    <div class="content">
+        
+<div class="dashboard-header fade-in-up">
+    <h1>📌 Painel</h1>
+    <div class="subtitle">Visão geral rápida dos principais indicadores</div>
+</div>
+
+<!-- Filtro obrigatório: sempre selecionar um mês para visualizar os cards -->
+<div style="max-width:1180px; margin: 8px auto 18px; display:flex; align-items:center; gap:12px;">
+    <div style="display:flex; gap:12px; align-items:center;">
+        <div style="font-size:13px; color:#334155;">Filtrar Mês</div>
+        <select id="panelMonth" class="form-input" style="padding:8px; border-radius:8px;">
+            <option value="01">Janeiro</option>
+            <option value="02">Fevereiro</option>
+            <option value="03">Março</option>
+            <option value="04">Abril</option>
+            <option value="05">Maio</option>
+            <option value="06">Junho</option>
+            <option value="07">Julho</option>
+            <option value="08">Agosto</option>
+            <option value="09">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+        </select>
+        <select id="panelYear" class="form-input" style="padding:8px; border-radius:8px;">
+            
+                <option value="2022">2022</option>
+            
+                <option value="2023">2023</option>
+            
+                <option value="2024">2024</option>
+            
+                <option value="2025">2025</option>
+            
+                <option value="2026">2026</option>
+            
+                <option value="2027">2027</option>
+            
+                <option value="2028">2028</option>
+            
+                <option value="2029">2029</option>
+            
+                <option value="2030">2030</option>
+            
+        </select>
+        <button id="btnApplyPanel" class="btn btn-primary">Aplicar</button>
+        <div style="color:#64748b; font-size:13px; margin-left:8px;">(Seleção obrigatória)</div>
+    </div>
+</div>
+
+<!-- Reaproveita a mesma estrutura do planejamento para começar -->
+
+<!-- Cards de Estatísticas -->
+<div class="stats-grid fade-in-up">
+    <div class="stat-card">
+        <div id="stat_total_receber" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Total a Receber</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_total_pagar" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Total a Pagar</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_saldo_projetado" class="stat-number">R$ 0,00</div>
+        <div class="stat-label">Saldo Projetado</div>
+    </div>
+    <div class="stat-card">
+        <div id="stat_total_lancamentos" class="stat-number">0</div>
+        <div class="stat-label">Lançamentos</div>
+    </div>
+</div>
+
+<!-- Cards Principais (mesma estrutura que o planejamento) -->
+<div class="cards-container fade-in-up">
+    <div class="card card-primary">
+        <div class="card-header">
+            <div class="card-title">Resumo do Mês</div>
+            <div class="card-icon">📊</div>
+        </div>
+    <div id="card_saldo_projetado" class="card-value">R$ 0,00</div>
+        <div class="card-subtitle">Saldo projetado atual</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 25%"></div>
+        </div>
+    </div>
+
+    <div class="card card-success">
+        <div class="card-header">
+            <div class="card-title">Contas a Receber</div>
+            <div class="card-icon">💰</div>
+        </div>
+    <div id="card_total_receber" class="card-value">R$ 0,00</div>
+        <div id="card_receber_sub" class="card-subtitle">Projeção: R$ 2125000,00</div>
+        <div class="card-progress" title="Projeção: R$ 2125000,00 (312 lanç.)\nRecebido: R$ 0,00 (0 lanç.)">
+            <div id="card_receber_bar" class="card-progress-bar" style="width: 6%"></div>
+            <div id="card_receber_badge" class="card-progress-badge">--</div>
+        </div>
+    </div>
+
+    <div class="card card-warning">
+        <div class="card-header">
+            <div class="card-title">Contas a Pagar</div>
+            <div class="card-icon">💸</div>
+        </div>
+    <div id="card_total_pagar" class="card-value">R$ 0,00</div>
+        <div class="card-subtitle">Obrigações pendentes</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 85%"></div>
+        </div>
+    </div>
+
+    <div class="card card-danger">
+        <div class="card-header">
+            <div class="card-title">Alertas</div>
+            <div class="card-icon">⚠️</div>
+        </div>
+    <div id="card_alertas" class="card-value">0</div>
+        <div class="card-subtitle">Vencimentos próximos</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 25%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Dinâmica (reaproveitada) -->
+<div class="table-container slide-in-left">
+    <div class="table-header">
+        <div class="table-title">📋 Lançamentos Financeiros</div>
+        <div class="table-controls">
+            <input type="text" class="search-box" placeholder="Buscar lançamentos..." id="searchInput">
+            <select class="filter-select" id="statusFilter">
+                <option value="">Todos os Status</option>
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Vencido</option>
+            </select>
+            <select class="filter-select" id="monthFilter">
+                <option value="">Todos os Meses</option>
+                <option value="01">Janeiro</option>
+                <option value="02">Fevereiro</option>
+                <option value="03">Março</option>
+                <option value="04">Abril</option>
+                <option value="05">Maio</option>
+                <option value="06">Junho</option>
+                <option value="07">Julho</option>
+                <option value="08">Agosto</option>
+                <option value="09">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+            </select>
+        </div>
+    </div>
+    <table class="dynamic-table" id="financialTable">
+        <thead>
+            <tr>
+                <th class="sortable" data-column="cliente">Cliente/Fornecedor</th>
+                <th class="sortable" data-column="valor">Valor</th>
+                <th class="sortable" data-column="vencimento">Vencimento</th>
+                <th class="sortable" data-column="status">Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                        📊 Nenhum lançamento encontrado. Importe seus dados financeiros na seção de Importação.
+                    </td>
+                </tr>
+            
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Reaplicar scripts do planejamento para busca/ordenacao
+document.addEventListener('DOMContentLoaded', function() {
+    // ensure panel filter defaults to month 8 (agosto) conforme solicitado
+    const now = new Date();
+    const defaultMonth = '08'; // MUDANÇA: usar agosto como padrão
+    const defaultYear = String(now.getFullYear());
+    const panelMonth = document.getElementById('panelMonth');
+    const panelYear = document.getElementById('panelYear');
+    if (panelMonth) panelMonth.value = defaultMonth;
+    if (panelYear) panelYear.value = defaultYear;
+
+    async function applyPanelFilter() {
+        const selMonth = panelMonth ? panelMonth.value : '';
+        const selYear = panelYear ? panelYear.value : defaultYear;
+        if (!selMonth) {
+            alert('Selecione um mês para filtrar.');
+            return;
+        }
+        // call backend (month required)
+        const url = `/api/painel?month=${encodeURIComponent(selMonth)}&year=${encodeURIComponent(selYear)}`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                const err = await res.json().catch(()=>({message:'erro'}));
+                console.error('API painel error', err);
+                alert('Erro ao buscar dados filtrados: ' + (err.message || res.statusText));
+                return;
+            }
+            const body = await res.json();
+            if (body.status !== 'success') {
+                alert('Erro ao buscar dados do painel');
+                return;
+            }
+            const d = body.data;
+            // update stat numbers
+            const fmt = v => 'R$ ' + Number(v||0).toFixed(2).replace('.', ',');
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            set('stat_total_receber', fmt(d.total_receber));
+            set('stat_total_pagar', fmt(d.total_pagar));
+            set('stat_saldo_projetado', fmt(d.saldo_projetado));
+            set('stat_total_lancamentos', d.total_lancamentos);
+            
+            // Para card de Contas a Receber: mostrar REALIZADO como valor principal
+            const proj = Number(d.projecao_receber || 0);
+            const recv = Number(d.recebido_receber || 0);
+            set('card_total_receber', fmt(recv)); // MUDANÇA: mostra recebido como valor principal
+            set('card_total_pagar', fmt(d.total_pagar));
+            set('card_saldo_projetado', fmt(d.saldo_projetado));
+            set('card_alertas', d.alertas);
+            
+            // Atualizar subtítulo: apenas projeção
+            const cardSub = document.getElementById('card_receber_sub');
+            if (cardSub) {
+                cardSub.textContent = `Projeção: ${fmt(proj)}`; // MUDANÇA: só mostra projeção
+            }
+            const projCount = Number(d.projecao_receber_count || 0);
+            const recvCount = Number(d.recebido_receber_count || 0);
+            const recBar = document.getElementById('card_receber_bar');
+            const recBadge = document.getElementById('card_receber_badge');
+            if (recBar) {
+                let pct = 0;
+                if (proj > 0) pct = Math.round((recv / proj) * 100);
+                pct = Math.max(0, Math.min(999, pct));
+                // largura visual limitada a 100% (se houve excesso, mostramos 100% e prefix '+' no badge)
+                recBar.style.width = `${Math.min(100, Math.max(6, pct))}%`;
+                if (recBadge) {
+                    if (proj <= 0) {
+                        recBadge.textContent = proj === 0 && recv === 0 ? '--' : (recv > 0 ? '+ ' + recv.toFixed(0) : '--');
+                    } else {
+                        recBadge.textContent = (pct > 100 ? '+' + pct : pct) + '%';
+                    }
+                }
+                // set tooltip with counts
+                const recContainer = recBar.parentElement;
+                if (recContainer) {
+                    recContainer.title = `Projeção: R$ ${proj.toFixed(2).replace('.', ',')} (${projCount} lanç.)\nRecebido: R$ ${recv.toFixed(2).replace('.', ',')} (${recvCount} lanç.)`;
+                }
+            }
+            // alerts: keep previous heuristic
+            const alertBar = document.querySelector('.card-danger .card-progress-bar');
+            if (alertBar) alertBar.style.width = `${Math.min(90, 10 + (d.alertas || 0) * 4)}%`;
+
+            // filter table rows client-side by selected month
+            const monthFilterSelect = document.getElementById('monthFilter');
+            if (monthFilterSelect) monthFilterSelect.value = selMonth;
+            // trigger the existing change handler on monthFilter if any
+            if (monthFilterSelect && typeof monthFilterSelect.onchange === 'function') monthFilterSelect.onchange();
+
+        } catch (e) {
+            console.error('Erro applyPanelFilter', e);
+            alert('Erro ao buscar dados do painel');
+        }
+    }
+
+    const btnApplyPanel = document.getElementById('btnApplyPanel');
+    if (btnApplyPanel) btnApplyPanel.addEventListener('click', applyPanelFilter);
+
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('financialTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    let sortDirection = 1;
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            sortTable(column);
+            sortableHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+            this.classList.add(sortDirection === 1 ? 'sort-asc' : 'sort-desc');
+            sortDirection *= -1;
+        });
+    });
+
+    function sortTable(column) {
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rowsArray = Array.from(tbody.getElementsByTagName('tr'));
+        rowsArray.sort((a, b) => {
+            let aValue, bValue;
+            switch(column) {
+                case 'cliente':
+                    aValue = a.cells[0].textContent;
+                    bValue = b.cells[0].textContent;
+                    break;
+                case 'valor':
+                    aValue = parseFloat(a.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    bValue = parseFloat(b.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    break;
+                case 'vencimento':
+                    aValue = new Date(a.cells[2].textContent.split('/').reverse().join('-'));
+                    bValue = new Date(b.cells[2].textContent.split('/').reverse().join('-'));
+                    break;
+                case 'status':
+                    aValue = a.cells[3].textContent;
+                    bValue = b.cells[3].textContent;
+                    break;
+            }
+            if (aValue < bValue) return -sortDirection;
+            if (aValue > bValue) return sortDirection;
+            return 0;
+        });
+        rowsArray.forEach(row => tbody.appendChild(row));
+    }
+
+    const statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', function() {
+        const filterValue = this.value;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const statusBadge = row.querySelector('.status-badge');
+            if (!filterValue || statusBadge.classList.contains(filterValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    // Filtra por mês (client-side) lendo a coluna de vencimento (formato dd/mm/yyyy ou yyyy-mm-dd)
+    const monthFilter = document.getElementById('monthFilter');
+    if (monthFilter) {
+        monthFilter.addEventListener('change', function() {
+            const sel = this.value; // '01'..'12' or ''
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const vencimentoCell = row.cells[2];
+                if (!vencimentoCell) continue;
+                const txt = vencimentoCell.textContent.trim();
+                let month = '';
+                if (txt.includes('/')) { // dd/mm/yyyy
+                    const parts = txt.split('/');
+                    if (parts.length >= 2) month = parts[1].padStart(2,'0');
+                } else if (txt.includes('-')) { // yyyy-mm-dd
+                    const parts = txt.split('-');
+                    if (parts.length >= 2) month = parts[1].padStart(2,'0');
+                }
+                if (!sel || sel === month) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    const cards = document.querySelectorAll('.card, .stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<style>
+.card, .stat-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.card-progress {
+    position: relative;
+}
+
+.card-progress-badge {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+    margin-right: 5px;
+}
+</style>
+
+
+    </div>
+    <script>
+        // Simple sidebar toggle: adiciona/removes a classe 'collapsed'
+        (function(){
+            const btnClose = document.getElementById('sidebarClose');
+            const btnOpen = document.getElementById('sidebarOpen');
+            const sidebar = document.getElementById('sidebar');
+            if(!sidebar) return;
+
+            // helper to hide/show controls
+            function setClosed(){
+                sidebar.classList.add('collapsed');
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            }
+            function setOpen(){
+                sidebar.classList.remove('collapsed');
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+
+            // wire up buttons
+            if(btnClose){
+                btnClose.addEventListener('click', function(e){
+                    setClosed();
+                    e.stopPropagation();
+                });
+            }
+            if(btnOpen){
+                btnOpen.addEventListener('click', function(e){
+                    setOpen();
+                    e.stopPropagation();
+                });
+            }
+
+            // initialize based on current class
+            if(sidebar.classList.contains('collapsed')){
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            } else {
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>
