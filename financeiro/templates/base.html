@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Financeiro{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
+        <h2 class="sidebar-title">Menu</h2>
+        <ul>
+            <li><a href="{{ url_for('planejamento') }}">Planejamento</a></li>
+            <li><a href="{{ url_for('projecao') }}">Projeção</a></li>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('resumo') }}">Resumo</a></li>
+            <li><a href="{{ url_for('consolidacao') }}">Consolidação</a></li>
+            <li><a href="{{ url_for('importacao') }}">📂 Importação</a></li>
+        </ul>
+    </div>
+
+    <!-- botão fixo para abrir quando o menu estiver fechado -->
+    <button id="sidebarOpen" class="sidebar-open" aria-label="Abrir menu">›</button>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+        // Simple sidebar toggle: adiciona/removes a classe 'collapsed'
+        (function(){
+            const btnClose = document.getElementById('sidebarClose');
+            const btnOpen = document.getElementById('sidebarOpen');
+            const sidebar = document.getElementById('sidebar');
+            if(!sidebar) return;
+
+            // helper to hide/show controls
+            function setClosed(){
+                sidebar.classList.add('collapsed');
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            }
+            function setOpen(){
+                sidebar.classList.remove('collapsed');
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+
+            // wire up buttons
+            if(btnClose){
+                btnClose.addEventListener('click', function(e){
+                    setClosed();
+                    e.stopPropagation();
+                });
+            }
+            if(btnOpen){
+                btnOpen.addEventListener('click', function(e){
+                    setOpen();
+                    e.stopPropagation();
+                });
+            }
+
+            // initialize based on current class
+            if(sidebar.classList.contains('collapsed')){
+                if(btnClose) btnClose.style.display = 'none';
+                if(btnOpen) btnOpen.style.display = 'block';
+            } else {
+                if(btnClose) btnClose.style.display = 'block';
+                if(btnOpen) btnOpen.style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>

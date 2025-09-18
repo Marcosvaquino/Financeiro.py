@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-header fade-in-up">
+    <h1>💼 Projeção Financeira</h1>
+    <div class="subtitle">Dashboard inteligente para planejamento financeiro</div>
+</div>
+
+<!-- Filtros de Mês e Ano -->
+<div class="filters-container fade-in-up">
+    <form method="GET" action="{{ url_for('planejamento') }}" class="filters-form">
+        <div class="filter-group">
+            <label for="mes">Mês:</label>
+            <select name="mes" id="mes" onchange="this.form.submit()">
+                <option value="">Todos</option>
+                {% for i in range(1, 13) %}
+                    <option value="{{ '%02d'|format(i) }}" {% if selected_month == '%02d'|format(i) %}selected{% endif %}>
+                        {{ ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                             'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'][i-1] }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="ano">Ano:</label>
+            <select name="ano" id="ano" onchange="this.form.submit()">
+                <option value="">Todos</option>
+                {% for ano_opcao in range(2022, 2031) %}
+                    <option value="{{ ano_opcao }}" {% if selected_year == ano_opcao %}selected{% endif %}>{{ ano_opcao }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="stats-grid fade-in-up">
+    <div class="stat-card">
+        <div class="stat-number">R$ {{ data.total_receber }}</div>
+        <div class="stat-label">Total a Receber</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">R$ {{ data.total_pagar }}</div>
+        <div class="stat-label">Total a Pagar</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">R$ {{ data.saldo_projetado }}</div>
+        <div class="stat-label">Saldo Projetado</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ data.rentabilidade_estatisticas }}</div>
+        <div class="stat-label">Rentabilidade</div>
+    </div>
+</div>
+
+<!-- Cards Principais -->
+<div class="cards-container fade-in-up">
+    <!-- Card de Resumo -->
+    <div class="card card-primary">
+        <div class="card-header">
+            <div class="card-title">Resumo do Mês</div>
+            <div class="card-icon">📊</div>
+        </div>
+        <div class="card-value">R$ {{ data.saldo_projetado or "0,00" }}</div>
+        <div class="card-subtitle">Saldo projetado atual</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" data-width="{{ data.get('percent_saldo', 25) }}"></div>
+        </div>
+    </div>
+
+    <!-- Card de Receita Realizada -->
+    <div class="card card-success">
+        <div class="card-header">
+            <div class="card-title">Receita Realizada</div>
+            <div class="card-icon">💰</div>
+        </div>
+        <div class="card-value">R$ {{ data.receita_realizada or "0,00" }}</div>
+        <div class="card-subtitle">Valor Projeção: R$ {{ data.projecao_receber or "0,00" }}</div>
+        <div class="card-progress">
+            {% set percentual = data.get('percent_receber', 0) %}
+            <div class="card-progress-bar" data-width="{{ percentual }}"></div>
+            <div class="card-progress-text">{{ data.get('percent_receber_text', '0.0%') }}</div>
+        </div>
+    </div>
+
+    <!-- Card de Contas a Pagar -->
+    <div class="card card-warning">
+        <div class="card-header">
+            <div class="card-title">Contas a Pagar</div>
+            <div class="card-icon">💸</div>
+        </div>
+        <div class="card-value">R$ {{ data.contas_pagar_realizadas or "0,00" }}</div>
+        <div class="card-subtitle">Valores já pagos</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" style="width: 85%"></div>
+        </div>
+    </div>
+
+    <!-- Card de Rentabilidade -->
+    <div class="card card-info">
+        <div class="card-header">
+            <div class="card-title">Rentabilidade</div>
+            <div class="card-icon">📈</div>
+        </div>
+        <div class="card-value">{{ data.rentabilidade_realizada }}</div>
+        <div class="card-subtitle">Margem de lucro sobre custos realizados</div>
+        <div class="card-progress">
+            <div class="card-progress-bar" data-width="{{ data.get('percent_rentabilidade_realizada', 25) }}"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Dinâmica -->
+<div class="table-container slide-in-left">
+    <div class="table-header">
+        <div class="table-title">📋 Lançamentos Financeiros</div>
+        <div class="table-controls">
+            <input type="text" class="search-box" placeholder="Buscar lançamentos..." id="searchInput">
+            <select class="filter-select" id="statusFilter">
+                <option value="">Todos os Status</option>
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Vencido</option>
+            </select>
+            <select class="filter-select" id="monthFilter">
+                <option value="">Todos os Meses</option>
+                <option value="janeiro">Janeiro</option>
+                <option value="fevereiro">Fevereiro</option>
+                <option value="março">Março</option>
+            </select>
+        </div>
+    </div>
+    
+    <table class="dynamic-table" id="financialTable">
+        <thead>
+            <tr>
+                <th class="sortable" data-column="cliente">Cliente/Fornecedor</th>
+                <th class="sortable" data-column="valor">Valor</th>
+                <th class="sortable" data-column="vencimento">Vencimento</th>
+                <th class="sortable" data-column="status">Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            {% if data.lancamentos %}
+                {% for lancamento in data.lancamentos %}
+                <tr>
+                    <td>{{ lancamento[0] or 'N/A' }}</td>
+                    <td>R$ {{ "%.2f"|format(lancamento[1] or 0)|replace(".", ",") }}</td>
+                    <td>{{ lancamento[2] or 'N/A' }}</td>
+                    <td>
+                        {% if lancamento[3] == 'Pendente' %}
+                            <span class="status-badge pending">Pendente</span>
+                        {% elif lancamento[3] == 'Pago' %}
+                            <span class="status-badge paid">Pago</span>
+                        {% else %}
+                            <span class="status-badge overdue">{{ lancamento[3] or 'N/A' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm">Editar</button>
+                        <button class="btn btn-secondary btn-sm">Detalhes</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                        📊 Nenhum lançamento encontrado. Importe seus dados financeiros na seção de Importação.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- JavaScript para interatividade -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidade de busca
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('financialTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            
+            if (text.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+
+    // Funcionalidade de ordenação
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    let sortDirection = 1;
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.column;
+            sortTable(column);
+            
+            // Atualiza visual da ordenação
+            sortableHeaders.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+            this.classList.add(sortDirection === 1 ? 'sort-asc' : 'sort-desc');
+            sortDirection *= -1;
+        });
+    });
+
+    function sortTable(column) {
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rowsArray = Array.from(tbody.getElementsByTagName('tr'));
+        
+        rowsArray.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch(column) {
+                case 'cliente':
+                    aValue = a.cells[0].textContent;
+                    bValue = b.cells[0].textContent;
+                    break;
+                case 'valor':
+                    aValue = parseFloat(a.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    bValue = parseFloat(b.cells[1].textContent.replace(/[^\d,]/g, '').replace(',', '.'));
+                    break;
+                case 'vencimento':
+                    aValue = new Date(a.cells[2].textContent.split('/').reverse().join('-'));
+                    bValue = new Date(b.cells[2].textContent.split('/').reverse().join('-'));
+                    break;
+                case 'status':
+                    aValue = a.cells[3].textContent;
+                    bValue = b.cells[3].textContent;
+                    break;
+            }
+            
+            if (aValue < bValue) return -sortDirection;
+            if (aValue > bValue) return sortDirection;
+            return 0;
+        });
+        
+        // Reinsere as linhas ordenadas
+        rowsArray.forEach(row => tbody.appendChild(row));
+    }
+
+    // Filtros de status
+    const statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', function() {
+        const filterValue = this.value;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const statusBadge = row.querySelector('.status-badge');
+            
+            if (!filterValue || statusBadge.classList.contains(filterValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        // aplica larguras das barras definidas como data-width
+        function applyDataWidths() {
+            document.querySelectorAll('.card-progress-bar[data-width]').forEach(el => {
+                const w = Number(el.dataset.width) || 0;
+                el.style.width = Math.min(100, w) + '%';
+            });
+        }
+
+        applyDataWidths();
+    });
+
+    // Animação de entrada dos cards
+    const cards = document.querySelectorAll('.card, .stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+
+<style>
+/* Animações iniciais */
+.card, .stat-card {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+</style>
+
+<script>
+// set widths from data-width attributes to avoid Jinja in inline CSS
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-width]').forEach(el => {
+        const w = el.getAttribute('data-width');
+        if (w !== null) el.style.width = w + '%';
+    });
+});
+</script>
+
+{% endblock %}

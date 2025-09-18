@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backups/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# CSV uploads (dados sensíveis)
+financeiro/uploads/*.csv
+
+# HTML pages de debug/teste
+*_page*.html
+painel_api_response*.json
+
+# Scripts de debug/teste
+debug_*.py
+teste_*.py
+testar_*.py
+verificar_*.py
+investigar_*.py
+diagnostico_*.py
+comparar_*.py
+check_*.py
+analise_*.py
+limpar_*.py

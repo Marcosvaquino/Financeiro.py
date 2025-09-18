@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="import-cards">
+    <div class="card">
+        <h2 style="margin-bottom:12px">📂 Importar Arquivos Financeiros</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="drop-zone" id="dropZone">
+                <div style="text-align:center; padding:18px;">
+                    <strong id="dropText">Arraste e solte os arquivos aqui ou clique para selecionar</strong>
+                    <div style="font-size:12px; color:#6b7280; margin-top:6px">Suporta CSV e XLSX</div>
+                </div>
+                <input type="file" name="files" id="fileInput" multiple hidden>
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+                <button type="submit" class="btn btn-primary">📤 Enviar</button>
+                <button type="button" id="btnClearInput" class="btn btn-secondary">Limpar seleção</button>
+            </div>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="messages">
+              {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0;">Histórico de uploads</h3>
+        {% if uploads and uploads|length > 0 %}
+        <div class="uploads-table-wrapper">
+            <table class="uploads-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Arquivo</th>
+                        <th>Tamanho (KB)</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in uploads %}
+                    <tr>
+                        <td>{{ f.mtime }}</td>
+                        <td><div class="file-name" title="{{ f.name }}">{{ f.name }}</div></td>
+                        <td style="text-align:right">{{ (f.size / 1024) | round(1) }}</td>
+                        <td><a href="{{ url_for('uploaded_file', filename=f.name) }}" target="_blank">Baixar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div style="color:#64748b; margin-top:8px;">Nenhum arquivo encontrado na pasta de uploads.</div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const dropText = document.getElementById("dropText");
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+        dropText.textContent = "Solte os arquivos aqui";
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+        dropText.textContent = "Arraste e solte os arquivos aqui ou clique para selecionar";
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileInput.files = e.dataTransfer.files;
+        dropZone.classList.remove("dragover");
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+    fileInput.addEventListener("change", () => {
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+  document.getElementById('btnClearInput').addEventListener('click', function(){
+    fileInput.value = null;
+    dropText.textContent = 'Arraste e solte os arquivos aqui ou clique para selecionar';
+  });
+</script>
+{% endblock %}
