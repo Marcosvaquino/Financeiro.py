@@ -92,7 +92,7 @@ financeiro/
 3. O sistema processará automaticamente
 
 ### Dashboard
-1. Acesse "Planejamento"
+1. Acesse "Painel"
 2. Use os filtros de mês/ano
 3. Visualize os cards com dados financeiros
 

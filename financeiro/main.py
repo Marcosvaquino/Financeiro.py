@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify, send_from_directory
-from database import init_db, get_connection
-from importacao import importar_arquivo
+from .database import init_db, get_connection
+from .importacao import importar_arquivo
 import bcrypt
 import os
 from datetime import datetime, timedelta
@@ -109,6 +109,12 @@ def planejamento():
     data['selected_year'] = ano
     
     return render_template("planejamento.html", data=data, selected_month=mes, selected_year=ano)
+
+
+@app.route("/planejamento_frz")
+def planejamento_frz():
+    """Página em branco para Planejamento FRZ (não direciona/duplica dados)."""
+    return render_template("planejamento_frz.html")
 
 
 def build_dashboard_data_with_filters(mes, ano, limit_recent=20):

@@ -300,6 +300,19 @@ body {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* ===== Menu orange (Planejamento FRZ) ===== */
+.menu-orange {
+    color: #ff7a18 !important; /* laranja vibrante */
+    font-weight: 700;
+}
+.menu-orange::before {
+    background: linear-gradient(90deg, rgba(255,122,24,0.08), rgba(255,122,24,0.02));
+}
+.menu-orange:hover {
+    transform: translateX(6px);
+    color: #ff4f00 !important;
+}
+
 /* ===== Cards Container ===== */
 .cards-container {
     display: grid;
@@ -395,6 +408,17 @@ body {
     font-size: 20px;
     font-weight: 600;
     color: #1e293b;
+}
+
+/* Menu item orange style (Planejamento FRZ) */
+.menu-orange {
+    color: #ff7a18; /* laranja vibrante */
+    font-weight: 700;
+}
+.menu-orange:hover {
+    color: #ffffff;
+    background: linear-gradient(90deg,#ff7a18,#ffb86b);
+    transform: translateX(6px);
 }
 
 .card-icon {
@@ -1058,4 +1082,156 @@ body {
 .btn-salvar:hover {
     background: linear-gradient(90deg, #e05500, #c84400);
     transform: translateY(-2px);
+}
+
+/* FRZ Planning Table Styles */
+.frz-table-container {
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.frz-planning-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    background: white;
+}
+
+.frz-planning-table th,
+.frz-planning-table td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.frz-planning-table .cliente-col {
+    background: #666;
+    color: white;
+    font-weight: bold;
+    width: 200px;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.frz-planning-table .semana-header {
+    background: #ff6600;
+    color: white;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.frz-planning-table .total-header {
+    background: #ff8533;
+    color: white;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.frz-planning-table .proj-real {
+    background: #666;
+    color: white;
+    font-weight: bold;
+    font-size: 9px;
+    min-width: 80px;
+}
+
+.frz-planning-table .cliente-nome {
+    background: #666;
+    color: white;
+    font-weight: bold;
+    text-align: left;
+    padding-left: 8px;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+.frz-planning-table .valor {
+    background: #f8f9fa;
+    text-align: right;
+    font-size: 10px;
+    min-width: 70px;
+}
+
+.frz-planning-table .total-col {
+    background: #fff3cd;
+    font-weight: bold;
+}
+
+.frz-planning-table .total-row {
+    background: #fff3cd;
+}
+
+.frz-planning-table .total-row .total-label {
+    background: #ffc107;
+    color: #000;
+    font-weight: bold;
+}
+
+.frz-planning-table .total-row .total-valor {
+    background: #fff3cd;
+    font-weight: bold;
+}
+
+.frz-planning-table .despesas-row .despesas-label {
+    background: #666;
+    color: white;
+    font-weight: bold;
+}
+
+.frz-planning-table .despesas-row .despesas-valor {
+    background: #f8f9fa;
+}
+
+.frz-planning-table .resultado-row .resultado-label {
+    background: #666;
+    color: white;
+    font-weight: bold;
+}
+
+.frz-planning-table .resultado-row .resultado-valor {
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.frz-planning-table .valor-negativo {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.frz-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.frz-filters label {
+    font-weight: bold;
+    color: #333;
+}
+
+.frz-filters input {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 8px;
+}
+
+.frz-filters button {
+    background: #ff6600;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.frz-filters button:hover {
+    background: #e55a00;
 }

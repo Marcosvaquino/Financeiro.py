@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Debug da página planejamento"""
+"""Debug da página Painel"""
 
 import os
 import sys
@@ -9,7 +9,7 @@ sys.path.append('financeiro')
 from financeiro.database import get_connection
 
 def test_planejamento():
-    print("🔍 TESTANDO FUNÇÃO PLANEJAMENTO")
+    print("🔍 TESTANDO FUNÇÃO PAINEL")
     print("=" * 50)
     
     try:

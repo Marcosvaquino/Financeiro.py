@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Planejamento FRZ{% endblock %}
+
+{% block content %}
+<div class="dashboard-header fade-in-up">
+    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <div class="frz-logo">
+            <div style="background: #ff6600; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 24px; margin-right: 20px;">
+                🔶 FRZ<br><span style="font-size: 12px;">Logística</span>
+            </div>
+        </div>
+        <div class="frz-filters">
+            <label for="mes">Mês:</label>
+            <input type="number" id="mes" name="mes" value="9" min="1" max="12" style="margin-left: 10px; padding: 5px; width: 60px;">
+            <label for="ano" style="margin-left: 20px;">Ano:</label>
+            <input type="number" id="ano" name="ano" value="2025" min="2020" max="2030" style="margin-left: 10px; padding: 5px; width: 80px;">
+            <button onclick="atualizarPlanejamento()" style="margin-left: 20px; padding: 8px 16px; background: #ff6600; color: white; border: none; border-radius: 4px; cursor: pointer;">Atualizar</button>
+        </div>
+    </div>
+</div>
+
+<div class="frz-table-container" style="overflow-x: auto; margin: 20px 0;">
+    <table class="frz-planning-table">
+        <thead>
+            <tr class="header-row">
+                <th class="cliente-col">Clientes</th>
+                <th colspan="2" class="semana-header">SEMANA 30 A 5</th>
+                <th colspan="2" class="semana-header">SEMANA 6 A 12</th>
+                <th colspan="2" class="semana-header">SEMANA 13 A 19</th>
+                <th colspan="2" class="semana-header">SEMANA 20 A 26</th>
+                <th colspan="2" class="semana-header">SEMANA 27 A 3</th>
+                <th colspan="2" class="total-header">TOTAL MÊS</th>
+            </tr>
+            <tr class="subheader-row">
+                <th></th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+                <th class="proj-real">PROJETADO</th>
+                <th class="proj-real">REALIZADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Clientes -->
+            <tr><td class="cliente-nome">ADORO</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">ADORO S.A.</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">ADORO SAO CARLOS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">AGRA FOODS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">ALIBEM</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">FRIBOI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">GOLDPAO CD SAO JOSE DOS CAMPOS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">GTFOODS BARUERI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">JK DISTRIBUIDORA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">LATICINIO CARMONA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">MARFRIG - ITUPEVA CD</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">MARFRIG - PROMISSAO</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">MARFRIG GLOBAL FOODS S A</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">MINERVA S A</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">PAMPLONA JANDIRA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">PEIXES MEGGOS PESCADOS LTDA - SJBV</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">SANTA LUCIA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">SAUDALI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            <tr><td class="cliente-nome">VALENCIO JATAÍ</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            
+            <!-- Linha de Total -->
+            <tr class="total-row">
+                <td class="cliente-nome total-label">TOTAL</td>
+                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
+                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
+                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
+                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
+                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
+                <td class="valor total-col total-valor">R$ -</td><td class="valor total-col total-valor">R$ -</td>
+            </tr>
+            
+            <!-- Linha de Despesas Gerais -->
+            <tr class="despesas-row">
+                <td class="cliente-nome despesas-label">Despesas gerais</td>
+                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
+                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
+                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
+                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
+                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
+                <td class="valor total-col despesas-valor">R$ -</td><td class="valor total-col despesas-valor">R$ -</td>
+            </tr>
+            
+            <!-- Linha de Resultado -->
+            <tr class="resultado-row">
+                <td class="cliente-nome resultado-label">Resultado</td>
+                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
+                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
+                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
+                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
+                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
+                <td class="valor total-col resultado-valor">R$ -</td><td class="valor total-col resultado-valor">R$ -</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+function atualizarPlanejamento() {
+    const mes = document.getElementById('mes').value;
+    const ano = document.getElementById('ano').value;
+    console.log('Atualizando planejamento para:', mes, '/', ano);
+    // TODO: Implementar chamada AJAX para buscar dados do servidor
+    alert('Filtro será implementado na próxima etapa!');
+}
+</script>
+
+{% endblock %}

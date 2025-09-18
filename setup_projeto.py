@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     <div class="sidebar">
         <h2>Menu</h2>
         <ul>
-            <li><a href="{{ url_for('planejamento') }}">Planejamento</a></li>
+            <li><a href="{{ url_for('planejamento') }}">Painel</a></li>
             <li><a href="#">Projeção</a></li>
             <li><a href="#">Dashboard</a></li>
             <li><a href="#">Resumo</a></li>
