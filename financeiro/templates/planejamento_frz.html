@@ -4,23 +4,39 @@
 
 {% block content %}
 <div class="dashboard-header fade-in-up">
-    <div style="display: flex; align-items: center; margin-bottom: 20px;">
-        <div class="frz-logo">
-            <div style="background: #ff6600; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 24px; margin-right: 20px;">
-                🔶 FRZ<br><span style="font-size: 12px;">Logística</span>
-            </div>
-        </div>
+    <div class="frz-header-container">
         <div class="frz-filters">
             <label for="mes">Mês:</label>
-            <input type="number" id="mes" name="mes" value="9" min="1" max="12" style="margin-left: 10px; padding: 5px; width: 60px;">
-            <label for="ano" style="margin-left: 20px;">Ano:</label>
-            <input type="number" id="ano" name="ano" value="2025" min="2020" max="2030" style="margin-left: 10px; padding: 5px; width: 80px;">
-            <button onclick="atualizarPlanejamento()" style="margin-left: 20px; padding: 8px 16px; background: #ff6600; color: white; border: none; border-radius: 4px; cursor: pointer;">Atualizar</button>
+            <select id="mes" name="mes" class="frz-select">
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9" selected>Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+            </select>
+            
+            <label for="ano">Ano:</label>
+            <select id="ano" name="ano" class="frz-select">
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
+            
+            <button onclick="atualizarPlanejamento()" class="frz-btn-atualizar">Atualizar</button>
         </div>
     </div>
 </div>
 
-<div class="frz-table-container" style="overflow-x: auto; margin: 20px 0;">
+<div class="frz-table-container">
     <table class="frz-planning-table">
         <thead>
             <tr class="header-row">
@@ -49,7 +65,6 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Clientes -->
             <tr><td class="cliente-nome">ADORO</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
             <tr><td class="cliente-nome">ADORO S.A.</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
             <tr><td class="cliente-nome">ADORO SAO CARLOS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
@@ -70,7 +85,6 @@
             <tr><td class="cliente-nome">SAUDALI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
             <tr><td class="cliente-nome">VALENCIO JATAÍ</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
             
-            <!-- Linha de Total -->
             <tr class="total-row">
                 <td class="cliente-nome total-label">TOTAL</td>
                 <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
@@ -81,7 +95,6 @@
                 <td class="valor total-col total-valor">R$ -</td><td class="valor total-col total-valor">R$ -</td>
             </tr>
             
-            <!-- Linha de Despesas Gerais -->
             <tr class="despesas-row">
                 <td class="cliente-nome despesas-label">Despesas gerais</td>
                 <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
@@ -92,7 +105,6 @@
                 <td class="valor total-col despesas-valor">R$ -</td><td class="valor total-col despesas-valor">R$ -</td>
             </tr>
             
-            <!-- Linha de Resultado -->
             <tr class="resultado-row">
                 <td class="cliente-nome resultado-label">Resultado</td>
                 <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
@@ -111,7 +123,6 @@ function atualizarPlanejamento() {
     const mes = document.getElementById('mes').value;
     const ano = document.getElementById('ano').value;
     console.log('Atualizando planejamento para:', mes, '/', ano);
-    // TODO: Implementar chamada AJAX para buscar dados do servidor
     alert('Filtro será implementado na próxima etapa!');
 }
 </script>
