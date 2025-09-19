@@ -9,15 +9,40 @@
     <div class="sidebar" id="sidebar">
         <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
         <h2 class="sidebar-title">Menu</h2>
-        <ul>
-            <li><a href="{{ url_for('planejamento') }}">Painel</a></li>
-            <li><a class="menu-orange" href="{{ url_for('planejamento_frz') }}">Planejamento FRZ</a></li>
-            <li><a href="{{ url_for('projecao') }}">Projeção</a></li>
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('resumo') }}">Resumo</a></li>
-            <li><a href="{{ url_for('consolidacao') }}">Consolidação</a></li>
-            <li><a href="{{ url_for('importacao') }}">📂 Importação</a></li>
-        </ul>
+        <nav class="menu">
+            <ul class="menu-root">
+                <li class="menu-item has-children">
+                    <span class="menu-parent">Financeiro</span>
+                    <ul class="menu-children">
+                        <li class="child-item"><a href="{{ url_for('planejamento') }}">Painel</a></li>
+                        <li class="child-item"><a class="menu-orange" href="{{ url_for('planejamento_frz') }}">Planejamento FRZ</a></li>
+                        <li class="child-item"><a href="{{ url_for('projecao') }}">Projeção</a></li>
+                        <li class="child-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="child-item"><a href="{{ url_for('resumo') }}">Resumo</a></li>
+                        <li class="child-item"><a href="{{ url_for('consolidacao') }}">Consolidação</a></li>
+                        <li class="child-item"><a href="{{ url_for('importacao') }}">📂 Importação</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item has-children">
+                    <span class="menu-parent">Frete</span>
+                    <ul class="menu-children">
+                        <li class="child-item"><a href="{{ url_for('frete.index') }}">Frete</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item has-children">
+                    <span class="menu-parent">Armazem</span>
+                    <ul class="menu-children">
+                        <li class="child-item"><a href="{{ url_for('armazem.index') }}">Armazem</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item has-children">
+                    <span class="menu-parent">Logistica</span>
+                    <ul class="menu-children">
+                        <li class="child-item"><a href="{{ url_for('logistica.index') }}">Logistica</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <!-- botão fixo para abrir quando o menu estiver fechado -->
@@ -68,6 +93,16 @@
                 if(btnClose) btnClose.style.display = 'block';
                 if(btnOpen) btnOpen.style.display = 'none';
             }
+        })();
+        // Menu pai/filho: alterna submenus ao clicar no item pai
+        (function(){
+            const parents = document.querySelectorAll('.menu-parent');
+            parents.forEach(p => {
+                p.addEventListener('click', function(){
+                    const item = this.parentElement;
+                    item.classList.toggle('expanded');
+                });
+            });
         })();
     </script>
 </body>
