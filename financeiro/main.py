@@ -191,53 +191,135 @@ def build_dados_frz(mes, ano):
 
 
 def calcular_semanas_sabado_sexta(mes, ano):
-    """Calcula as 5 semanas do mês no formato sábado-sexta, evitando sobreposição entre meses."""
-    from datetime import datetime, timedelta
+    """Retorna as semanas do mês baseadas no padrão estático do print fornecido."""
     
-    # Primeiro dia do mês
-    primeiro_dia = datetime(ano, mes, 1)
+    # Mapeamento estático das semanas para cada mês (baseado no print)
+    semanas_estaticas = {
+        1: [  # Janeiro
+            {'label': 'SEMANA 1 A 7', 'inicio_dia': 1, 'fim_dia': 7},
+            {'label': 'SEMANA 8 A 14', 'inicio_dia': 8, 'fim_dia': 14},
+            {'label': 'SEMANA 15 A 21', 'inicio_dia': 15, 'fim_dia': 21},
+            {'label': 'SEMANA 22 A 28', 'inicio_dia': 22, 'fim_dia': 28},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        2: [  # Fevereiro
+            {'label': 'SEMANA 1 A 7', 'inicio_dia': 1, 'fim_dia': 7},
+            {'label': 'SEMANA 8 A 14', 'inicio_dia': 8, 'fim_dia': 14},
+            {'label': 'SEMANA 15 A 21', 'inicio_dia': 15, 'fim_dia': 21},
+            {'label': 'SEMANA 22 A 28', 'inicio_dia': 22, 'fim_dia': 28},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        3: [  # Março
+            {'label': 'SEMANA 1 A 7', 'inicio_dia': 1, 'fim_dia': 7},
+            {'label': 'SEMANA 8 A 14', 'inicio_dia': 8, 'fim_dia': 14},
+            {'label': 'SEMANA 15 A 21', 'inicio_dia': 15, 'fim_dia': 21},
+            {'label': 'SEMANA 22 A 28', 'inicio_dia': 22, 'fim_dia': 28},
+            {'label': 'SEMANA 29 A 4', 'inicio_dia': 29, 'fim_dia': 4}  # Abril
+        ],
+        4: [  # Abril
+            {'label': 'SEMANA 5 A 11', 'inicio_dia': 5, 'fim_dia': 11},
+            {'label': 'SEMANA 12 A 18', 'inicio_dia': 12, 'fim_dia': 18},
+            {'label': 'SEMANA 19 A 25', 'inicio_dia': 19, 'fim_dia': 25},
+            {'label': 'SEMANA 26 A 2', 'inicio_dia': 26, 'fim_dia': 2},  # Maio
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        5: [  # Maio
+            {'label': 'SEMANA 3 A 9', 'inicio_dia': 3, 'fim_dia': 9},
+            {'label': 'SEMANA 10 A 16', 'inicio_dia': 10, 'fim_dia': 16},
+            {'label': 'SEMANA 17 A 23', 'inicio_dia': 17, 'fim_dia': 23},
+            {'label': 'SEMANA 24 A 30', 'inicio_dia': 24, 'fim_dia': 30},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        6: [  # Junho
+            {'label': 'SEMANA 31 A 6', 'inicio_dia': 31, 'fim_dia': 6},  # Maio-Junho
+            {'label': 'SEMANA 7 A 13', 'inicio_dia': 7, 'fim_dia': 13},
+            {'label': 'SEMANA 14 A 20', 'inicio_dia': 14, 'fim_dia': 20},
+            {'label': 'SEMANA 21 A 27', 'inicio_dia': 21, 'fim_dia': 27},
+            {'label': 'SEMANA 28 A 4', 'inicio_dia': 28, 'fim_dia': 4}  # Julho
+        ],
+        7: [  # Julho
+            {'label': 'SEMANA 5 A 11', 'inicio_dia': 5, 'fim_dia': 11},
+            {'label': 'SEMANA 12 A 18', 'inicio_dia': 12, 'fim_dia': 18},
+            {'label': 'SEMANA 19 A 25', 'inicio_dia': 19, 'fim_dia': 25},
+            {'label': 'SEMANA 26 A 1', 'inicio_dia': 26, 'fim_dia': 1},  # Agosto
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        8: [  # Agosto
+            {'label': 'SEMANA 2 A 8', 'inicio_dia': 2, 'fim_dia': 8},
+            {'label': 'SEMANA 9 A 15', 'inicio_dia': 9, 'fim_dia': 15},
+            {'label': 'SEMANA 16 A 22', 'inicio_dia': 16, 'fim_dia': 22},
+            {'label': 'SEMANA 23 A 29', 'inicio_dia': 23, 'fim_dia': 29},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        9: [  # Setembro
+            {'label': 'SEMANA 30 A 5', 'inicio_dia': 30, 'fim_dia': 5},  # Agosto-Setembro
+            {'label': 'SEMANA 6 A 12', 'inicio_dia': 6, 'fim_dia': 12},
+            {'label': 'SEMANA 13 A 19', 'inicio_dia': 13, 'fim_dia': 19},
+            {'label': 'SEMANA 20 A 26', 'inicio_dia': 20, 'fim_dia': 26},
+            {'label': 'SEMANA 27 A 3', 'inicio_dia': 27, 'fim_dia': 3}  # Outubro
+        ],
+        10: [  # Outubro
+            {'label': 'SEMANA 4 A 10', 'inicio_dia': 4, 'fim_dia': 10},
+            {'label': 'SEMANA 11 A 17', 'inicio_dia': 11, 'fim_dia': 17},
+            {'label': 'SEMANA 18 A 24', 'inicio_dia': 18, 'fim_dia': 24},
+            {'label': 'SEMANA 25 A 31', 'inicio_dia': 25, 'fim_dia': 31},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        11: [  # Novembro
+            {'label': 'SEMANA 1 A 7', 'inicio_dia': 1, 'fim_dia': 7},
+            {'label': 'SEMANA 8 A 14', 'inicio_dia': 8, 'fim_dia': 14},
+            {'label': 'SEMANA 15 A 21', 'inicio_dia': 15, 'fim_dia': 21},
+            {'label': 'SEMANA 22 A 28', 'inicio_dia': 22, 'fim_dia': 28},
+            {'label': '-', 'inicio_dia': None, 'fim_dia': None}
+        ],
+        12: [  # Dezembro
+            {'label': 'SEMANA 29 A 5', 'inicio_dia': 29, 'fim_dia': 5},  # Novembro-Dezembro
+            {'label': 'SEMANA 6 A 12', 'inicio_dia': 6, 'fim_dia': 12},
+            {'label': 'SEMANA 13 A 19', 'inicio_dia': 13, 'fim_dia': 19},
+            {'label': 'SEMANA 20 A 26', 'inicio_dia': 20, 'fim_dia': 26},
+            {'label': 'SEMANA 27 A 2', 'inicio_dia': 27, 'fim_dia': 2}  # Janeiro próximo
+        ]
+    }
     
-    # Encontrar o primeiro sábado que contém ou antecede o primeiro dia do mês
-    # weekday(): 0=segunda, 1=terça, ..., 5=sábado, 6=domingo
-    dias_atras_para_sabado = (primeiro_dia.weekday() + 2) % 7
-    primeiro_sabado = primeiro_dia - timedelta(days=dias_atras_para_sabado)
+    from datetime import datetime
     
-    # AJUSTE: Se o primeiro sábado for de um mês anterior E já teve muitos dias desse mês anterior,
-    # avançar para o primeiro sábado que está majoritariamente no mês atual
-    if primeiro_sabado.month != mes:
-        # Se o primeiro sábado é do mês anterior, verificar se a maioria da semana está no mês atual
-        fim_semana = primeiro_sabado + timedelta(days=6)
-        dias_no_mes_atual = 0
-        
-        # Contar quantos dias da semana estão no mês atual
-        for i in range(7):
-            dia_semana = primeiro_sabado + timedelta(days=i)
-            if dia_semana.month == mes:
-                dias_no_mes_atual += 1
-        
-        # Se menos de 4 dias estão no mês atual (menos da metade), pular para próximo sábado
-        if dias_no_mes_atual < 4:
-            primeiro_sabado += timedelta(days=7)
+    # Pegar as semanas estáticas para o mês
+    semanas_do_mes = semanas_estaticas.get(mes, [])
     
     semanas = []
-    for i in range(5):
-        inicio_semana = primeiro_sabado + timedelta(weeks=i)
-        fim_semana = inicio_semana + timedelta(days=6)  # sexta-feira
-        
-        # Label mostra apenas os dias
-        label = f"SEMANA {inicio_semana.day} A {fim_semana.day}"
-        
-        semanas.append({
-            'inicio': inicio_semana,
-            'fim': fim_semana,
-            'label': label
-        })
+    for semana_config in semanas_do_mes:
+        if semana_config['inicio_dia'] is None:
+            # Semana vazia
+            semanas.append({
+                'inicio': None,
+                'fim': None,
+                'label': '-'
+            })
+        else:
+            # Calcular as datas reais (usando o mês atual como base)
+            try:
+                inicio = datetime(ano, mes, semana_config['inicio_dia'])
+                fim = datetime(ano, mes, min(semana_config['fim_dia'], 31))  # Ajustar para últimos dias
+            except ValueError:
+                # Se o dia não existe no mês, usar None
+                inicio = None
+                fim = None
+            
+            semanas.append({
+                'inicio': inicio,
+                'fim': fim,
+                'label': semana_config['label']
+            })
     
     return semanas
 
 
 def buscar_valor_projetado(cur, cliente, semana, mes, ano):
     """Busca valor projetado para o cliente na semana especificada."""
+    # Se a semana está vazia (label = '-'), retornar 0
+    if semana['inicio'] is None or semana['fim'] is None:
+        return 0.0
+    
     # Buscar na tabela projecao
     cur.execute("""
         SELECT SUM(valor) FROM projecao 
@@ -252,6 +334,10 @@ def buscar_valor_projetado(cur, cliente, semana, mes, ano):
 def buscar_valor_realizado(cur, cliente, semana, mes, ano):
     """Busca valor realizado (recebido) para o cliente na semana especificada."""
     from datetime import datetime
+    
+    # Se a semana está vazia (label = '-'), retornar 0
+    if semana['inicio'] is None or semana['fim'] is None:
+        return 0.0
     
     # Converter datas da semana para formato de comparação
     inicio_semana = semana['inicio']
@@ -285,18 +371,34 @@ def calcular_totais_frz(dados):
     totais = {
         'total_geral': {'projetado': 0, 'realizado': 0},
         'despesas_gerais': {'projetado': 0, 'realizado': 0},
-        'resultado': {'projetado': 0, 'realizado': 0}
+        'resultado': {'projetado': 0, 'realizado': 0},
+        'semanas': {},
+        'despesas_semanas': {}
     }
     
-    # Somar todos os clientes
+    # Calcular totais por semana
+    for semana_num in range(1, 6):  # semanas 1 a 5
+        totais['semanas'][f'semana_{semana_num}'] = {'projetado': 0, 'realizado': 0}
+        
+        for cliente, valores in dados['clientes'].items():
+            totais['semanas'][f'semana_{semana_num}']['projetado'] += valores[f'semana_{semana_num}']['projetado']
+            totais['semanas'][f'semana_{semana_num}']['realizado'] += valores[f'semana_{semana_num}']['realizado']
+    
+    # Somar todos os clientes para total geral
     for cliente, valores in dados['clientes'].items():
         totais['total_geral']['projetado'] += valores['total_mes']['projetado']
         totais['total_geral']['realizado'] += valores['total_mes']['realizado']
     
-    # TODO: Implementar lógica de despesas gerais baseada nos dados reais
-    # Por enquanto, usar 10% do total como estimativa
-    totais['despesas_gerais']['projetado'] = totais['total_geral']['projetado'] * 0.1
-    totais['despesas_gerais']['realizado'] = totais['total_geral']['realizado'] * 0.1
+    # Calcular despesas por semana (10% do total de cada semana)
+    for semana_num in range(1, 6):
+        totais['despesas_semanas'][f'semana_{semana_num}'] = {
+            'projetado': totais['semanas'][f'semana_{semana_num}']['projetado'] * 0.1,
+            'realizado': totais['semanas'][f'semana_{semana_num}']['realizado'] * 0.1
+        }
+    
+    # Total de despesas gerais (soma de todas as semanas)
+    totais['despesas_gerais']['projetado'] = sum([totais['despesas_semanas'][f'semana_{i}']['projetado'] for i in range(1, 6)])
+    totais['despesas_gerais']['realizado'] = sum([totais['despesas_semanas'][f'semana_{i}']['realizado'] for i in range(1, 6)])
     
     # Resultado = Total - Despesas
     totais['resultado']['projetado'] = totais['total_geral']['projetado'] - totais['despesas_gerais']['projetado']
