@@ -113,8 +113,179 @@ def planejamento():
 
 @app.route("/planejamento_frz")
 def planejamento_frz():
-    """Página em branco para Planejamento FRZ (não direciona/duplica dados)."""
-    return render_template("planejamento_frz.html")
+    """Página de Planejamento FRZ com dados dos bancos."""
+    # Parâmetros de filtro (padrão: setembro 2025)
+    mes = request.args.get('mes', 9, type=int)
+    ano = request.args.get('ano', 2025, type=int)
+    
+    # Buscar dados do FRZ
+    dados_frz = build_dados_frz(mes, ano)
+    
+    return render_template("planejamento_frz.html", dados=dados_frz, mes=mes, ano=ano)
+
+
+def build_dados_frz(mes, ano):
+    """Constrói dados do FRZ por semanas (sábado a sexta) para o mês/ano especificado."""
+    
+    # Lista dos 19 clientes FRZ
+    clientes_frz = [
+        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
+        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
+        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
+        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
+        'PEIXES MEGGOS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
+    ]
+    
+    # Calcular semanas do mês (sábado a sexta)
+    semanas = calcular_semanas_sabado_sexta(mes, ano)
+    
+    # Estrutura de dados
+    dados = {
+        'mes': mes,
+        'ano': ano,
+        'semanas': semanas,
+        'clientes': {}
+    }
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Para cada cliente, buscar dados de cada semana
+    for cliente in clientes_frz:
+        dados['clientes'][cliente] = {}
+        
+        for i, semana in enumerate(semanas):
+            dados['clientes'][cliente][f'semana_{i+1}'] = {
+                'projetado': buscar_valor_projetado(cur, cliente, semana, mes, ano),
+                'realizado': buscar_valor_realizado(cur, cliente, semana, mes, ano)
+            }
+        
+        # Total do mês para o cliente
+        dados['clientes'][cliente]['total_mes'] = {
+            'projetado': sum([dados['clientes'][cliente][f'semana_{i+1}']['projetado'] for i in range(5)]),
+            'realizado': sum([dados['clientes'][cliente][f'semana_{i+1}']['realizado'] for i in range(5)])
+        }
+    
+    # Calcular totais gerais
+    dados['totais'] = calcular_totais_frz(dados)
+    
+    conn.close()
+    return dados
+
+
+def calcular_semanas_sabado_sexta(mes, ano):
+    """Calcula as 5 semanas do mês no formato sábado-sexta, evitando sobreposição entre meses."""
+    from datetime import datetime, timedelta
+    
+    # Primeiro dia do mês
+    primeiro_dia = datetime(ano, mes, 1)
+    
+    # Encontrar o primeiro sábado que contém ou antecede o primeiro dia do mês
+    # weekday(): 0=segunda, 1=terça, ..., 5=sábado, 6=domingo
+    dias_atras_para_sabado = (primeiro_dia.weekday() + 2) % 7
+    primeiro_sabado = primeiro_dia - timedelta(days=dias_atras_para_sabado)
+    
+    # AJUSTE: Se o primeiro sábado for de um mês anterior E já teve muitos dias desse mês anterior,
+    # avançar para o primeiro sábado que está majoritariamente no mês atual
+    if primeiro_sabado.month != mes:
+        # Se o primeiro sábado é do mês anterior, verificar se a maioria da semana está no mês atual
+        fim_semana = primeiro_sabado + timedelta(days=6)
+        dias_no_mes_atual = 0
+        
+        # Contar quantos dias da semana estão no mês atual
+        for i in range(7):
+            dia_semana = primeiro_sabado + timedelta(days=i)
+            if dia_semana.month == mes:
+                dias_no_mes_atual += 1
+        
+        # Se menos de 4 dias estão no mês atual (menos da metade), pular para próximo sábado
+        if dias_no_mes_atual < 4:
+            primeiro_sabado += timedelta(days=7)
+    
+    semanas = []
+    for i in range(5):
+        inicio_semana = primeiro_sabado + timedelta(weeks=i)
+        fim_semana = inicio_semana + timedelta(days=6)  # sexta-feira
+        
+        # Label mostra apenas os dias
+        label = f"SEMANA {inicio_semana.day} A {fim_semana.day}"
+        
+        semanas.append({
+            'inicio': inicio_semana,
+            'fim': fim_semana,
+            'label': label
+        })
+    
+    return semanas
+
+
+def buscar_valor_projetado(cur, cliente, semana, mes, ano):
+    """Busca valor projetado para o cliente na semana especificada."""
+    # Buscar na tabela projecao
+    cur.execute("""
+        SELECT SUM(valor) FROM projecao 
+        WHERE cliente = ? AND mes = ? AND ano = ? 
+        AND dia BETWEEN ? AND ?
+    """, (cliente, mes, ano, semana['inicio'].day, semana['fim'].day))
+    
+    resultado = cur.fetchone()[0]
+    return resultado if resultado else 0.0
+
+
+def buscar_valor_realizado(cur, cliente, semana, mes, ano):
+    """Busca valor realizado (recebido) para o cliente na semana especificada."""
+    from datetime import datetime
+    
+    # Converter datas da semana para formato de comparação
+    inicio_semana = semana['inicio']
+    fim_semana = semana['fim']
+    
+    # Buscar na tabela contas_receber com status 'RECEBIDO' 
+    # filtrando por data de vencimento dentro da semana específica
+    # Formato esperado: DD/MM/YYYY
+    cur.execute("""
+        SELECT SUM(valor_principal) FROM contas_receber 
+        WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+        AND (
+            CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+            CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+            CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
+        )
+    """, (
+        cliente, 
+        ano,  # Ano (YYYY)
+        mes,  # Mês (MM)
+        inicio_semana.day,  # Dia inicial da semana
+        fim_semana.day      # Dia final da semana
+    ))
+    
+    resultado = cur.fetchone()[0]
+    return resultado if resultado else 0.0
+
+
+def calcular_totais_frz(dados):
+    """Calcula totais gerais, despesas e resultado do FRZ."""
+    totais = {
+        'total_geral': {'projetado': 0, 'realizado': 0},
+        'despesas_gerais': {'projetado': 0, 'realizado': 0},
+        'resultado': {'projetado': 0, 'realizado': 0}
+    }
+    
+    # Somar todos os clientes
+    for cliente, valores in dados['clientes'].items():
+        totais['total_geral']['projetado'] += valores['total_mes']['projetado']
+        totais['total_geral']['realizado'] += valores['total_mes']['realizado']
+    
+    # TODO: Implementar lógica de despesas gerais baseada nos dados reais
+    # Por enquanto, usar 10% do total como estimativa
+    totais['despesas_gerais']['projetado'] = totais['total_geral']['projetado'] * 0.1
+    totais['despesas_gerais']['realizado'] = totais['total_geral']['realizado'] * 0.1
+    
+    # Resultado = Total - Despesas
+    totais['resultado']['projetado'] = totais['total_geral']['projetado'] - totais['despesas_gerais']['projetado']
+    totais['resultado']['realizado'] = totais['total_geral']['realizado'] - totais['despesas_gerais']['realizado']
+    
+    return totais
 
 
 def build_dashboard_data_with_filters(mes, ano, limit_recent=20):

@@ -3,7 +3,8 @@
 {% block title %}Planejamento FRZ{% endblock %}
 
 {% block content %}
-<div class="dashboard-header fade-in-up">
+<div class="frz-page">
+<div class="dashboard-header fade-in-up frz-compact-header">
     <div class="frz-header-container">
         <div class="frz-filters">
             <label for="mes">Mês:</label>
@@ -41,11 +42,11 @@
         <thead>
             <tr class="header-row">
                 <th class="cliente-col">Clientes</th>
-                <th colspan="2" class="semana-header">SEMANA 30 A 5</th>
-                <th colspan="2" class="semana-header">SEMANA 6 A 12</th>
-                <th colspan="2" class="semana-header">SEMANA 13 A 19</th>
-                <th colspan="2" class="semana-header">SEMANA 20 A 26</th>
-                <th colspan="2" class="semana-header">SEMANA 27 A 3</th>
+                <th colspan="2" class="semana-header">{{ dados.semanas[0].label }}</th>
+                <th colspan="2" class="semana-header">{{ dados.semanas[1].label }}</th>
+                <th colspan="2" class="semana-header">{{ dados.semanas[2].label }}</th>
+                <th colspan="2" class="semana-header">{{ dados.semanas[3].label }}</th>
+                <th colspan="2" class="semana-header">{{ dados.semanas[4].label }}</th>
                 <th colspan="2" class="total-header">TOTAL MÊS</th>
             </tr>
             <tr class="subheader-row">
@@ -65,54 +66,70 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td class="cliente-nome">ADORO</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">ADORO S.A.</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">ADORO SAO CARLOS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">AGRA FOODS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">ALIBEM</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">FRIBOI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">GOLDPAO CD SAO JOSE DOS CAMPOS</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">GTFOODS BARUERI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">JK DISTRIBUIDORA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">LATICINIO CARMONA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">MARFRIG - ITUPEVA CD</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">MARFRIG - PROMISSAO</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">MARFRIG GLOBAL FOODS S A</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">MINERVA S A</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">PAMPLONA JANDIRA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">PEIXES MEGGOS PESCADOS LTDA - SJBV</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">SANTA LUCIA</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">SAUDALI</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
-            <tr><td class="cliente-nome">VALENCIO JATAÍ</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor">R$ -</td><td class="valor total-col">R$ -</td><td class="valor total-col">R$ -</td></tr>
+            {% for cliente in dados.clientes %}
+            <tr>
+                <td class="cliente-nome">{{ cliente }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_1.projetado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_1.realizado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_2.projetado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_2.realizado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_3.projetado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_3.realizado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_4.projetado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_4.realizado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_5.projetado) }}</td>
+                <td class="valor">R$ {{ "{:,.2f}".format(dados.clientes[cliente].semana_5.realizado) }}</td>
+                <td class="valor total-col">R$ {{ "{:,.2f}".format(dados.clientes[cliente].total_mes.projetado) }}</td>
+                <td class="valor total-col">R$ {{ "{:,.2f}".format(dados.clientes[cliente].total_mes.realizado) }}</td>
+            </tr>
+            {% endfor %}
             
             <tr class="total-row">
                 <td class="cliente-nome total-label">TOTAL</td>
-                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
-                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
-                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
-                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
-                <td class="valor total-valor">R$ -</td><td class="valor total-valor">R$ -</td>
-                <td class="valor total-col total-valor">R$ -</td><td class="valor total-col total-valor">R$ -</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
+                <td class="valor total-col total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.projetado) }}</td>
+                <td class="valor total-col total-valor">R$ {{ "{:,.2f}".format(dados.totais.total_geral.realizado) }}</td>
             </tr>
             
             <tr class="despesas-row">
                 <td class="cliente-nome despesas-label">Despesas gerais</td>
-                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
-                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
-                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
-                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
-                <td class="valor despesas-valor">R$ -</td><td class="valor despesas-valor">R$ -</td>
-                <td class="valor total-col despesas-valor">R$ -</td><td class="valor total-col despesas-valor">R$ -</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
+                <td class="valor total-col despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.projetado) }}</td>
+                <td class="valor total-col despesas-valor">R$ {{ "{:,.2f}".format(dados.totais.despesas_gerais.realizado) }}</td>
             </tr>
             
             <tr class="resultado-row">
                 <td class="cliente-nome resultado-label">Resultado</td>
-                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
-                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
-                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
-                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
-                <td class="valor resultado-valor">R$ -</td><td class="valor resultado-valor">R$ -</td>
-                <td class="valor total-col resultado-valor">R$ -</td><td class="valor total-col resultado-valor">R$ -</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
+                <td class="valor total-col resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.projetado) }}</td>
+                <td class="valor total-col resultado-valor">R$ {{ "{:,.2f}".format(dados.totais.resultado.realizado) }}</td>
             </tr>
         </tbody>
     </table>
@@ -123,8 +140,20 @@ function atualizarPlanejamento() {
     const mes = document.getElementById('mes').value;
     const ano = document.getElementById('ano').value;
     console.log('Atualizando planejamento para:', mes, '/', ano);
-    alert('Filtro será implementado na próxima etapa!');
+    
+    // Redirecionar para a mesma página com os novos parâmetros
+    window.location.href = `/planejamento_frz?mes=${mes}&ano=${ano}`;
 }
-</script>
 
+// Configurar valores padrão dos selects com os valores atuais
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mesAtual = urlParams.get('mes') || new Date().getMonth() + 1;
+    const anoAtual = urlParams.get('ano') || new Date().getFullYear();
+    
+    document.getElementById('mes').value = mesAtual;
+    document.getElementById('ano').value = anoAtual;
+});
+</script>
+</div>
 {% endblock %}
