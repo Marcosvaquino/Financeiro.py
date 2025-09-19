@@ -8,6 +8,23 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "frz-secret"  # chave de sessão
 
+# Registra blueprints de módulos adicionais (placeholders)
+try:
+    from .frete import bp as frete_bp
+    app.register_blueprint(frete_bp)
+except Exception:
+    pass
+try:
+    from .armazem import bp as armazem_bp
+    app.register_blueprint(armazem_bp)
+except Exception:
+    pass
+try:
+    from .logistica import bp as logistica_bp
+    app.register_blueprint(logistica_bp)
+except Exception:
+    pass
+
 # Inicializa banco de dados somente quando executado como script
 # (não executar no import para evitar apagar dados durante testes/imports)
 

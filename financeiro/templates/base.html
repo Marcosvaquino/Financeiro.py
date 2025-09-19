@@ -100,8 +100,49 @@
             parents.forEach(p => {
                 p.addEventListener('click', function(){
                     const item = this.parentElement;
-                    item.classList.toggle('expanded');
+                    
+                    // Se o menu já está expandido, apenas feche
+                    if (item.classList.contains('expanded')) {
+                        item.classList.remove('expanded');
+                        return;
+                    }
+                    
+                    // Fechar todos os outros menus primeiro
+                    const allMenuItems = document.querySelectorAll('.menu-item');
+                    allMenuItems.forEach(menuItem => {
+                        menuItem.classList.remove('expanded');
+                    });
+                    
+                    // Abrir apenas o menu clicado
+                    item.classList.add('expanded');
                 });
+            });
+            
+            // Manter submenu aberto se estamos em uma de suas páginas filhas
+            const currentPath = window.location.pathname;
+            
+            // Mapear caminhos para seus menus pais
+            const menuMappings = {
+                'Financeiro': ['/planejamento', '/projecao', '/dashboard', '/resumo', '/consolidacao', '/importacao', '/painel'],
+                'Frete': ['/frete'],
+                'Armazem': ['/armazem'], 
+                'Logistica': ['/logistica']
+            };
+            
+            // Verificar qual menu deve estar expandido baseado na URL atual
+            Object.keys(menuMappings).forEach(menuName => {
+                const paths = menuMappings[menuName];
+                const isCurrentMenu = paths.some(path => currentPath.startsWith(path));
+                
+                if (isCurrentMenu) {
+                    // Encontrar o menu pai correspondente e expandir
+                    const menuParents = document.querySelectorAll('.menu-parent');
+                    menuParents.forEach(parent => {
+                        if (parent.textContent.trim() === menuName) {
+                            parent.parentElement.classList.add('expanded');
+                        }
+                    });
+                }
             });
         })();
     </script>
