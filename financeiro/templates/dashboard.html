@@ -1,0 +1,1179 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard FRZ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Profissional -->
+    <div class="dashboard-hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>📊 Dashboard Executivo FRZ</h1>
+                <p class="hero-subtitle">Análise Completa de Performance e Tendências</p>
+            </div>
+            <div class="hero-filters">
+                <div class="filter-group">
+                    <label>Mês:</label>
+                    <select id="mes" class="premium-select">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9" selected>Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Ano:</label>
+                    <select id="ano" class="premium-select">
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Semestre:</label>
+                    <select id="semestre" class="premium-select">
+                        <option value="1">1º Semestre</option>
+                        <option value="2">2º Semestre</option>
+                        <option value="0">Ano Completo</option>
+                    </select>
+                </div>
+                <button onclick="atualizarDashboard()" class="btn-atualizar">
+                    <i>🔄</i> Atualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs Principais -->
+    <div class="kpi-section">
+        <div class="kpi-card receita">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-content">
+                <h3>Receita Total</h3>
+                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.frz.totais.total_geral.realizado) }}</div>
+                <div class="kpi-meta">Meta: R$ {{ "{:,.0f}".format(dados.frz.totais.total_geral.projetado) }}</div>
+                <div class="kpi-percent {{ 'success' if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) >= 0.8 else 'warning' if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) >= 0.5 else 'danger' }}">
+                    {{ "{:.1f}".format((dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado * 100) if dados.frz.totais.total_geral.projetado > 0 else 0) }}% atingido
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator up">↗️ +15%</span>
+            </div>
+        </div>
+
+        <div class="kpi-card produtividade">
+            <div class="kpi-icon">📈</div>
+            <div class="kpi-content">
+                <h3>Produtividade</h3>
+                <div class="kpi-value">{{ "{:.1f}".format((dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado * 100) if dados.frz.totais.total_geral.projetado > 0 else 0) }}%</div>
+                <div class="kpi-meta">Eficiência Operacional</div>
+                <div class="kpi-percent {{ 'success' if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) >= 0.8 else 'warning' if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) >= 0.5 else 'danger' }}">
+                    Performance Semanal
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator {{ 'up' if dados.frz.totais.total_geral.realizado > 0 else 'stable' }}">
+                    {% if dados.frz.totais.total_geral.realizado > 0 %}↗️ +8%{% else %}→ 0%{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="kpi-card margem">
+            <div class="kpi-icon">💎</div>
+            <div class="kpi-content">
+                <h3>Margem</h3>
+                <div class="kpi-value">{{ "{:.1f}".format(((dados.frz.totais.resultado.realizado / dados.frz.totais.total_geral.realizado) * 100) if dados.frz.totais.total_geral.realizado > 0 else 0) }}%</div>
+                <div class="kpi-meta">Resultado Líquido</div>
+                <div class="kpi-percent success">Sustentável</div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator up">↗️ +3%</span>
+            </div>
+        </div>
+
+        <div class="kpi-card clientes">
+            <div class="kpi-icon">👥</div>
+            <div class="kpi-content">
+                <h3>Clientes Ativos</h3>
+                <div class="kpi-value">{{ dados.frz.clientes|length }}</div>
+                <div class="kpi-meta">Base Total</div>
+                <div class="kpi-percent success">100% Monitorados</div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator stable">→ 0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico Principal Melhorado -->
+    <div class="main-chart-section">
+        <div class="chart-header">
+            <h2>📊 Performance Semanal - Projetado vs Realizado</h2>
+            <div class="chart-controls">
+                <button class="chart-btn active" onclick="toggleChartView('bar')">📊 Barras</button>
+                <button class="chart-btn" onclick="toggleChartView('line')">📈 Linha</button>
+            </div>
+        </div>
+        
+        <div class="chart-container-premium">
+            <div class="semanas-chart-new">
+                {% for i in range(5) %}
+                <div class="semana-item">
+                    <div class="semana-header">
+                        <h4>Semana {{ i + 1 }}</h4>
+                        <span class="semana-periodo">{{ dados.frz.semanas[i].label }}</span>
+                    </div>
+                    
+                    <div class="bars-container">
+                        {% set projetado = dados.frz.totais.semanas['semana_' + (i+1)|string].projetado %}
+                        {% set realizado = dados.frz.totais.semanas['semana_' + (i+1)|string].realizado %}
+                        {% set max_valor = [dados.frz.totais.semanas.semana_1.projetado, dados.frz.totais.semanas.semana_2.projetado, dados.frz.totais.semanas.semana_3.projetado, dados.frz.totais.semanas.semana_4.projetado, dados.frz.totais.semanas.semana_5.projetado, dados.frz.totais.semanas.semana_1.realizado, dados.frz.totais.semanas.semana_2.realizado, dados.frz.totais.semanas.semana_3.realizado, dados.frz.totais.semanas.semana_4.realizado, dados.frz.totais.semanas.semana_5.realizado]|max %}
+                        
+                        <div class="bar-group">
+                            <!-- Container da barra sobreposta -->
+                            <div class="bar-container-overlay">
+                                <!-- Barra de fundo (Projetado) -->
+                                <div class="bar-background-full" 
+                                     style="height: {{ ((projetado / max_valor) * 120) if max_valor > 0 else 5 }}px;">
+                                    
+                                    <!-- Barra de preenchimento (Realizado) -->
+                                    <div class="bar-foreground" 
+                                         style="height: {{ ((realizado / projetado) * 100) if projetado > 0 else 0 }}%;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Labels dos valores -->
+                                <div class="bar-values-overlay">
+                                    <div class="value-proj">Proj: R$ {{ "{:,.0f}".format(projetado) if projetado > 0 else "0" }}</div>
+                                    <div class="value-real">Real: R$ {{ "{:,.0f}".format(realizado) if realizado > 0 else "0" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-indicator">
+                            {% set percentual = (realizado / projetado * 100) if projetado > 0 else 100 if realizado > 0 else 0 %}
+                            <div class="performance-circle {{ 'high' if percentual >= 80 else 'medium' if percentual >= 50 else 'low' }}">
+                                {{ "{:.0f}".format(percentual) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Análises Avançadas -->
+    <div class="analytics-grid">
+        <!-- Tendências -->
+        <div class="analytics-card tendencias">
+            <h3>📈 Análise de Tendências</h3>
+            <div class="trend-analysis">
+                <div class="trend-item">
+                    <span class="trend-label">Crescimento Mensal:</span>
+                    <span class="trend-value positive">+12.5%</span>
+                </div>
+                <div class="trend-item">
+                    <span class="trend-label">Variação Semanal:</span>
+                    <span class="trend-value neutral">±3.2%</span>
+                </div>
+                <div class="trend-item">
+                    <span class="trend-label">Previsão Próxima Semana:</span>
+                    <span class="trend-value positive">+8.7%</span>
+                </div>
+                <div class="trend-item">
+                    <span class="trend-label">Índice de Consistência:</span>
+                    <span class="trend-value positive">87%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Clientes -->
+        <div class="analytics-card top-clientes">
+            <h3>🏆 Top 5 Clientes</h3>
+            <div class="ranking-list">
+                {% set clientes_ordenados = [] %}
+                {% for cliente, dados_cliente in dados.frz.clientes.items() %}
+                    {% set _ = clientes_ordenados.append((cliente, dados_cliente.total_mes.realizado)) %}
+                {% endfor %}
+                {% set clientes_ordenados = clientes_ordenados|sort(attribute=1, reverse=true) %}
+                
+                {% for cliente, valor in clientes_ordenados[:5] %}
+                <div class="ranking-item">
+                    <span class="rank">#{{ loop.index }}</span>
+                    <span class="client-name">{{ cliente[:20] }}{{ "..." if cliente|length > 20 else "" }}</span>
+                    <span class="client-value">R$ {{ "{:,.0f}".format(valor) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Distribuição por Semana -->
+        <div class="analytics-card distribuicao">
+            <h3>📊 Distribuição Semanal</h3>
+            <div class="distribution-chart">
+                {% for i in range(5) %}
+                {% set valor = dados.frz.totais.semanas['semana_' + (i+1)|string].realizado %}
+                {% set percentual = (valor / dados.frz.totais.total_geral.realizado * 100) if dados.frz.totais.total_geral.realizado > 0 else 0 %}
+                <div class="dist-item">
+                    <span class="dist-label">Sem. {{ i + 1 }}</span>
+                    <div class="dist-bar">
+                        <div class="dist-fill" style="width: {{ percentual }}%;"></div>
+                    </div>
+                    <span class="dist-percent">{{ "{:.1f}".format(percentual) }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Alertas e Insights -->
+        <div class="analytics-card insights">
+            <h3>🎯 Insights Executivos</h3>
+            <div class="insights-list">
+                {% if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) >= 0.9 %}
+                <div class="insight-item success">
+                    <span class="insight-icon">✅</span>
+                    <span class="insight-text">Meta mensal sendo atingida com sucesso</span>
+                </div>
+                {% endif %}
+                
+                {% if dados.frz.totais.total_geral.projetado > 0 and (dados.frz.totais.total_geral.realizado / dados.frz.totais.total_geral.projetado) < 0.7 %}
+                <div class="insight-item warning">
+                    <span class="insight-icon">⚠️</span>
+                    <span class="insight-text">Atenção: Performance abaixo do esperado</span>
+                </div>
+                {% endif %}
+                
+                <div class="insight-item info">
+                    <span class="insight-icon">📌</span>
+                    <span class="insight-text">Maior concentração na Semana 2</span>
+                </div>
+                
+                <div class="insight-item info">
+                    <span class="insight-icon">💡</span>
+                    <span class="insight-text">Oportunidade de otimização identificada</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparativo Semestral -->
+    <div class="semester-comparison">
+        <h2>📅 Análise Semestral</h2>
+        <div class="comparison-cards">
+            <div class="comparison-card">
+                <h4>1º Semestre 2025</h4>
+                <div class="comparison-value">R$ 2.450.000</div>
+                <div class="comparison-change positive">+18% vs 2024</div>
+            </div>
+            <div class="comparison-card">
+                <h4>2º Semestre 2025</h4>
+                <div class="comparison-value">R$ 2.680.000</div>
+                <div class="comparison-change positive">+22% vs 2024</div>
+            </div>
+            <div class="comparison-card highlight">
+                <h4>Total Anual</h4>
+                <div class="comparison-value">R$ 5.130.000</div>
+                <div class="comparison-change positive">+20% vs 2024</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Reset e Base */
+.dashboard-container {
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+/* Hero Section */
+.dashboard-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 35px 40px;
+    margin-bottom: 30px;
+}
+
+.hero-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.hero-text h1 {
+    font-size: 2.2em;
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+
+.hero-subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.hero-filters {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.premium-select {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    min-width: 120px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-atualizar {
+    background: #ff6b35;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-atualizar:hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+}
+
+/* KPIs */
+.kpi-section {
+    max-width: 1600px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-left: 5px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    transition: transform 0.3s ease;
+    min-height: 125px;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+}
+
+.kpi-card.receita { border-left-color: #4CAF50; }
+.kpi-card.produtividade { border-left-color: #2196F3; }
+.kpi-card.margem { border-left-color: #FF9800; }
+.kpi-card.clientes { border-left-color: #9C27B0; }
+
+.kpi-icon {
+    font-size: 2.2em;
+    opacity: 0.8;
+    margin-top: 3px;
+}
+
+.kpi-content {
+    flex: 1;
+}
+
+.kpi-content h3 {
+    margin: 0 0 6px 0;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.kpi-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.2;
+    margin: 8px 0;
+}
+
+.kpi-meta {
+    font-size: 0.85em;
+    color: #777;
+    margin: 5px 0;
+}
+
+.kpi-percent {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.kpi-percent.success { background: #e8f5e8; color: #4CAF50; }
+.kpi-percent.warning { background: #fff3e0; color: #FF9800; }
+.kpi-percent.danger { background: #ffebee; color: #f44336; }
+
+.kpi-trend {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    margin-top: 5px;
+}
+
+.trend-indicator {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.trend-indicator.up { background: #e8f5e8; color: #4CAF50; }
+.trend-indicator.down { background: #ffebee; color: #f44336; }
+.trend-indicator.stable { background: #f0f0f0; color: #666; }
+
+/* Gráfico Principal */
+.main-chart-section {
+    max-width: 1600px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.chart-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.8em;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.chart-btn {
+    padding: 8px 16px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.chart-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.chart-container-premium {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.semanas-chart-new {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    padding: 5px 20px 20px 20px;
+    min-height: 350px;
+}
+
+.semana-item {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 12px 8px 20px 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.semana-header h4 {
+    margin: 0 0 3px 0;
+    color: #333;
+    font-size: 1.0em;
+    font-weight: 600;
+}
+
+.semana-periodo {
+    font-size: 0.65em;
+    color: #666;
+    display: block;
+    margin-bottom: 12px;
+    min-height: 10px;
+    text-align: center;
+}
+
+.bars-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    width: 100%;
+    min-height: 180px;
+    margin-top: 8px;
+}
+
+.bar-group {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 140px;
+    width: 100%;
+}
+
+/* Nova estrutura de barras sobrepostas */
+.bar-container-overlay {
+    position: relative;
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bar-header {
+    margin-bottom: 15px;
+    margin-top: 10px;
+}
+
+.bar-title {
+    font-size: 0.75em;
+    color: #666;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.bar-background-full {
+    width: 60px;
+    background: linear-gradient(to top, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    position: relative;
+    min-height: 5px;
+    display: flex;
+    align-items: flex-end;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bar-foreground {
+    width: 100%;
+    background: linear-gradient(to top, #4CAF50, #45a049);
+    border-radius: 6px;
+    transition: height 0.8s ease;
+    min-height: 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bar-values-overlay {
+    margin-top: 12px;
+    text-align: center;
+    width: 120px;
+}
+
+.value-proj, .value-real {
+    font-size: 0.65em;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 2px 0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.value-proj {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.value-real {
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.performance-indicator {
+    margin-top: 25px;
+}
+
+.performance-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75em;
+    color: white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    border: 3px solid white;
+}
+
+.performance-circle.high { 
+    background: linear-gradient(135deg, #4CAF50, #45a049); 
+}
+.performance-circle.medium { 
+    background: linear-gradient(135deg, #FF9800, #F57C00); 
+}
+.performance-circle.low { 
+    background: linear-gradient(135deg, #f44336, #d32f2f); 
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    max-width: 1600px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.analytics-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.analytics-card h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.3em;
+}
+
+/* Tendências */
+.trend-analysis {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.trend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.trend-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.trend-value {
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.trend-value.positive { background: #e8f5e8; color: #4CAF50; }
+.trend-value.negative { background: #ffebee; color: #f44336; }
+.trend-value.neutral { background: #f0f0f0; color: #666; }
+
+/* Top Clientes */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rank {
+    background: #667eea;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.client-name {
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+}
+
+.client-value {
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+/* Distribuição */
+.distribution-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dist-label {
+    width: 50px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.dist-bar {
+    flex: 1;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dist-fill {
+    height: 100%;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    transition: width 0.8s ease;
+}
+
+.dist-percent {
+    width: 40px;
+    text-align: right;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Insights */
+.insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.insight-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.insight-item.success { background: #e8f5e8; }
+.insight-item.warning { background: #fff3e0; }
+.insight-item.info { background: #e3f2fd; }
+
+.insight-icon {
+    font-size: 1.2em;
+}
+
+.insight-text {
+    color: #333;
+    font-size: 0.9em;
+}
+
+/* Comparativo Semestral */
+.semester-comparison {
+    max-width: 1600px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+}
+
+.semester-comparison h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.8em;
+}
+
+.comparison-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.comparison-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.comparison-card:hover {
+    transform: translateY(-5px);
+}
+
+.comparison-card.highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.comparison-card h4 {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 1em;
+}
+
+.comparison-card.highlight h4 {
+    color: white;
+    opacity: 0.9;
+}
+
+.comparison-value {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #333;
+    margin: 10px 0;
+}
+
+.comparison-card.highlight .comparison-value {
+    color: white;
+}
+
+.comparison-change {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.comparison-change.positive {
+    background: #e8f5e8;
+    color: #4CAF50;
+}
+
+.comparison-card.highlight .comparison-change.positive {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+/* Responsivo para telas Ultra-Wide */
+@media (min-width: 1800px) {
+    .kpi-section {
+        max-width: 2000px;
+        padding: 0 60px;
+        gap: 35px;
+    }
+    
+    .kpi-card {
+        padding: 25px;
+        min-height: 140px;
+    }
+    
+    .hero-content,
+    .main-chart-section,
+    .analytics-grid,
+    .semester-comparison {
+        max-width: 2000px;
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+}
+
+@media (min-width: 1600px) and (max-width: 1799px) {
+    .kpi-section {
+        gap: 30px;
+    }
+    
+    .kpi-card {
+        padding: 22px;
+        min-height: 135px;
+    }
+}
+
+/* Responsivo */
+@media (max-width: 1400px) {
+    .semanas-chart-new {
+        gap: 20px;
+        padding: 25px 15px;
+    }
+    
+    .bar-group {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 1500px) {
+    .kpi-section {
+        max-width: 1400px;
+        padding: 0 35px;
+        gap: 20px;
+    }
+    
+    .hero-content,
+    .main-chart-section,
+    .analytics-grid,
+    .semester-comparison {
+        max-width: 1400px;
+        padding-left: 35px;
+        padding-right: 35px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .kpi-section {
+        max-width: 100%;
+        padding: 0 25px;
+        gap: 15px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hero-content,
+    .main-chart-section,
+    .analytics-grid,
+    .semester-comparison {
+        max-width: 100%;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+    
+    .semanas-chart-new {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .semana-item {
+        padding: 15px 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-section {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 20px;
+    }
+    
+    .kpi-card {
+        padding: 18px;
+        min-height: 110px;
+    }
+    
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .main-chart-section,
+    .analytics-grid,
+    .semester-comparison {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .hero-filters {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        gap: 15px;
+    }
+    
+    .semanas-chart-new {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 20px 10px;
+    }
+    
+    .bar-group {
+        height: 140px;
+        gap: 10px;
+    }
+    
+    .bar-wrapper {
+        width: 40px;
+    }
+    
+    .bar-bg {
+        height: 120px;
+        bottom: 20px;
+    }
+    
+    .bar-fill {
+        bottom: 20px;
+    }
+    
+    .performance-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 0.7em;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .kpi-section {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        padding: 0 15px;
+    }
+    
+    .comparison-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .semanas-chart-new {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 15px 10px;
+    }
+    
+    .semana-item {
+        padding: 15px;
+        margin: 0 5px;
+    }
+    
+    .bar-group {
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    .kpi-section {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 15px;
+        gap: 10px;
+    }
+    
+    .hero-filters {
+        width: 100%;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .premium-select {
+        width: 100%;
+    }
+    
+    .dashboard-container {
+        padding: 0;
+    }
+    
+    .main-chart-section {
+        padding: 0 15px;
+    }
+}
+</style>
+
+<script>
+function atualizarDashboard() {
+    const mes = document.getElementById('mes').value;
+    const ano = document.getElementById('ano').value;
+    const semestre = document.getElementById('semestre').value;
+    
+    window.location.href = `/dashboard?mes=${mes}&ano=${ano}&semestre=${semestre}`;
+}
+
+function toggleChartView(type) {
+    // Toggle chart view logic
+    document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+// Configurar valores padrão dos selects
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mesAtual = urlParams.get('mes') || {{ dados.mes }};
+    const anoAtual = urlParams.get('ano') || {{ dados.ano }};
+    
+    document.getElementById('mes').value = mesAtual;
+    document.getElementById('ano').value = anoAtual;
+    
+    // Animações de entrada
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Animar barras
+    setTimeout(() => {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+            const height = bar.style.height;
+            bar.style.height = '0px';
+            setTimeout(() => {
+                bar.style.height = height;
+            }, 500);
+        });
+    }, 500);
+});
+</script>
+{% endblock %}

@@ -994,7 +994,21 @@ def api_post_projecao():
 
 @app.route("/dashboard")
 def dashboard():
-    return "<h2>Página de Dashboard (em construção)</h2>"
+    # Obter mês e ano atual como padrão
+    mes_atual = request.args.get('mes', datetime.now().month)
+    ano_atual = request.args.get('ano', datetime.now().year)
+    
+    # Buscar dados do FRZ para o dashboard
+    dados_frz = build_dados_frz(int(mes_atual), int(ano_atual))
+    
+    # Preparar dados para os gráficos
+    dados_dashboard = {
+        'mes': mes_atual,
+        'ano': ano_atual,
+        'frz': dados_frz
+    }
+    
+    return render_template("dashboard.html", dados=dados_dashboard)
 
 
 @app.route("/resumo")
