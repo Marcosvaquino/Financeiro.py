@@ -57,6 +57,7 @@
             const btnClose = document.getElementById('sidebarClose');
             const btnOpen = document.getElementById('sidebarOpen');
             const sidebar = document.getElementById('sidebar');
+            const STORAGE_KEY = 'frz_sidebar_collapsed';
             if(!sidebar) return;
 
             // helper to hide/show controls
@@ -64,11 +65,13 @@
                 sidebar.classList.add('collapsed');
                 if(btnClose) btnClose.style.display = 'none';
                 if(btnOpen) btnOpen.style.display = 'block';
+                try { localStorage.setItem(STORAGE_KEY, '1'); } catch(e){}
             }
             function setOpen(){
                 sidebar.classList.remove('collapsed');
                 if(btnClose) btnClose.style.display = 'block';
                 if(btnOpen) btnOpen.style.display = 'none';
+                try { localStorage.setItem(STORAGE_KEY, '0'); } catch(e){}
             }
 
             // wire up buttons
@@ -86,12 +89,32 @@
             }
 
             // initialize based on current class
-            if(sidebar.classList.contains('collapsed')){
-                if(btnClose) btnClose.style.display = 'none';
-                if(btnOpen) btnOpen.style.display = 'block';
-            } else {
-                if(btnClose) btnClose.style.display = 'block';
-                if(btnOpen) btnOpen.style.display = 'none';
+            // If user previously set a preference, restore it
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored === '1') {
+                    setClosed();
+                } else if (stored === '0') {
+                    setOpen();
+                } else {
+                    // no stored preference — keep default from class
+                    if(sidebar.classList.contains('collapsed')){
+                        if(btnClose) btnClose.style.display = 'none';
+                        if(btnOpen) btnOpen.style.display = 'block';
+                    } else {
+                        if(btnClose) btnClose.style.display = 'block';
+                        if(btnOpen) btnOpen.style.display = 'none';
+                    }
+                }
+            } catch(e) {
+                // localStorage may be unavailable (privacy mode); fallback to default
+                if(sidebar.classList.contains('collapsed')){
+                    if(btnClose) btnClose.style.display = 'none';
+                    if(btnOpen) btnOpen.style.display = 'block';
+                } else {
+                    if(btnClose) btnClose.style.display = 'block';
+                    if(btnOpen) btnOpen.style.display = 'none';
+                }
             }
         })();
         // Menu pai/filho: alterna submenus ao clicar no item pai

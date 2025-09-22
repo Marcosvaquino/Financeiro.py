@@ -54,6 +54,10 @@
         </div>
     </div>
 
+    <!-- Dados hidden para JavaScript -->
+    <input type="hidden" id="dados-mes" value="{{ dados.mes }}">
+    <input type="hidden" id="dados-ano" value="{{ dados.ano }}">
+
     <!-- KPIs Principais -->
     <div class="kpi-section">
         <div class="kpi-card receita">
@@ -1149,8 +1153,9 @@ function toggleChartView(type) {
 // Configurar valores padrão dos selects
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const mesAtual = urlParams.get('mes') || {{ dados.mes }};
-    const anoAtual = urlParams.get('ano') || {{ dados.ano }};
+    // Pegar dados dos elementos hidden
+    const mesAtual = urlParams.get('mes') || document.getElementById('dados-mes').value;
+    const anoAtual = urlParams.get('ano') || document.getElementById('dados-ano').value;
     
     document.getElementById('mes').value = mesAtual;
     document.getElementById('ano').value = anoAtual;
