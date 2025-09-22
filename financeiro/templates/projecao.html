@@ -52,12 +52,13 @@
         /* o wrapper não força altura do card; limita sua altura para caber na viewport */
         max-height: var(--matrix-height);
         height: auto !important; /* ignora o height inline */
-        /* removemos scroll horizontal e permitimos scroll vertical */
-        overflow-x: hidden !important;
+        /* permitir scroll horizontal e vertical quando necessário */
+        overflow-x: auto !important;
         overflow-y: auto !important;
         display: block;
         padding-bottom: 0 !important; /* remove gap que empurra a scrollbar para baixo */
         margin-bottom: 0 !important;
+        white-space: nowrap; /* evita que conteúdos quebrem em várias linhas, força scroll */
     }
 
         /* reduzir visualmente a barra de rolagem horizontal */
@@ -88,6 +89,7 @@
         box-sizing: border-box !important;
         font-size: 10px !important;
         text-align: right !important; /* mantém alinhamento numérico à direita */
+        white-space: nowrap !important; /* impede quebra dentro do input */
     }
 
     /* força larguras menores nas colunas de dias (sobrescreve os inline styles) */
@@ -101,6 +103,7 @@
         padding: 6px 10px !important;
         font-size: 12px !important;
         text-align: center !important; /* centraliza o total da linha */
+        white-space: nowrap !important;
     }
 
     /* footer totals */
@@ -113,11 +116,21 @@
     .projecao-table tfoot td.total-dia {
         text-align: center !important;
         color: #fff !important;
+        white-space: nowrap !important;
     }
 
     /* tornar o texto TOTAL (thead última th) branco */
     .projecao-table thead th:last-child {
         color: #fff !important;
+    }
+
+    /* total geral na tabela (canto inferior direito) - número em branco */
+    #totalGeralTabela {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        padding: 6px 10px !important;
+        box-sizing: border-box !important;
     }
 
     /* tornar o texto TOTAL DIÁRIO (tfoot primeira td) branco */
@@ -263,7 +276,7 @@
 </div>
 
 <script>
-let clienteIdCounter = 1000;
+let clienteIdCounter = 100;
 
 // Implementação simples de notificação (fallback se não existir)
 function showNotification(message, type) {
@@ -294,6 +307,31 @@ function showNotification(message, type) {
     }
 }
 
+// --- Formatação: apenas apresentação ---
+// Formata número inteiro com separador de milhares '.' (ex: 7000 -> "7.000")
+function formatWithDots(value) {
+    if (value === null || value === undefined || value === '') return '';
+    const n = Number(value);
+    if (!isFinite(n)) return '';
+    // arredonda para inteiro para exibição
+    const rounded = Math.round(n);
+    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Faz o parse de uma string possivelmente formatada (ex: "7.000" ou "1.234,56") para número
+function parseFormattedNumber(s) {
+    if (s === null || s === undefined || s === '') return 0;
+    const str = s.toString();
+    // remove tudo que não seja dígito, ponto, vírgula ou menos
+    const cleaned = str.replace(/[^0-9,.-]/g, '');
+    // Se o usuário usou '.' como separador de milhares, remova-os
+    // Em seguida troque vírgula decimal por ponto, se houver
+    const noThousands = cleaned.replace(/\./g, '');
+    const normalized = noThousands.replace(/,/g, '.');
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function adicionarLinha() {
     const nomeCliente = prompt('Nome do cliente:');
     if (!nomeCliente || nomeCliente.trim() === '') return;
@@ -315,6 +353,8 @@ function adicionarLinha() {
     
     novaLinha.innerHTML = html;
     tbody.appendChild(novaLinha);
+    // garante listeners em inputs recém-criados
+    attachInputListeners();
     calcularTotais();
 }
 
@@ -328,14 +368,15 @@ function calcularTotais() {
         let totalLinha = 0;
         
         inputs.forEach((input, index) => {
-            const valor = parseFloat(input.value.replace(/[^\d.-]/g, '')) || 0;
+            const valor = parseFormattedNumber(input.value) || 0;
             totalLinha += valor;
             totalDias[index] += valor;
         });
         
         const cellTotal = linha.querySelector('.total-linha');
         if (cellTotal) {
-            cellTotal.textContent = 'R$ ' + totalLinha.toFixed(2);
+            // exibição sem casas decimais, apenas separador de milhares
+            cellTotal.textContent = 'R$ ' + formatWithDots(totalLinha);
         }
         
         totalGeral += totalLinha;
@@ -343,11 +384,12 @@ function calcularTotais() {
     
     const totalDiaCells = document.querySelectorAll('.total-dia');
     totalDiaCells.forEach((cell, index) => {
-        cell.textContent = 'R$ ' + totalDias[index].toFixed(0);
+        cell.textContent = 'R$ ' + formatWithDots(totalDias[index]);
     });
     
-    const totalFormatado = 'R$ ' + totalGeral.toFixed(2);
-    document.getElementById('totalGeral').textContent = 'Total Geral: ' + totalFormatado;
+    const totalFormatado = 'R$ ' + formatWithDots(totalGeral);
+    const elTotalGeral = document.getElementById('totalGeral');
+    if (elTotalGeral) elTotalGeral.textContent = 'Total Geral: ' + totalFormatado;
     
     const totalGeralTabela = document.getElementById('totalGeralTabela');
     if (totalGeralTabela) {
@@ -365,9 +407,27 @@ function clearAll() {
 function attachInputListeners() {
     const inputs = document.querySelectorAll('.valor-input');
     inputs.forEach(input => {
-        // avoid duplicate listeners
+        // remove listeners gently to avoid duplicates
         input.removeEventListener('input', calcularTotais);
+        input.removeEventListener('focus', input._projFocusHandler);
+        input.removeEventListener('blur', input._projBlurHandler);
+
         input.addEventListener('input', calcularTotais);
+
+        // ao focar, desfaz a formatação para facilitar edição
+        input._projFocusHandler = function (e) {
+            const v = e.target.value || '';
+            e.target.value = v.toString().replace(/\./g, '');
+        };
+        input.addEventListener('focus', input._projFocusHandler);
+
+        // ao perder o foco, formata com separador de milhares
+        input._projBlurHandler = function (e) {
+            const v = parseFormattedNumber(e.target.value);
+            e.target.value = v ? formatWithDots(v) : '';
+            calcularTotais();
+        };
+        input.addEventListener('blur', input._projBlurHandler);
     });
 }
 
@@ -383,7 +443,7 @@ async function saveProjecao() {
         const cliente = clienteCell ? clienteCell.textContent.trim() : '';
         const inputs = row.querySelectorAll('.valor-input');
         const valores = Array.from(inputs).map(i => {
-            const v = parseFloat(i.value.replace(/[\sR$,.]/g, '').replace(',', '.'));
+            const v = parseFormattedNumber(i.value);
             return Number.isFinite(v) ? v : 0.0;
         });
         linhas.push({ cliente: cliente, valores: valores });
@@ -437,7 +497,8 @@ async function loadProjecao() {
             const inputs = row.querySelectorAll('.valor-input');
             inputs.forEach((input, idx) => {
                 const v = idx < valores.length ? valores[idx] : 0;
-                input.value = v && v !== 0 ? v.toString() : '';
+                // apenas formata para apresentação; não altera valor armazenado
+                input.value = v && v !== 0 ? formatWithDots(v) : '';
             });
         });
 

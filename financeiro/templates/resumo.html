@@ -1,0 +1,770 @@
+{% extends "base.html" %}
+
+{% block title %}Resumo Executivo FRZ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Profissional (padronizado com Dashboard) -->
+    <div class="dashboard-hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>📋 Resumo Executivo FRZ</h1>
+                <p class="hero-subtitle">Visão Geral da Saúde Financeira</p>
+            </div>
+            <div class="hero-filters">
+                <div class="filter-group">
+                    <label>Mês:</label>
+                    <select id="mes" class="premium-select">
+                        <option value="1" {{ 'selected' if dados.mes == 1 else '' }}>Janeiro</option>
+                        <option value="2" {{ 'selected' if dados.mes == 2 else '' }}>Fevereiro</option>
+                        <option value="3" {{ 'selected' if dados.mes == 3 else '' }}>Março</option>
+                        <option value="4" {{ 'selected' if dados.mes == 4 else '' }}>Abril</option>
+                        <option value="5" {{ 'selected' if dados.mes == 5 else '' }}>Maio</option>
+                        <option value="6" {{ 'selected' if dados.mes == 6 else '' }}>Junho</option>
+                        <option value="7" {{ 'selected' if dados.mes == 7 else '' }}>Julho</option>
+                        <option value="8" {{ 'selected' if dados.mes == 8 else '' }}>Agosto</option>
+                        <option value="9" {{ 'selected' if dados.mes == 9 else '' }}>Setembro</option>
+                        <option value="10" {{ 'selected' if dados.mes == 10 else '' }}>Outubro</option>
+                        <option value="11" {{ 'selected' if dados.mes == 11 else '' }}>Novembro</option>
+                        <option value="12" {{ 'selected' if dados.mes == 12 else '' }}>Dezembro</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Ano:</label>
+                    <select id="ano" class="premium-select">
+                        <option value="2023" {{ 'selected' if dados.ano == 2023 else '' }}>2023</option>
+                        <option value="2024" {{ 'selected' if dados.ano == 2024 else '' }}>2024</option>
+                        <option value="2025" {{ 'selected' if dados.ano == 2025 else '' }}>2025</option>
+                        <option value="2026" {{ 'selected' if dados.ano == 2026 else '' }}>2026</option>
+                        <option value="2027" {{ 'selected' if dados.ano == 2027 else '' }}>2027</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Semestre:</label>
+                    <select id="semestre" class="premium-select">
+                        <option value="1">1º Semestre</option>
+                        <option value="2">2º Semestre</option>
+                        <option value="0">Ano Completo</option>
+                    </select>
+                </div>
+                <button onclick="atualizarResumo()" class="btn-atualizar">
+                    <i>🔄</i> Atualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados hidden para JavaScript -->
+    <input type="hidden" id="dados-mes" value="{{ dados.mes }}">
+    <input type="hidden" id="dados-ano" value="{{ dados.ano }}">
+
+    <!-- Status Geral Premium -->
+    <div class="status-executive-premium">
+        <div class="executive-indicator {{ dados.status_geral.cor }}">
+            <div class="executive-glow"></div>
+            <div class="executive-content">
+                <div class="executive-icon">{{ dados.status_geral.emoji }}</div>
+                <div class="executive-info">
+                    <h2 class="executive-title">{{ dados.status_geral.texto }}</h2>
+                    <p class="executive-subtitle">Status Financeiro Atual</p>
+                </div>
+            </div>
+            <div class="executive-pattern"></div>
+        </div>
+    </div>
+
+    <!-- KPIs Principais -->
+    <div class="kpi-section">
+        <!-- Receita -->
+        <div class="kpi-card receita">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-content">
+                <h3>Receita do Mês</h3>
+                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                <div class="kpi-meta">Meta: R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</div>
+                <div class="kpi-percent {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
+                    {{ "{:.1f}".format(dados.kpis.receita.percentual) }}% atingido
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator {{ 'up' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'down' }}">
+                    {% if dados.kpis.receita.percentual >= 80 %}↗️ Ótimo{% elif dados.kpis.receita.percentual >= 50 %}⚠️ Atenção{% else %}↘️ Baixo{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Fluxo de Caixa -->
+        <div class="kpi-card {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}">
+            <div class="kpi-icon">💧</div>
+            <div class="kpi-content">
+                <h3>Fluxo de Caixa</h3>
+                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
+                <div class="kpi-meta">Receber - Pagar</div>
+                <div class="kpi-percent {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
+                    {{ 'Positivo' if dados.kpis.fluxo_caixa.positivo else 'Negativo' }}
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator {{ 'up' if dados.kpis.fluxo_caixa.positivo else 'down' }}">
+                    {{ '💚 Estável' if dados.kpis.fluxo_caixa.positivo else '❤️ Cuidado' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Contas a Receber -->
+        <div class="kpi-card clientes">
+            <div class="kpi-icon">📈</div>
+            <div class="kpi-content">
+                <h3>Contas a Receber</h3>
+                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                <div class="kpi-meta">{{ dados.kpis.receber.count }} títulos</div>
+                <div class="kpi-percent {{ 'danger' if dados.kpis.receber.count_vencidas > 0 else 'success' }}">
+                    {% if dados.kpis.receber.count_vencidas > 0 %}
+                        {{ dados.kpis.receber.count_vencidas }} vencidos
+                    {% else %}
+                        Em dia
+                    {% endif %}
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator {{ 'up' if dados.kpis.receber.count_vencidas == 0 else 'down' }}">
+                    {% if dados.kpis.receber.count_vencidas == 0 %}✅ Ok{% else %}⚠️ Vencidos{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Contas a Pagar -->
+        <div class="kpi-card margem">
+            <div class="kpi-icon">📉</div>
+            <div class="kpi-content">
+                <h3>Contas a Pagar</h3>
+                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                <div class="kpi-meta">{{ dados.kpis.pagar.count }} títulos</div>
+                <div class="kpi-percent {{ 'danger' if dados.kpis.pagar.count_vencidas > 0 else 'success' }}">
+                    {% if dados.kpis.pagar.count_vencidas > 0 %}
+                        {{ dados.kpis.pagar.count_vencidas }} vencidos
+                    {% else %}
+                        Em dia
+                    {% endif %}
+                </div>
+            </div>
+            <div class="kpi-trend">
+                <span class="trend-indicator {{ 'up' if dados.kpis.pagar.count_vencidas == 0 else 'down' }}">
+                    {% if dados.kpis.pagar.count_vencidas == 0 %}✅ Ok{% else %}⚠️ Vencidos{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análises Avançadas -->
+    <div class="analytics-grid">
+            <!-- Alertas (card compacto) -->
+            <div class="analytics-card tendencias">
+                <h3>🚨 Alertas do Sistema</h3>
+                <div class="alerts-card">
+                    {% if dados.alertas|length == 0 %}
+                        <div class="alert-item">Nenhum alerta no período</div>
+                    {% else %}
+                        {% for alerta in dados.alertas %}
+                            <div class="alert-item">
+                                <div class="alert-text">{{ alerta }}</div>
+                                {% if 'vencida' in alerta %}
+                                    <div class="alert-badge">VENCIDO</div>
+                                {% elif 'vencido' in alerta or 'vencidos' in alerta %}
+                                    <div class="alert-badge">VENC.</div>
+                                {% elif 'negativo' in alerta or 'Fluxo de caixa negativo' in alerta %}
+                                    <div class="alert-badge" style="background:#fff0e6;color:#e65a00;">NEG.</div>
+                                {% elif 'Meta' in alerta %}
+                                    <div class="alert-badge" style="background:#fff9e6;color:#b86b00;">META</div>
+                                {% else %}
+                                    <div class="alert-badge" style="background:#eef9f3;color:#1b7a4b;">INFO</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+        <!-- Top 3 Clientes -->
+        <div class="analytics-card top-clientes">
+            <h3>🏆 Top 3 Clientes do Mês</h3>
+            <div class="ranking-list">
+                {% for cliente, valor in dados.top_clientes %}
+                <div class="ranking-item">
+                    <span class="rank">#{{ loop.index }}</span>
+                    <span class="client-name">{{ cliente[:25] }}{{ "..." if cliente|length > 25 else "" }}</span>
+                    <span class="client-value">R$ {{ "{:,.0f}".format(valor) }}</span>
+                </div>
+                {% endfor %}
+                {% if dados.top_clientes|length == 0 %}
+                <div class="ranking-item">
+                    <span class="no-data">Nenhum cliente com faturamento no período</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas Premium -->
+    <div class="executive-actions-premium">
+        <div class="actions-header">
+            <h3>⚡ Ações Executivas</h3>
+            <p>Acesso rápido às principais funcionalidades</p>
+        </div>
+        <div class="actions-grid-premium">
+            <a href="{{ url_for('dashboard') }}" class="action-card-premium dashboard-action">
+                <div class="action-backdrop"></div>
+                <div class="action-content">
+                    <div class="action-icon-premium">📊</div>
+                    <div class="action-details">
+                        <h4>Dashboard</h4>
+                        <p>Análise completa</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+            
+            <a href="{{ url_for('projecao') }}" class="action-card-premium targets-action">
+                <div class="action-backdrop"></div>
+                <div class="action-content">
+                    <div class="action-icon-premium">🎯</div>
+                    <div class="action-details">
+                        <h4>Metas</h4>
+                        <p>Projeções e objetivos</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+            
+            <a href="{{ url_for('importacao') }}" class="action-card-premium import-action">
+                <div class="action-backdrop"></div>
+                <div class="action-content">
+                    <div class="action-icon-premium">📂</div>
+                    <div class="action-details">
+                        <h4>Importar</h4>
+                        <p>Gestão de dados</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+            
+            <a href="{{ url_for('planejamento') }}" class="action-card-premium planning-action">
+                <div class="action-backdrop"></div>
+                <div class="action-content">
+                    <div class="action-icon-premium">📋</div>
+                    <div class="action-details">
+                        <h4>Planejamento</h4>
+                        <p>Estratégia financeira</p>
+                    </div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Status Executive Premium */
+.status-executive-premium {
+    margin: 1rem 0 1.6rem 0;
+    display: flex;
+    justify-content: center;
+    perspective: 1000px;
+}
+.dashboard-container {
+    padding: 0;
+    margin: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+.dashboard-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 35px 40px;
+    margin-bottom: 30px;
+}
+.hero-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.hero-text h1 {
+    font-size: 2.2em;
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+.hero-subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin: 0;
+}
+.hero-filters {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.filter-group label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+.premium-select {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    min-width: 120px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.btn-atualizar {
+    background: #ff6b35;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+.btn-atualizar:hover {
+    background: #e55a2b;
+    transform: translateY(-2px);
+}
+.kpi-section {
+    max-width: 1600px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
+}
+.kpi-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-left: 5px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    transition: transform 0.3s ease;
+    min-height: 125px;
+}
+.kpi-card:hover {
+    transform: translateY(-5px);
+}
+.kpi-card.receita { border-left-color: #4CAF50; }
+.kpi-card.produtividade { border-left-color: #2196F3; }
+.kpi-card.margem { border-left-color: #FF9800; }
+.kpi-card.clientes { border-left-color: #9C27B0; }
+.kpi-icon {
+    font-size: 2.2em;
+    opacity: 0.8;
+    margin-top: 3px;
+}
+.kpi-content {
+    flex: 1;
+}
+.kpi-content h3 {
+    margin: 0 0 6px 0;
+    color: #555;
+    font-size: 0.95em;
+}
+.kpi-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.2;
+    margin: 8px 0;
+}
+.kpi-meta {
+    font-size: 0.85em;
+    color: #777;
+    margin: 5px 0;
+}
+.kpi-percent {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    display: inline-block;
+}
+.kpi-percent.success { background: #e8f5e8; color: #4CAF50; }
+.kpi-percent.warning { background: #fff3e0; color: #FF9800; }
+.kpi-percent.danger { background: #ffebee; color: #f44336; }
+.kpi-trend {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    margin-top: 5px;
+}
+.trend-indicator {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+.trend-indicator.up { background: #e8f5e8; color: #4CAF50; }
+.trend-indicator.down { background: #ffebee; color: #f44336; }
+.trend-indicator.stable { background: #f0f0f0; color: #666; }
+
+.executive-indicator {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 1.2rem 1.6rem;
+    box-shadow: 
+        0 12px 30px rgba(102, 126, 234, 0.24),
+        0 6px 12px rgba(102, 126, 234, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+    min-width: 360px;
+    animation: statusPulse 3s ease-in-out infinite;
+    transform: translateZ(0);
+}
+
+.executive-indicator.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    box-shadow: 
+        0 20px 40px rgba(240, 147, 251, 0.3),
+        0 8px 16px rgba(240, 147, 251, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.executive-indicator.danger {
+    background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+    box-shadow: 
+        0 20px 40px rgba(252, 70, 107, 0.3),
+        0 8px 16px rgba(252, 70, 107, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.executive-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: glowRotate 8s linear infinite;
+}
+
+.executive-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 2;
+}
+
+.executive-icon {
+    font-size: 2.4rem;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    animation: iconFloat 2s ease-in-out infinite alternate;
+}
+
+.executive-info {
+    flex: 1;
+}
+
+.executive-title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: -0.5px;
+}
+
+.executive-subtitle {
+    margin: 0.5rem 0 0 0;
+    color: rgba(255,255,255,0.9);
+    font-size: 1rem;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.executive-pattern {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+    opacity: 0.6;
+}
+
+/* Ações Executivas Premium */
+.executive-actions-premium {
+    margin: 3rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.08),
+        0 8px 16px rgba(0,0,0,0.04);
+    border: 1px solid rgba(255,255,255,0.8);
+}
+
+.actions-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.actions-header h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.actions-header p {
+    color: #6c757d;
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.actions-grid-premium {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.action-card-premium {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 
+        0 8px 25px rgba(0,0,0,0.08),
+        0 3px 6px rgba(0,0,0,0.04);
+}
+
+.action-card-premium:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 25px 50px rgba(0,0,0,0.15),
+        0 10px 20px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dashboard-action:hover .action-backdrop {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    opacity: 1;
+}
+
+.targets-action:hover .action-backdrop {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 142, 83, 0.1) 100%);
+    opacity: 1;
+}
+
+.import-action:hover .action-backdrop {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 178, 172, 0.1) 100%);
+    opacity: 1;
+}
+
+.planning-action:hover .action-backdrop {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+    opacity: 1;
+}
+
+.action-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    z-index: 2;
+    position: relative;
+}
+
+.action-icon-premium {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.action-details h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.2;
+}
+
+.action-details p {
+    margin: 0.3rem 0 0 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.action-arrow {
+    font-size: 1.5rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    z-index: 2;
+    position: relative;
+}
+
+.action-card-premium:hover .action-arrow {
+    color: #2c3e50;
+    transform: translateX(5px);
+}
+
+/* Animações */
+@keyframes statusPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes glowRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes iconFloat {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-6px); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .executive-indicator {
+        min-width: auto;
+        width: 100%;
+        padding: 1.5rem 2rem;
+    }
+    
+    .executive-title {
+        font-size: 1.5rem;
+    }
+    
+    .executive-icon {
+        font-size: 2.5rem;
+    }
+    
+    .actions-grid-premium {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .action-card-premium {
+        padding: 1.5rem;
+    }
+}
+
+/* KPI Cards com melhor animação */
+.kpi-card {
+    animation: kpiSlideIn 0.5s ease-out forwards;
+    animation-delay: calc(var(--delay) * 0.06s);
+    opacity: 0;
+    transform: translateY(18px);
+    padding: 14px;
+    min-height: 100px;
+}
+
+.kpi-card:nth-child(1) { --delay: 1; }
+.kpi-card:nth-child(2) { --delay: 2; }
+.kpi-card:nth-child(3) { --delay: 3; }
+.kpi-card:nth-child(4) { --delay: 4; }
+
+@keyframes kpiSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Alertas compactos */
+.alerts-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+    max-width: 720px;
+}
+.alert-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+.alert-badge {
+    display: inline-block;
+    background: #ffecec;
+    color: #c0392b;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-left: auto;
+}
+</style>
+
+<script>
+function atualizarResumo() {
+    const mes = document.getElementById('mes').value;
+    const ano = document.getElementById('ano').value;
+    window.location.href = `/resumo?mes=${mes}&ano=${ano}`;
+}
+
+// Auto-selecionar valores atuais nos selects
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mesAtual = urlParams.get('mes') || document.getElementById('dados-mes').value;
+    const anoAtual = urlParams.get('ano') || document.getElementById('dados-ano').value;
+    
+    document.getElementById('mes').value = mesAtual;
+    document.getElementById('ano').value = anoAtual;
+    
+    // Animações de entrada
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

@@ -1013,7 +1013,187 @@ def dashboard():
 
 @app.route("/resumo")
 def resumo():
-    return "<h2>Página de Resumo (em construção)</h2>"
+    """Página de resumo executivo com KPIs principais e alertas"""
+    from datetime import datetime, timedelta
+    
+    # Pegar parâmetros de filtro (padrão: mês atual)
+    mes = request.args.get('mes', datetime.now().month)
+    ano = request.args.get('ano', datetime.now().year)
+    
+    try:
+        mes = int(mes)
+        ano = int(ano)
+    except (ValueError, TypeError):
+        mes = datetime.now().month
+        ano = datetime.now().year
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # ===== CALCULAR KPIs PRINCIPAIS =====
+    
+    # 1. RECEITA TOTAL (realizada vs projetada)
+    pattern = f"%/{mes:02d}/{ano}%"
+    
+    # Receita realizada (apenas clientes dos 19 e status RECEBIDO)
+    clientes_19 = [
+        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
+        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
+        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
+        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
+        'PEIXES MEGGS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
+    ]
+    
+    cur.execute("""
+        SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
+        FROM contas_receber
+        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+    """, (pattern,))
+    receita_realizada = cur.fetchone()[0] or 0.0
+    
+    # Receita projetada (meta da projeção)
+    cur.execute("""
+        SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0)
+        FROM projecao 
+        WHERE mes = ? AND ano = ?
+    """, (mes, ano))
+    receita_meta = cur.fetchone()[0] or 0.0
+    
+    # 2. CONTAS A RECEBER (total e vencidas)
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
+            COUNT(*)
+        FROM contas_receber
+        WHERE status != 'RECEBIDO' AND status != 'Pago'
+    """, ())
+    receber_dados = cur.fetchone()
+    total_receber = receber_dados[0] or 0.0
+    count_receber = receber_dados[1] or 0
+    
+    # Contas vencidas (vencimento < hoje)
+    hoje = datetime.now().strftime("%d/%m/%Y")
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
+            COUNT(*)
+        FROM contas_receber
+        WHERE status != 'RECEBIDO' AND status != 'Pago'
+        AND LENGTH(vencimento) = 10
+        AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
+    """, ())
+    receber_vencidas_dados = cur.fetchone()
+    receber_vencidas = receber_vencidas_dados[0] or 0.0
+    count_receber_vencidas = receber_vencidas_dados[1] or 0
+    
+    # 3. CONTAS A PAGAR (total e vencidas)
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
+            COUNT(*)
+        FROM contas_pagar
+        WHERE status != 'PAGO' AND status != 'Pago'
+    """, ())
+    pagar_dados = cur.fetchone()
+    total_pagar = pagar_dados[0] or 0.0
+    count_pagar = pagar_dados[1] or 0
+    
+    # Contas vencidas (vencimento < hoje)
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
+            COUNT(*)
+        FROM contas_pagar
+        WHERE status != 'PAGO' AND status != 'Pago'
+        AND LENGTH(vencimento) = 10
+        AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
+    """, ())
+    pagar_vencidas_dados = cur.fetchone()
+    pagar_vencidas = pagar_vencidas_dados[0] or 0.0
+    count_pagar_vencidas = pagar_vencidas_dados[1] or 0
+    
+    # 4. FLUXO DE CAIXA (simplificado: receber - pagar)
+    fluxo_caixa = total_receber - total_pagar
+    
+    # 5. TOP 3 CLIENTES DO MÊS (por valor realizado)
+    cur.execute("""
+        SELECT 
+            cliente,
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0) as total
+        FROM contas_receber
+        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+        GROUP BY cliente
+        ORDER BY total DESC
+        LIMIT 3
+    """, (pattern,))
+    top_clientes = cur.fetchall()
+    
+    # ===== CALCULAR STATUS GERAL =====
+    # Lógica: Verde se receita > 80% da meta e fluxo positivo
+    #         Amarelo se receita > 50% da meta OU fluxo positivo
+    #         Vermelho caso contrário
+    
+    percentual_meta = (receita_realizada / receita_meta * 100) if receita_meta > 0 else 0
+    
+    if percentual_meta >= 80 and fluxo_caixa >= 0:
+        status_geral = {"cor": "success", "texto": "Situação Estável", "emoji": "🟢"}
+    elif percentual_meta >= 50 or fluxo_caixa >= 0:
+        status_geral = {"cor": "warning", "texto": "Atenção Necessária", "emoji": "🟡"}
+    else:
+        status_geral = {"cor": "danger", "texto": "Ação Urgente", "emoji": "🔴"}
+    
+    # ===== ALERTAS CONTEXTUAIS =====
+    alertas = []
+    
+    if count_receber_vencidas > 0:
+        alertas.append(f"{count_receber_vencidas} conta(s) a receber vencida(s) - R$ {receber_vencidas:,.0f}")
+    
+    if count_pagar_vencidas > 0:
+        alertas.append(f"{count_pagar_vencidas} conta(s) a pagar vencida(s) - R$ {pagar_vencidas:,.0f}")
+    
+    if percentual_meta < 50:
+        alertas.append(f"Meta do mês: apenas {percentual_meta:.1f}% atingida")
+    
+    if fluxo_caixa < 0:
+        alertas.append(f"Fluxo de caixa negativo: R$ {fluxo_caixa:,.0f}")
+    
+    if not alertas:
+        alertas.append("Nenhum alerta crítico no momento")
+    
+    # ===== ESTRUTURA DE DADOS PARA O TEMPLATE =====
+    dados_resumo = {
+        'mes': mes,
+        'ano': ano,
+        'status_geral': status_geral,
+        'kpis': {
+            'receita': {
+                'realizada': receita_realizada,
+                'meta': receita_meta,
+                'percentual': percentual_meta
+            },
+            'fluxo_caixa': {
+                'valor': fluxo_caixa,
+                'positivo': fluxo_caixa >= 0
+            },
+            'receber': {
+                'total': total_receber,
+                'vencidas': receber_vencidas,
+                'count': count_receber,
+                'count_vencidas': count_receber_vencidas
+            },
+            'pagar': {
+                'total': total_pagar,
+                'vencidas': pagar_vencidas,
+                'count': count_pagar,
+                'count_vencidas': count_pagar_vencidas
+            }
+        },
+        'top_clientes': top_clientes,
+        'alertas': alertas
+    }
+    
+    conn.close()
+    return render_template('resumo.html', dados=dados_resumo)
 
 
 @app.route("/consolidacao")
