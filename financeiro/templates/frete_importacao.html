@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="board-header fade-in-up">
+    <h1>📦 Importação de Dados - Frete</h1>
+    <div class="subtitle">Gerencie uploads de arquivos para o módulo de frete</div>
+</div>
+
+<div class="import-cards">
+    <div class="card fade-in-up">
+        <h2 style="margin-bottom:12px">📂 Importar Arquivos de Frete</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="drop-zone" id="dropZone">
+                <div style="text-align:center; padding:18px;">
+                    <strong id="dropText">Arraste e solte os arquivos aqui ou clique para selecionar</strong>
+                    <div style="font-size:12px; color:#6b7280; margin-top:6px">Suporta CSV e XLSX para dados de frete</div>
+                </div>
+                <input type="file" name="files" id="fileInput" multiple hidden>
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+                <button type="submit" class="btn btn-primary">📤 Enviar</button>
+                <button type="button" id="btnClearInput" class="btn btn-secondary">Limpar seleção</button>
+            </div>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="messages">
+              {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="card fade-in-up">
+        <h3 style="margin-top:0;">📋 Histórico de uploads - Frete</h3>
+        {% if uploads and uploads|length > 0 %}
+        <div class="uploads-table-wrapper">
+            <table class="uploads-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Arquivo</th>
+                        <th>Tamanho (KB)</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in uploads %}
+                    <tr>
+                        <td>{{ f.mtime }}</td>
+                        <td><div class="file-name" title="{{ f.name }}">{{ f.name }}</div></td>
+                        <td style="text-align:right">{{ (f.size / 1024) | round(1) }}</td>
+                        <td><a href="{{ url_for('frete.uploaded_file', filename=f.name) }}" target="_blank">Baixar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div style="color:#64748b; margin-top:8px;">Nenhum arquivo encontrado na pasta de uploads do frete.</div>
+        {% endif %}
+    </div>
+
+    <!-- Card informativo sobre o formato esperado -->
+    <div class="card fade-in-up" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0ea5e9;">
+        <h3 style="margin-top:0; color: #0c4a6e;">📝 Informações sobre Importação</h3>
+        <div style="color: #164e63; line-height: 1.6;">
+            <p><strong>Formatos aceitos:</strong> CSV (separado por vírgula ou ponto-e-vírgula) e XLSX</p>
+            <p><strong>Colunas esperadas para frete:</strong></p>
+            <ul style="margin: 8px 0; padding-left: 20px;">
+                <li>Data de envio/recebimento</li>
+                <li>Cliente/Fornecedor</li>
+                <li>Origem e Destino</li>
+                <li>Valor do frete</li>
+                <li>Tipo de transporte</li>
+                <li>Status da entrega</li>
+            </ul>
+            <p style="margin-top: 12px;"><em>⚠️ A funcionalidade de processamento está sendo desenvolvida.</em></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const dropText = document.getElementById("dropText");
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+        dropText.textContent = "Solte os arquivos aqui";
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+        dropText.textContent = "Arraste e solte os arquivos aqui ou clique para selecionar";
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileInput.files = e.dataTransfer.files;
+        dropZone.classList.remove("dragover");
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+    fileInput.addEventListener("change", () => {
+        dropText.textContent = fileInput.files.length + " arquivo(s) selecionado(s)";
+    });
+
+    document.getElementById('btnClearInput').addEventListener('click', function(){
+        fileInput.value = null;
+        dropText.textContent = 'Arraste e solte os arquivos aqui ou clique para selecionar';
+    });
+</script>
+{% endblock %}
