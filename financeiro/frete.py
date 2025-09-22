@@ -377,16 +377,27 @@ def importacao():
 
         for file in files:
             if file.filename:
-                # Salvar arquivo temporariamente
-                filepath = os.path.join(uploads_dir, file.filename)
+                # Normalizar nome original e decidir nome de salvamento
+                orig_name = file.filename
+                name_lower = orig_name.lower()
+                # detectar variações "valecio"/"valencio" (case-insensitive)
+                if 'valecio' in name_lower or 'valencio' in name_lower:
+                    base = 'Valencio_Ajustes'
+                    ext = os.path.splitext(orig_name)[1]
+                    save_name = f"{base}{ext}"
+                else:
+                    save_name = orig_name
+
+                # Salvar arquivo com o nome decidido
+                filepath = os.path.join(uploads_dir, save_name)
                 file.save(filepath)
                 # Processar o arquivo segundo a regra do FRIGORIFICO VALENCIO
                 try:
                     processed = process_frete_file(filepath)
-                    flash(f'{file.filename}: Arquivo salvo e processado -> {os.path.basename(processed)}', 'success')
+                    flash(f'{orig_name}: Arquivo salvo como {save_name} e processado -> {os.path.basename(processed)}', 'success')
                 except Exception as e:
                     # em caso de erro, avisa mas não interrompe o loop
-                    flash(f'{file.filename}: Erro no processamento ({str(e)})', 'error')
+                    flash(f'{orig_name}: Erro no processamento ({str(e)})', 'error')
 
         return redirect(url_for('frete.importacao'))
 
