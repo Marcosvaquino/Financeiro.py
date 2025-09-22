@@ -391,6 +391,26 @@ def importacao():
                 # Salvar arquivo com o nome decidido
                 filepath = os.path.join(uploads_dir, save_name)
                 file.save(filepath)
+
+                # Se for um arquivo PREVIA MANIFESTO, apenas salvar com o nome fixo Manifesto_Frete e não processar
+                if 'previa manifesto' in orig_name.lower():
+                    mf_base = 'Manifesto_Frete'
+                    ext = os.path.splitext(orig_name)[1]
+                    manifest_name = f"{mf_base}{ext}"
+                    manifest_path = os.path.join(uploads_dir, manifest_name)
+                    # sobrescreve o Manifesto_Frete existente
+                    try:
+                        # move/rename the saved file to the manifest_name (overwrite if exists)
+                        if os.path.abspath(filepath) != os.path.abspath(manifest_path):
+                            if os.path.exists(manifest_path):
+                                os.remove(manifest_path)
+                            os.replace(filepath, manifest_path)
+                        flash(f'{orig_name}: Arquivo salvo como {manifest_name} (manifesto principal)', 'success')
+                    except Exception as e:
+                        flash(f'{orig_name}: Erro ao salvar Manifesto_Frete ({str(e)})', 'error')
+                    # não processar este arquivo
+                    continue
+
                 # Processar o arquivo segundo a regra do FRIGORIFICO VALENCIO
                 try:
                     processed = process_frete_file(filepath)
