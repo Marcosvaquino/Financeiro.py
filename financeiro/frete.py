@@ -430,8 +430,14 @@ def importacao():
             try:
                 mtime = os.path.getmtime(fpath)
                 size = os.path.getsize(fpath)
+                display_name = fname
+                parts = fname.split('.')
+                if len(parts) >= 3 and parts[-2].isdigit():
+                    display_name = '.'.join(parts[:-2] + [parts[-1]])
+
                 uploads.append({
                     'name': fname,
+                    'display_name': display_name,
                     'mtime': datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S'),
                     'size': size
                 })

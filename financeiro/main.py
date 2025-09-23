@@ -1237,8 +1237,18 @@ def importacao():
             try:
                 mtime = os.path.getmtime(fpath)
                 size = os.path.getsize(fpath)
+
+                # Gera um nome de exibição amigável: remove timestamp inserido pelos uploads temporários
+                display_name = fname
+                # Padrão: base.TIMESTAMP.ext  (ex: contas-a-receber.1758628304.csv)
+                parts = fname.split('.')
+                if len(parts) >= 3 and parts[-2].isdigit():
+                    # junta a parte base e a extensão
+                    display_name = '.'.join(parts[:-2] + [parts[-1]])
+
                 uploads.append({
-                    'name': fname,
+                    'name': fname,            # nome do arquivo no disco (usado para download)
+                    'display_name': display_name,  # nome amigável mostrado na UI
                     'mtime': datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S'),
                     'size': size
                 })

@@ -1,6 +1,16 @@
 import os
 import pandas as pd
 import sqlite3
+import time
+import sys
+
+# Tenta forçar stdout para UTF-8 durante execução local para evitar
+# UnicodeEncodeError em consoles Windows (cp1252) ao imprimir emojis.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    # reconfigure pode não estar disponível em alguns ambientes; ok continuar
+    pass
 
 # Caminho para o banco na raiz do projeto (um nível acima)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -10,7 +20,53 @@ DB_PATH = os.path.join(BASE_DIR, "financeiro.db")
 # Conexão com o banco
 # =========================
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    # Aumenta timeout para reduzir chances de 'database is locked' em operações concorrentes
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    try:
+        # Ativa WAL (write-ahead logging) para melhorar concorrência entre leitura/escrita
+        conn.execute('PRAGMA journal_mode=WAL;')
+        # Seta busy timeout em ms (para SQLite aguardar locks por até 30s)
+        conn.execute('PRAGMA busy_timeout = 30000;')
+    except Exception:
+        pass
+    return conn
+
+
+def _cleanup_upload_variants(uploads_dir, standard_filename, keep_filename=None):
+    """Remove arquivos variantes como base.TIMESTAMP.ext e backups, mantendo keep_filename se fornecido.
+    Uso: evita duplicação de arquivos com timestamps na pasta de uploads.
+    """
+    base, ext = os.path.splitext(standard_filename)
+    for fname in os.listdir(uploads_dir):
+        # Ignora diretórios
+        fpath = os.path.join(uploads_dir, fname)
+        if os.path.isdir(fpath):
+            continue
+
+        # Se é exatamente o padrão e é o que queremos manter, pula
+        if keep_filename and fname == keep_filename:
+            continue
+
+        # Remove arquivos que comecem com base. e terminem com ext (e.g. base.TIMESTAMP.ext)
+        if fname.startswith(base + '.') and fname.endswith(ext):
+            # Pode tentar remover com retries
+            for attempt in range(3):
+                try:
+                    os.remove(fpath)
+                    print(f"🗑️ Removido variante: {fname}")
+                    break
+                except Exception as e:
+                    print(f"⚠️ Falha ao remover {fname} (tentativa {attempt+1}): {str(e)}")
+                    time.sleep(0.3)
+                    continue
+
+        # Remove backup marker files
+        if fname.startswith(standard_filename) and (fname.endswith('.backup') or '.backup.' in fname):
+            try:
+                os.remove(fpath)
+                print(f"🗑️ Removido backup: {fname}")
+            except Exception as e:
+                print(f"⚠️ Falha ao remover backup {fname}: {str(e)}")
 
 
 # =========================
@@ -122,14 +178,49 @@ def importar_arquivo(file_storage):
     os.makedirs(uploads_dir, exist_ok=True)
     filepath = os.path.join(uploads_dir, standard_filename)
     
-    # Remove arquivo anterior se existir
+    # Salva com um nome temporário para evitar colisões/locks (ex: OneDrive)
+    timestamp = int(time.time())
+    base, ext = os.path.splitext(standard_filename)
+    # preserva extensão (.csv ou .xlsx)
+    temp_filename = f"{base}.{timestamp}{ext}"
+    temp_path = os.path.join(uploads_dir, temp_filename)
+
+    try:
+        file_storage.save(temp_path)
+        print(f"💾 Arquivo salvo temporariamente como: {temp_filename}")
+    except Exception as e:
+        return f"❌ Falha ao salvar arquivo enviado: {str(e)}"
+
+    # Tenta remover o arquivo padrão anterior (se existir), com retries curtos
     if os.path.exists(filepath):
-        os.remove(filepath)
-        print(f"🗑️ Arquivo anterior removido: {standard_filename}")
-    
-    # Salva com nome padronizado
-    file_storage.save(filepath)
-    print(f"💾 Arquivo salvo como: {standard_filename}")
+        removed = False
+        for attempt in range(5):
+            try:
+                os.remove(filepath)
+                print(f"🗑️ Arquivo anterior removido: {standard_filename}")
+                removed = True
+                break
+            except PermissionError as pe:
+                # Arquivo está sendo usado por outro processo; aguarda e tenta novamente
+                print(f"⚠️ Tentativa {attempt+1}: não foi possível remover {standard_filename} (PermissionError). Retentando em 0.5s...")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"⚠️ Erro ao remover arquivo antigo: {str(e)}")
+                break
+
+        if not removed:
+            # Se não conseguiu remover, tentamos renomear como backup; se também falhar, seguimos usando o arquivo temporário
+            backup_name = f"{standard_filename}.backup.{timestamp}"
+            backup_path = os.path.join(uploads_dir, backup_name)
+            try:
+                os.replace(filepath, backup_path)
+                print(f"� Arquivo antigo renomeado para backup: {backup_name}")
+                removed = True
+            except Exception as e:
+                print(f"⚠️ Não foi possível renomear arquivo antigo (provável lock). Continuando com o arquivo temporário: {str(e)}")
+
+    # Usaremos o arquivo salvo temporariamente para o processamento
+    filepath = temp_path
 
     try:
         # Limpa dados anteriores do banco antes de importar
@@ -137,18 +228,90 @@ def importar_arquivo(file_storage):
         cur = conn.cursor()
         
         if action == "receber":
+            # Executa DELETE, commita e fecha a conexão para liberar locks antes de reabrir conexão
             cur.execute("DELETE FROM contas_receber")
-            print("🧹 Dados anteriores de contas a receber removidos")
-            salvar_contas_receber(filepath)
             conn.commit()
             conn.close()
+            print("🧹 Dados anteriores de contas a receber removidos (commit realizado)")
+
+            # Agora a função de importação abre sua própria conexão para inserir os dados
+            salvar_contas_receber(filepath)
+
+            # Tentar mover o arquivo temporário para o nome padrão (sobrescrever)
+            moved = False
+            try:
+                for attempt in range(5):
+                    try:
+                        # move (replace) temp -> padrão
+                        if os.path.exists(temp_path):
+                            os.replace(temp_path, os.path.join(uploads_dir, standard_filename))
+                            print(f"🔁 Arquivo temporário movido para: {standard_filename}")
+                            moved = True
+                            break
+                    except Exception as e:
+                        print(f"⚠️ Tentativa {attempt+1} mover temp->padrão falhou: {str(e)}")
+                        time.sleep(0.5)
+
+                # Se não conseguiu mover, grava um marker apontando pro temp para referência
+                marker = os.path.join(uploads_dir, f"{standard_filename}.current")
+                try:
+                    with open(marker, 'w', encoding='utf-8') as mf:
+                        # se moveu, manter o padrão; senão, aponta para o temp atual
+                        mf.write(standard_filename if moved else os.path.basename(filepath))
+                    print(f"📌 Marker criado: {os.path.basename(marker)} -> {os.path.basename(filepath)}")
+                except Exception as e:
+                    print(f"⚠️ Não foi possível criar marker de arquivo atual: {str(e)}")
+
+            except Exception:
+                pass
+
+            # Após import bem-sucedida, tenta limpar variantes e backups, mantendo o arquivo atual
+            try:
+                keep = standard_filename if moved else os.path.basename(filepath)
+                _cleanup_upload_variants(uploads_dir, standard_filename, keep_filename=keep)
+            except Exception as e:
+                print(f"⚠️ Falha na limpeza de variantes: {str(e)}")
+
             return "📥 Contas a Receber importadas com sucesso!"
+
         elif action == "pagar":
             cur.execute("DELETE FROM contas_pagar")
-            print("🧹 Dados anteriores de contas a pagar removidos")
-            salvar_contas_pagar(filepath)
             conn.commit()
             conn.close()
+            print("🧹 Dados anteriores de contas a pagar removidos (commit realizado)")
+            salvar_contas_pagar(filepath)
+
+            # Tentar mover temp -> padrão (analogamente)
+            moved = False
+            try:
+                for attempt in range(5):
+                    try:
+                        if os.path.exists(temp_path):
+                            os.replace(temp_path, os.path.join(uploads_dir, standard_filename))
+                            print(f"🔁 Arquivo temporário movido para: {standard_filename}")
+                            moved = True
+                            break
+                    except Exception as e:
+                        print(f"⚠️ Tentativa {attempt+1} mover temp->padrão falhou: {str(e)}")
+                        time.sleep(0.5)
+
+                marker = os.path.join(uploads_dir, f"{standard_filename}.current")
+                try:
+                    with open(marker, 'w', encoding='utf-8') as mf:
+                        mf.write(standard_filename if moved else os.path.basename(filepath))
+                    print(f"📌 Marker criado: {os.path.basename(marker)} -> {os.path.basename(filepath)}")
+                except Exception as e:
+                    print(f"⚠️ Não foi possível criar marker de arquivo atual: {str(e)}")
+            except Exception:
+                pass
+
+            # Limpeza de variantes/backups
+            try:
+                keep = standard_filename if moved else os.path.basename(filepath)
+                _cleanup_upload_variants(uploads_dir, standard_filename, keep_filename=keep)
+            except Exception as e:
+                print(f"⚠️ Falha na limpeza de variantes: {str(e)}")
+
             return "📤 Contas a Pagar importadas com sucesso!"
             
     except Exception as e:

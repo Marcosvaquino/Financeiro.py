@@ -8,7 +8,17 @@ DB_PATH = os.path.join(BASE_DIR, "financeiro.db")
 
 def get_connection():
     """Cria conexão com o banco SQLite"""
-    return sqlite3.connect(DB_PATH)
+    # Aumenta timeout para reduzir chances de 'database is locked' em operações concorrentes
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    try:
+        # Ativa WAL (write-ahead logging) para melhorar concorrência entre leitura/escrita
+        conn.execute('PRAGMA journal_mode=WAL;')
+        # Seta busy timeout em ms (para SQLite aguardar locks por até 30s)
+        conn.execute('PRAGMA busy_timeout = 30000;')
+    except Exception:
+        # Se a execução das PRAGMAs falhar (por exemplo, em bancos remotos), seguimos com a conexão
+        pass
+    return conn
 
 def init_db():
     """Inicializa o banco de dados criando tabelas a partir do schema.sql"""

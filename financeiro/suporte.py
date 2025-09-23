@@ -2,13 +2,13 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from .database import get_connection
 
 bp = Blueprint('suporte', __name__, url_prefix='/frete/suporte')
 
 def get_db_connection():
-    """Retorna conexão com o banco de dados"""
-    db_path = Path(__file__).parent.parent / 'financeiro.db'
-    conn = sqlite3.connect(str(db_path))
+    """Retorna conexão com o banco de dados usando o wrapper central (com timeout/PRAGMA)."""
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
     return conn
 

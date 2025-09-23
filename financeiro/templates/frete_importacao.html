@@ -52,7 +52,10 @@
                     {% for f in uploads %}
                     <tr>
                         <td>{{ f.mtime }}</td>
-                        <td><div class="file-name" title="{{ f.name }}">{{ f.name }}</div></td>
+                        <td>
+                            {% set display = f.display_name if f.display_name is defined else f.name %}
+                            <div class="file-name" title="{{ f.name }}">{{ display }}</div>
+                        </td>
                         <td style="text-align:right">{{ (f.size / 1024) | round(1) }}</td>
                         <td><a href="{{ url_for('frete.uploaded_file', filename=f.name) }}" target="_blank">Baixar</a></td>
                     </tr>

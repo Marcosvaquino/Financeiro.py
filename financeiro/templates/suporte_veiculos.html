@@ -4,21 +4,9 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">
-            <i class="fas fa-truck"></i>
-            Gerenciamento de Veículos
-        </h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVeiculoModal">
-                <i class="fas fa-plus"></i>
-                Adicionar Veículo
-            </button>
-            <button type="button" class="btn btn-info ms-2" onclick="detectarPlacasNovas()">
-                <i class="fas fa-search"></i>
-                Detectar Novas
-            </button>
-        </div>
+
+    <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2"><i class="fas fa-truck"></i> Gerenciamento de Veículos</h1>
     </div>
 
     <!-- Navegação breadcrumb -->
@@ -29,7 +17,40 @@
         </ol>
     </nav>
 
-    <!-- Tabela de veículos -->
+    <!-- Formulário de Adição no topo -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('suporte.add_veiculo') }}" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="placa" class="form-label">Placa</label>
+                    <input type="text" class="form-control form-control-lg" id="placa" name="placa" required placeholder="ABC1234" style="text-transform:uppercase; font-weight:bold; text-align:center;">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status" required>
+                        <option value="">Selecione</option>
+                        <option value="FIXO">FIXO</option>
+                        <option value="SPOT">SPOT</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="tipologia" class="form-label">Tipologia</label>
+                    <select class="form-select" id="tipologia" name="tipologia" required>
+                        <option value="">Selecione</option>
+                        <option value="3/4">3/4</option>
+                        <option value="TRUCK">TRUCK</option>
+                        <option value="TOCO">TOCO</option>
+                        <option value="VUC">VUC</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-success btn-lg">Adicionar veículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de veículos abaixo -->
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">Veículos Cadastrados</h5>
@@ -44,41 +65,20 @@
                             <th>Tipologia</th>
                             <th>Data Cadastro</th>
                             <th>Ativo</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for veiculo in veiculos %}
                         <tr>
                             <td><strong>{{ veiculo.placa }}</strong></td>
-                            <td>
-                                <span class="badge bg-{{ 'success' if veiculo.status == 'FIXO' else 'warning' }}">
-                                    {{ veiculo.status }}
-                                </span>
-                            </td>
+                            <td><span class="badge bg-{{ 'success' if veiculo.status == 'FIXO' else 'warning' }}">{{ veiculo.status }}</span></td>
                             <td>{{ veiculo.tipologia }}</td>
                             <td>{{ veiculo.data_cadastro.split(' ')[0] if veiculo.data_cadastro else '' }}</td>
-                            <td>
-                                <span class="badge bg-{{ 'success' if veiculo.ativo else 'secondary' }}">
-                                    {{ 'Ativo' if veiculo.ativo else 'Inativo' }}
-                                </span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-primary me-1" 
-                                        onclick="editVeiculo('{{ veiculo.placa }}', '{{ veiculo.status }}', '{{ veiculo.tipologia }}', {{ 'true' if veiculo.ativo else 'false' }})"
-                                        title="Editar veículo">
-                                    <i class="fas fa-edit"></i> Editar
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        onclick="deleteVeiculo('{{ veiculo.placa }}')"
-                                        title="Excluir veículo">
-                                    <i class="fas fa-trash"></i> Excluir
-                                </button>
-                            </td>
+                            <td><span class="badge bg-{{ 'success' if veiculo.ativo else 'secondary' }}">{{ 'Ativo' if veiculo.ativo else 'Inativo' }}</span></td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted">Nenhum veículo cadastrado</td>
+                            <td colspan="5" class="text-center text-muted">Nenhum veículo cadastrado</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -86,6 +86,38 @@
             </div>
         </div>
     </div>
+        <!-- Formulário de Adição no topo -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('suporte.add_veiculo') }}" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="placa" class="form-label">Placa</label>
+                        <input type="text" class="form-control form-control-lg" id="placa" name="placa" required placeholder="ABC1234" style="text-transform:uppercase; font-weight:bold; text-align:center;">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">Selecione</option>
+                            <option value="FIXO">FIXO</option>
+                            <option value="SPOT">SPOT</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipologia" class="form-label">Tipologia</label>
+                        <select class="form-select" id="tipologia" name="tipologia" required>
+                            <option value="">Selecione</option>
+                            <option value="3/4">3/4</option>
+                            <option value="TRUCK">TRUCK</option>
+                            <option value="TOCO">TOCO</option>
+                            <option value="VUC">VUC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button type="submit" class="btn btn-success btn-lg">Adicionar veículo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 </div>
 
 <!-- Modal para adicionar veículo -->
