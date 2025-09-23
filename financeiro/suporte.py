@@ -148,3 +148,88 @@ def detect_placas_novas():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# =============================================================================
+# ROTAS PARA GERENCIAMENTO DE CLIENTES
+# =============================================================================
+
+@bp.route('/clientes')
+def clientes():
+    """Lista todos os clientes cadastrados"""
+    conn = get_db_connection()
+    clientes = conn.execute('''
+        SELECT nome_real, nome_ajustado, data_cadastro, ativo 
+        FROM clientes_suporte 
+        ORDER BY nome_real
+    ''').fetchall()
+    conn.close()
+    return render_template('suporte_clientes.html', clientes=clientes)
+
+@bp.route('/clientes/add', methods=['POST'])
+def add_cliente():
+    """Adiciona um novo cliente"""
+    nome_real = request.form.get('nome_real', '').strip()
+    nome_ajustado = request.form.get('nome_ajustado', '').strip().upper()
+    
+    if not nome_real or not nome_ajustado:
+        flash('Nome real e nome ajustado são obrigatórios', 'error')
+        return redirect(url_for('suporte.clientes'))
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO clientes_suporte (nome_real, nome_ajustado, data_cadastro, ativo)
+            VALUES (?, ?, ?, ?)
+        ''', (nome_real, nome_ajustado, datetime.now(), True))
+        conn.commit()
+        flash(f'Cliente "{nome_real}" cadastrado com sucesso', 'success')
+    except sqlite3.IntegrityError:
+        flash(f'Cliente "{nome_real}" já está cadastrado', 'error')
+    except Exception as e:
+        flash(f'Erro ao cadastrar cliente: {str(e)}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('suporte.clientes'))
+
+@bp.route('/clientes/edit/<nome_real>', methods=['POST'])
+def edit_cliente(nome_real):
+    """Edita um cliente existente"""
+    novo_nome_real = request.form.get('nome_real', '').strip()
+    nome_ajustado = request.form.get('nome_ajustado', '').strip().upper()
+    ativo = request.form.get('ativo') == 'on'
+    
+    if not novo_nome_real or not nome_ajustado:
+        flash('Nome real e nome ajustado são obrigatórios', 'error')
+        return redirect(url_for('suporte.clientes'))
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            UPDATE clientes_suporte 
+            SET nome_real = ?, nome_ajustado = ?, ativo = ?
+            WHERE nome_real = ?
+        ''', (novo_nome_real, nome_ajustado, ativo, nome_real))
+        conn.commit()
+        flash(f'Cliente "{novo_nome_real}" atualizado com sucesso', 'success')
+    except Exception as e:
+        flash(f'Erro ao atualizar cliente: {str(e)}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('suporte.clientes'))
+
+@bp.route('/clientes/delete/<nome_real>', methods=['POST'])
+def delete_cliente(nome_real):
+    """Remove um cliente"""
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM clientes_suporte WHERE nome_real = ?', (nome_real,))
+        conn.commit()
+        flash(f'Cliente "{nome_real}" removido com sucesso', 'success')
+    except Exception as e:
+        flash(f'Erro ao remover cliente: {str(e)}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('suporte.clientes'))
