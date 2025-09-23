@@ -3,430 +3,672 @@
 {% block title %}Veículos - Suporte{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<style>
+/* Estilos específicos para a página de veículos */
+.vehicle-form-input {
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
 
-    <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2"><i class="fas fa-truck"></i> Gerenciamento de Veículos</h1>
-    </div>
+.vehicle-form-input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none;
+}
 
-    <!-- Navegação breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('suporte.index') }}">Suporte</a></li>
-            <li class="breadcrumb-item active">Veículos</li>
-        </ol>
-    </nav>
+.vehicle-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
 
-    <!-- Formulário de Adição no topo -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('suporte.add_veiculo') }}" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="placa" class="form-label">Placa</label>
-                    <input type="text" class="form-control form-control-lg" id="placa" name="placa" required placeholder="ABC1234" style="text-transform:uppercase; font-weight:bold; text-align:center;">
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status" required>
-                        <option value="">Selecione</option>
-                        <option value="FIXO">FIXO</option>
-                        <option value="SPOT">SPOT</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="tipologia" class="form-label">Tipologia</label>
-                    <select class="form-select" id="tipologia" name="tipologia" required>
-                        <option value="">Selecione</option>
-                        <option value="3/4">3/4</option>
-                        <option value="TRUCK">TRUCK</option>
-                        <option value="TOCO">TOCO</option>
-                        <option value="VUC">VUC</option>
-                    </select>
-                </div>
-                <div class="col-md-3 text-end">
-                    <button type="submit" class="btn btn-success btn-lg">Adicionar veículo</button>
-                </div>
-            </form>
-        </div>
-    </div>
+.vehicle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+}
 
-    <!-- Tabela de veículos abaixo -->
+.vehicle-btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.vehicle-btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.status-fixo {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.status-spot {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.status-ativo {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.status-inativo {
+    background: #94a3b8;
+}
+
+/* Estilos para tabela compacta */
+.uploads-table-wrapper {
+    overflow-x: auto;
+    background: white;
+}
+
+.uploads-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.uploads-table th {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 12px;
+}
+
+.uploads-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.uploads-table tr:hover {
+    background: #f8fafc;
+}
+
+/* Linha de veículo compacta */
+.vehicle-row {
+    height: 38px;
+}
+
+.vehicle-row td {
+    padding: 4px 8px !important;
+    font-size: 11px;
+}
+
+.vehicle-row .status-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 8px;
+}
+
+.vehicle-row .vehicle-btn-small {
+    padding: 3px 6px;
+    font-size: 10px;
+    border-radius: 4px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .uploads-table {
+        font-size: 10px;
+    }
+    
+    .vehicle-row td {
+        padding: 3px 5px !important;
+        font-size: 9px;
+    }
+    
+    .vehicle-row .status-badge {
+        padding: 1px 4px;
+        font-size: 8px;
+    }
+    
+    .vehicle-row .vehicle-btn-small {
+        padding: 2px 4px;
+        font-size: 8px;
+    }
+}
+
+/* Paginação */
+#pagination button {
+    border: 1px solid #e5e7eb;
+    background: white;
+    padding: 6px 10px;
+    margin: 0 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+#pagination button:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+#pagination button.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* Controles de filtro */
+.filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-controls input, .filter-controls select {
+    font-size: 14px;
+    padding: 8px 12px;
+}
+
+@media (max-width: 768px) {
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-controls > div {
+        flex: 1;
+    }
+}
+</style>
+
+<div class="import-cards">
+    <!-- Cabeçalho com título e breadcrumb -->
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0">Veículos Cadastrados</h5>
+            <h2 style="margin:0; color:#1e293b;">🚚 Gerenciamento de Veículos</h2>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Placa</th>
-                            <th>Status</th>
-                            <th>Tipologia</th>
-                            <th>Data Cadastro</th>
-                            <th>Ativo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for veiculo in veiculos %}
-                        <tr>
-                            <td><strong>{{ veiculo.placa }}</strong></td>
-                            <td><span class="badge bg-{{ 'success' if veiculo.status == 'FIXO' else 'warning' }}">{{ veiculo.status }}</span></td>
-                            <td>{{ veiculo.tipologia }}</td>
-                            <td>{{ veiculo.data_cadastro.split(' ')[0] if veiculo.data_cadastro else '' }}</td>
-                            <td><span class="badge bg-{{ 'success' if veiculo.ativo else 'secondary' }}">{{ 'Ativo' if veiculo.ativo else 'Inativo' }}</span></td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">Nenhum veículo cadastrado</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div style="padding: 0 30px 20px 30px;">
+            <nav aria-label="breadcrumb">
+                <ol style="margin:0; padding:0; list-style:none; display:flex; gap:8px; font-size:14px; color:#64748b;">
+                    <li><a href="{{ url_for('suporte.index') }}" style="color:#3b82f6; text-decoration:none;">Suporte</a></li>
+                    <li>›</li>
+                    <li style="color:#64748b;">Veículos</li>
+                </ol>
+            </nav>
         </div>
     </div>
-        <!-- Formulário de Adição no topo -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('suporte.add_veiculo') }}" class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label for="placa" class="form-label">Placa</label>
-                        <input type="text" class="form-control form-control-lg" id="placa" name="placa" required placeholder="ABC1234" style="text-transform:uppercase; font-weight:bold; text-align:center;">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="">Selecione</option>
-                            <option value="FIXO">FIXO</option>
-                            <option value="SPOT">SPOT</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="tipologia" class="form-label">Tipologia</label>
-                        <select class="form-select" id="tipologia" name="tipologia" required>
-                            <option value="">Selecione</option>
-                            <option value="3/4">3/4</option>
-                            <option value="TRUCK">TRUCK</option>
-                            <option value="TOCO">TOCO</option>
-                            <option value="VUC">VUC</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <button type="submit" class="btn btn-success btn-lg">Adicionar veículo</button>
-                    </div>
-                </form>
+
+    <!-- Formulário de Adição -->
+    <div class="card card-primary">
+        <h3 style="margin-top:0; color:#1e293b;">➕ Adicionar Novo Veículo</h3>
+        <form method="POST" action="{{ url_for('suporte.add_veiculo') }}">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Placa *</label>
+                    <input type="text" class="vehicle-form-input" id="placa" name="placa" required placeholder="ABC1234" 
+                           style="text-transform:uppercase; font-weight:bold; text-align:center;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Status *</label>
+                    <select class="vehicle-form-input" id="status" name="status" required>
+                        <option value="">Selecione o status</option>
+                        <option value="FIXO">🟢 FIXO</option>
+                        <option value="SPOT">🟡 SPOT</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Tipologia *</label>
+                    <select class="vehicle-form-input" id="tipologia" name="tipologia" required>
+                        <option value="">Selecione a tipologia</option>
+                        <option value="3/4">🚐 3/4</option>
+                        <option value="TRUCK">🚛 TRUCK</option>
+                        <option value="TOCO">🚚 TOCO</option>
+                        <option value="VUC">🚐 VUC</option>
+                    </select>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <button type="submit" class="vehicle-btn vehicle-btn-primary">
+                    ✅ Adicionar Veículo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Veículos -->
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin:0; color:#1e293b;">📋 Veículos Cadastrados</h3>
+            <div style="display:flex; gap:12px; align-items:center; margin-top:12px;">
+                <div style="flex:1;">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar por placa, status ou tipologia..." 
+                           class="vehicle-form-input" style="margin:0;">
+                </div>
+                <select id="statusFilter" class="vehicle-form-input" style="margin:0; width:auto;">
+                    <option value="">Todos os status</option>
+                    <option value="FIXO">FIXO</option>
+                    <option value="SPOT">SPOT</option>
+                </select>
+                <select id="tipologiaFilter" class="vehicle-form-input" style="margin:0; width:auto;">
+                    <option value="">Todas tipologias</option>
+                    <option value="3/4">3/4</option>
+                    <option value="TRUCK">TRUCK</option>
+                    <option value="TOCO">TOCO</option>
+                    <option value="VUC">VUC</option>
+                </select>
             </div>
         </div>
-</div>
-
-<!-- Modal para adicionar veículo -->
-<div class="modal fade" id="addVeiculoModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('suporte.add_veiculo') }}">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Novo Veículo
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        
+        {% if veiculos and veiculos|length > 0 %}
+        <div style="padding:0 30px 20px 30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:14px; color:#64748b;">
+                <div id="showingInfo">Mostrando registros...</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span>Registros por página:</span>
+                    <select id="pageSize" style="padding:4px 8px; border:1px solid #e5e7eb; border-radius:4px;">
+                        <option value="20">20</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="all">Todos</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="placa" class="form-label">
-                                    <i class="fas fa-car"></i>
-                                    Placa *
-                                </label>
-                                <input type="text" class="form-control form-control-lg" id="placa" name="placa" required 
-                                       style="text-transform: uppercase; text-align: center; font-weight: bold; font-size: 1.2em;" 
-                                       placeholder="Ex: ABC1234">
-                                <div class="form-text">Digite a placa do veículo (será convertida automaticamente para maiúsculas)</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="status" class="form-label">
-                                    <i class="fas fa-tag"></i>
-                                    Status *
-                                </label>
-                                <select class="form-select form-select-lg" id="status" name="status" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="FIXO">🟢 FIXO</option>
-                                    <option value="SPOT">🟡 SPOT</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="tipologia" class="form-label">
-                                    <i class="fas fa-truck"></i>
-                                    Tipologia *
-                                </label>
-                                <select class="form-select form-select-lg" id="tipologia" name="tipologia" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="3/4">🚐 3/4</option>
-                                    <option value="TRUCK">🚛 TRUCK</option>
-                                    <option value="TOCO">🚚 TOCO</option>
-                                    <option value="VUC">🚐 VUC</option>
-                                    <option value="BITRUCK">🚛 BITRUCK</option>
-                                    <option value="TRUCADO">🚛 TRUCADO</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Veículo
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
+        
+        <div class="uploads-table-wrapper">
+            <table class="uploads-table" id="veiculosTable">
+                <thead>
+                    <tr>
+                        <th style="width:90px; padding:8px 10px; font-size:12px;">Placa</th>
+                        <th style="width:70px; padding:8px 10px; font-size:12px;">Status</th>
+                        <th style="width:70px; padding:8px 10px; font-size:12px;">Tipologia</th>
+                        <th style="width:90px; padding:8px 10px; font-size:12px;">Cadastro</th>
+                        <th style="width:60px; padding:8px 10px; font-size:12px;">Ativo</th>
+                        <th style="width:100px; padding:8px 10px; font-size:12px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="veiculosTableBody">
+                    {% for veiculo in veiculos %}
+                    <tr data-placa="{{ veiculo.placa }}" data-status="{{ veiculo.status }}" data-tipologia="{{ veiculo.tipologia }}" data-ativo="{{ 1 if veiculo.ativo else 0 }}" class="vehicle-row">
+                        <td style="padding:6px 10px;"><strong style="font-size:13px;">{{ veiculo.placa }}</strong></td>
+                        <td style="padding:6px 10px;">
+                            {% if veiculo.status == 'FIXO' %}
+                            <span class="status-badge status-fixo" style="padding:2px 6px; font-size:10px;">
+                                🟢 {{ veiculo.status }}
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-spot" style="padding:2px 6px; font-size:10px;">
+                                🟡 {{ veiculo.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight:500; font-size:12px; padding:6px 10px;">{{ veiculo.tipologia }}</td>
+                        <td style="color:#64748b; font-size:11px; padding:6px 10px;">{{ veiculo.data_cadastro.split(' ')[0] if veiculo.data_cadastro else '' }}</td>
+                        <td style="padding:6px 10px;">
+                            {% if veiculo.ativo %}
+                            <span class="status-badge status-ativo" style="padding:2px 6px; font-size:10px;">
+                                ✅
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-inativo" style="padding:2px 6px; font-size:10px;">
+                                ❌
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:6px 10px;">
+                            <button type="button" onclick="openEditModal(this)" 
+                                    class="vehicle-btn vehicle-btn-primary vehicle-btn-small" style="margin-right:4px; padding:4px 8px; font-size:10px;">
+                                ✏️
+                            </button>
+                            <button type="button" onclick="confirmDelete('{{ veiculo.placa }}')" 
+                                    class="vehicle-btn vehicle-btn-small" style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; padding:4px 8px; font-size:10px;">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        <div style="padding:20px 30px; border-top:1px solid #f1f5f9;">
+            <div style="display:flex; justify-content:center; align-items:center; gap:8px;" id="pagination">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+        
+        {% else %}
+        <div style="text-align:center; padding:40px; color:#94a3b8;">
+            <div style="font-size:48px; margin-bottom:16px;">🚚</div>
+            <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Nenhum veículo cadastrado</div>
+            <div style="font-size:14px;">Adicione o primeiro veículo usando o formulário acima</div>
+        </div>
+        {% endif %}
     </div>
-</div>
 
-<!-- Modal para editar veículo -->
-<div class="modal fade" id="editVeiculoModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <!-- Modal de Edição Customizado -->
+    <div style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;" id="editModal">
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:white; border-radius:16px; padding:30px; width:500px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="margin:0; color:#1e293b;">✏️ Editar Veículo</h3>
+                <button onclick="closeEditModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>
+            </div>
+            
             <form method="POST" id="editForm">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-edit"></i>
-                        Editar Veículo
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <input type="hidden" id="edit_placa_hidden" name="placa">
+                
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Status</label>
+                    <select id="edit_status" name="status" required class="vehicle-form-input">
+                        <option value="FIXO">🟢 FIXO</option>
+                        <option value="SPOT">🟡 SPOT</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12 mb-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h4 class="card-title mb-0" id="edit_placa_display">
-                                        <i class="fas fa-car"></i>
-                                        <span id="edit_placa_text"></span>
-                                    </h4>
-                                    <small class="text-muted">Placa do Veículo</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_status" class="form-label">
-                                    <i class="fas fa-tag"></i>
-                                    Status *
-                                </label>
-                                <select class="form-select form-select-lg" id="edit_status" name="status" required>
-                                    <option value="FIXO">🟢 FIXO</option>
-                                    <option value="SPOT">🟡 SPOT</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="edit_tipologia" class="form-label">
-                                    <i class="fas fa-truck"></i>
-                                    Tipologia *
-                                </label>
-                                <select class="form-select form-select-lg" id="edit_tipologia" name="tipologia" required>
-                                    <option value="3/4">🚐 3/4</option>
-                                    <option value="TRUCK">🚛 TRUCK</option>
-                                    <option value="TOCO">🚚 TOCO</option>
-                                    <option value="VUC">🚐 VUC</option>
-                                    <option value="BITRUCK">🚛 BITRUCK</option>
-                                    <option value="TRUCADO">🚛 TRUCADO</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-toggle-on"></i>
-                                        Status do Cadastro
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="edit_ativo" name="ativo">
-                                        <label class="form-check-label" for="edit_ativo">
-                                            <strong>Veículo Ativo</strong>
-                                            <br>
-                                            <small class="text-muted">Desmarque para desativar o veículo sem excluir do sistema</small>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Tipologia</label>
+                    <select id="edit_tipologia" name="tipologia" required class="vehicle-form-input">
+                        <option value="3/4">🚐 3/4</option>
+                        <option value="TRUCK">🚛 TRUCK</option>
+                        <option value="TOCO">🚚 TOCO</option>
+                        <option value="VUC">🚐 VUC</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i>
+                
+                <div style="margin-bottom:24px;">
+                    <label style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="edit_ativo" name="ativo" style="margin-right:8px; width:16px; height:16px;">
+                        <span style="font-weight:600; color:#374151;">Veículo Ativo</span>
+                    </label>
+                </div>
+                
+                <div style="display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" onclick="closeEditModal()" class="vehicle-btn" style="border:2px solid #e5e7eb; background:white; color:#374151;">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Salvar Alterações
+                    <button type="submit" class="vehicle-btn vehicle-btn-primary">
+                        💾 Salvar Alterações
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para detectar placas novas (reutilizado do suporte.html) -->
-<div class="modal fade" id="placasNovasModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Placas Novas Detectadas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="placasNovasContent">
-                <!-- Conteúdo será preenchido via JavaScript -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-function editVeiculo(placa, status, tipologia, ativo) {
-    document.getElementById('edit_placa_text').textContent = placa;
+// Variáveis de controle da tabela
+let allRows = [];
+let filteredRows = [];
+let currentPage = 1;
+let itemsPerPage = 50;
+
+// Inicialização e efeitos visuais
+document.addEventListener('DOMContentLoaded', function() {
+    // Placeholder para placa
+    var placa = document.getElementById('placa');
+    if (placa) {
+        placa.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Efeitos de hover para botões
+    var btns = document.querySelectorAll('button[type="submit"], button[onclick*="Edit"], button[onclick*="Delete"]');
+    btns.forEach(function(btn) {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 8px 15px rgba(0,0,0,0.15)';
+        });
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+    
+    // Efeitos de foco para inputs
+    var inputs = document.querySelectorAll('input, select');
+    inputs.forEach(function(input) {
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#3b82f6';
+            this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+        });
+        input.addEventListener('blur', function() {
+            this.style.borderColor = '#e5e7eb';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Inicializar tabela se existir
+    initializeTable();
+    setupEventListeners();
+});
+
+// Sistema de Paginação e Busca
+function initializeTable() {
+    const tbody = document.getElementById('veiculosTableBody');
+    if (!tbody) return;
+    
+    allRows = Array.from(tbody.querySelectorAll('.vehicle-row'));
+    filteredRows = [...allRows];
+    updateTable();
+}
+
+function setupEventListeners() {
+    // Busca
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+    }
+
+    // Filtros
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', handleFilter);
+    }
+
+    const tipologiaFilter = document.getElementById('tipologiaFilter');
+    if (tipologiaFilter) {
+        tipologiaFilter.addEventListener('change', handleFilter);
+    }
+
+    // Tamanho da página
+    const pageSize = document.getElementById('pageSize');
+    if (pageSize) {
+        pageSize.addEventListener('change', function() {
+            itemsPerPage = this.value === 'all' ? filteredRows.length : parseInt(this.value);
+            currentPage = 1;
+            updateTable();
+        });
+    }
+}
+
+function handleSearch() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    applyFilters(searchTerm);
+}
+
+function handleFilter() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    applyFilters(searchTerm);
+}
+
+function applyFilters(searchTerm = '') {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const tipologiaFilter = document.getElementById('tipologiaFilter').value;
+
+    filteredRows = allRows.filter(row => {
+        const placa = row.dataset.placa.toLowerCase();
+        const status = row.dataset.status;
+        const tipologia = row.dataset.tipologia;
+
+        // Busca por texto
+        const matchesSearch = !searchTerm || 
+            placa.includes(searchTerm) || 
+            status.toLowerCase().includes(searchTerm) || 
+            tipologia.toLowerCase().includes(searchTerm);
+
+        // Filtro por status
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        // Filtro por tipologia
+        const matchesTipologia = !tipologiaFilter || tipologia === tipologiaFilter;
+
+        return matchesSearch && matchesStatus && matchesTipologia;
+    });
+
+    currentPage = 1;
+    updateTable();
+}
+
+function updateTable() {
+    const tbody = document.getElementById('veiculosTableBody');
+    if (!tbody) return;
+
+    // Limpar tabela
+    tbody.innerHTML = '';
+
+    // Calcular paginação
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = itemsPerPage === filteredRows.length ? filteredRows.length : startIndex + itemsPerPage;
+    const rowsToShow = filteredRows.slice(startIndex, endIndex);
+
+    // Adicionar linhas
+    rowsToShow.forEach(row => {
+        tbody.appendChild(row.cloneNode(true));
+    });
+
+    // Atualizar informações
+    updateShowingInfo(startIndex + 1, endIndex, filteredRows.length, allRows.length);
+    updatePagination();
+}
+
+function updateShowingInfo(start, end, filtered, total) {
+    const showingInfo = document.getElementById('showingInfo');
+    if (!showingInfo) return;
+
+    if (filtered === total) {
+        showingInfo.textContent = `Mostrando ${start} a ${end} de ${total} veículos`;
+    } else {
+        showingInfo.textContent = `Mostrando ${start} a ${end} de ${filtered} veículos (filtrado de ${total})`;
+    }
+}
+
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+
+    const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    // Botão anterior
+    if (currentPage > 1) {
+        html += `<button onclick="changePage(${currentPage - 1})" style="padding:8px 12px; margin:0 2px; border:1px solid #e5e7eb; background:white; border-radius:6px; cursor:pointer;">‹ Anterior</button>`;
+    }
+
+    // Páginas
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    if (startPage > 1) {
+        html += `<button onclick="changePage(1)" style="padding:8px 12px; margin:0 2px; border:1px solid #e5e7eb; background:white; border-radius:6px; cursor:pointer;">1</button>`;
+        if (startPage > 2) {
+            html += `<span style="padding:8px 4px;">...</span>`;
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const isActive = i === currentPage;
+        html += `<button onclick="changePage(${i})" style="padding:8px 12px; margin:0 2px; border:1px solid ${isActive ? '#3b82f6' : '#e5e7eb'}; background:${isActive ? '#3b82f6' : 'white'}; color:${isActive ? 'white' : 'black'}; border-radius:6px; cursor:pointer;">${i}</button>`;
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += `<span style="padding:8px 4px;">...</span>`;
+        }
+        html += `<button onclick="changePage(${totalPages})" style="padding:8px 12px; margin:0 2px; border:1px solid #e5e7eb; background:white; border-radius:6px; cursor:pointer;">${totalPages}</button>`;
+    }
+
+    // Botão próximo
+    if (currentPage < totalPages) {
+        html += `<button onclick="changePage(${currentPage + 1})" style="padding:8px 12px; margin:0 2px; border:1px solid #e5e7eb; background:white; border-radius:6px; cursor:pointer;">Próximo ›</button>`;
+    }
+
+    pagination.innerHTML = html;
+}
+
+function changePage(page) {
+    currentPage = page;
+    updateTable();
+}
+
+// Funções de modal
+function openEditModal(button){
+    const tr = button.closest('tr');
+    const placa = tr.getAttribute('data-placa');
+    const status = tr.getAttribute('data-status');
+    const tipologia = tr.getAttribute('data-tipologia');
+    const ativo = tr.getAttribute('data-ativo') === '1';
+
+    // Preenche o modal
+    document.getElementById('edit_placa_hidden').value = placa;
     document.getElementById('edit_status').value = status;
     document.getElementById('edit_tipologia').value = tipologia;
     document.getElementById('edit_ativo').checked = ativo;
-    document.getElementById('editForm').action = `{{ url_for('suporte.edit_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
-    new bootstrap.Modal(document.getElementById('editVeiculoModal')).show();
+
+    // Ajusta action do form
+    const editForm = document.getElementById('editForm');
+    editForm.action = `{{ url_for('suporte.edit_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
+
+    // Exibe modal
+    document.getElementById('editModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
-function deleteVeiculo(placa) {
-    if (confirm(`Tem certeza que deseja excluir o veículo ${placa}?`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `{{ url_for('suporte.delete_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
-        document.body.appendChild(form);
-        form.submit();
+function closeEditModal(){
+    document.getElementById('editModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function confirmDelete(placa){
+    if (!confirm(`🗑️ Tem certeza que deseja excluir o veículo ${placa}?`)) return;
+    const action = `{{ url_for('suporte.delete_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
+    const f = document.createElement('form');
+    f.method = 'POST';
+    f.action = action;
+    document.body.appendChild(f);
+    f.submit();
+}
+
+// Fechar modal ao clicar fora
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('editModal');
+    if (e.target === modal) {
+        closeEditModal();
     }
-}
-
-function detectarPlacasNovas() {
-    fetch('{{ url_for("suporte.detect_placas_novas") }}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Erro: ' + data.error);
-                return;
-            }
-            
-            let content = `
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="card bg-info text-white">
-                            <div class="card-body text-center">
-                                <h5>${data.total_manifesto}</h5>
-                                <small>Total no Manifesto</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body text-center">
-                                <h5>${data.total_cadastradas}</h5>
-                                <small>Já Cadastradas</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body text-center">
-                                <h5>${data.total_novas}</h5>
-                                <small>Novas (precisam cadastro)</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            if (data.placas_novas.length > 0) {
-                content += '<h6>Placas que precisam ser cadastradas:</h6>';
-                content += '<div class="row">';
-                data.placas_novas.forEach(placa => {
-                    content += `<div class="col-md-3 mb-2"><span class="badge bg-warning">${placa}</span></div>`;
-                });
-                content += '</div>';
-                content += `
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-primary" onclick="adicionarPlacasRapido(${JSON.stringify(data.placas_novas)})">
-                            <i class="fas fa-plus"></i>
-                            Adicionar Todas como SPOT/3-4
-                        </button>
-                    </div>
-                `;
-            } else {
-                content += '<div class="alert alert-success">Todas as placas do manifesto já estão cadastradas!</div>';
-            }
-            
-            document.getElementById('placasNovasContent').innerHTML = content;
-            new bootstrap.Modal(document.getElementById('placasNovasModal')).show();
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao detectar placas novas');
-        });
-}
-
-function adicionarPlacasRapido(placas) {
-    if (confirm(`Adicionar ${placas.length} placas como SPOT/3-4?`)) {
-        placas.forEach(placa => {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ url_for("suporte.add_veiculo") }}';
-            form.style.display = 'none';
-            
-            const inputs = [
-                {name: 'placa', value: placa},
-                {name: 'status', value: 'SPOT'},
-                {name: 'tipologia', value: '3/4'}
-            ];
-            
-            inputs.forEach(input => {
-                const field = document.createElement('input');
-                field.type = 'hidden';
-                field.name = input.name;
-                field.value = input.value;
-                form.appendChild(field);
-            });
-            
-            document.body.appendChild(form);
-            form.submit();
-        });
-    }
-}
-
-// Auto-uppercase placa input
-document.getElementById('placa').addEventListener('input', function() {
-    this.value = this.value.toUpperCase();
 });
 </script>
+
 {% endblock %}

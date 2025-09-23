@@ -51,6 +51,19 @@
     <button id="sidebarOpen" class="sidebar-open" aria-label="Abrir menu">›</button>
 
     <div class="content">
+        {# Mensagens flash globais (sucessos/erros) #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container py-2">
+                    {% for category, message in messages %}
+                        {% set css = 'info' %}
+                        {% if category == 'success' %}{% set css = 'success' %}{% elif category == 'error' %}{% set css = 'danger' %}{% endif %}
+                        <div class="alert alert-{{ css }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </div>
     <script>
