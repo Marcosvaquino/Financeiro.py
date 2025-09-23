@@ -31,6 +31,15 @@ CREATE TABLE IF NOT EXISTS contas_receber (
     descricao_receita TEXT
 );
 
+-- Tabela de suporte para veículos do frete
+CREATE TABLE IF NOT EXISTS veiculos_suporte (
+    placa TEXT PRIMARY KEY,
+    status TEXT NOT NULL CHECK (status IN ('FIXO', 'SPOT')),
+    tipologia TEXT NOT NULL,
+    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
 CREATE TABLE IF NOT EXISTS contas_pagar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cnpj_filial TEXT,

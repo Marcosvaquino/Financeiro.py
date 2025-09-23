@@ -24,6 +24,11 @@ try:
     app.register_blueprint(logistica_bp)
 except Exception:
     pass
+try:
+    from .suporte import bp as suporte_bp
+    app.register_blueprint(suporte_bp)
+except Exception:
+    pass
 
 # Inicializa banco de dados somente quando executado como script
 # (não executar no import para evitar apagar dados durante testes/imports)

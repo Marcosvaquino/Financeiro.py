@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Veículos - Suporte{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="fas fa-truck"></i>
+            Gerenciamento de Veículos
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVeiculoModal">
+                <i class="fas fa-plus"></i>
+                Adicionar Veículo
+            </button>
+            <button type="button" class="btn btn-info ms-2" onclick="detectarPlacasNovas()">
+                <i class="fas fa-search"></i>
+                Detectar Novas
+            </button>
+        </div>
+    </div>
+
+    <!-- Navegação breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('suporte.index') }}">Suporte</a></li>
+            <li class="breadcrumb-item active">Veículos</li>
+        </ol>
+    </nav>
+
+    <!-- Tabela de veículos -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Veículos Cadastrados</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Placa</th>
+                            <th>Status</th>
+                            <th>Tipologia</th>
+                            <th>Data Cadastro</th>
+                            <th>Ativo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for veiculo in veiculos %}
+                        <tr>
+                            <td><strong>{{ veiculo.placa }}</strong></td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if veiculo.status == 'FIXO' else 'warning' }}">
+                                    {{ veiculo.status }}
+                                </span>
+                            </td>
+                            <td>{{ veiculo.tipologia }}</td>
+                            <td>{{ veiculo.data_cadastro.split(' ')[0] if veiculo.data_cadastro else '' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if veiculo.ativo else 'secondary' }}">
+                                    {{ 'Ativo' if veiculo.ativo else 'Inativo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary me-1" 
+                                        onclick="editVeiculo('{{ veiculo.placa }}', '{{ veiculo.status }}', '{{ veiculo.tipologia }}', {{ 'true' if veiculo.ativo else 'false' }})"
+                                        title="Editar veículo">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="deleteVeiculo('{{ veiculo.placa }}')"
+                                        title="Excluir veículo">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Nenhum veículo cadastrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar veículo -->
+<div class="modal fade" id="addVeiculoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('suporte.add_veiculo') }}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Novo Veículo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="placa" class="form-label">
+                                    <i class="fas fa-car"></i>
+                                    Placa *
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="placa" name="placa" required 
+                                       style="text-transform: uppercase; text-align: center; font-weight: bold; font-size: 1.2em;" 
+                                       placeholder="Ex: ABC1234">
+                                <div class="form-text">Digite a placa do veículo (será convertida automaticamente para maiúsculas)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">
+                                    <i class="fas fa-tag"></i>
+                                    Status *
+                                </label>
+                                <select class="form-select form-select-lg" id="status" name="status" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="FIXO">🟢 FIXO</option>
+                                    <option value="SPOT">🟡 SPOT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipologia" class="form-label">
+                                    <i class="fas fa-truck"></i>
+                                    Tipologia *
+                                </label>
+                                <select class="form-select form-select-lg" id="tipologia" name="tipologia" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="3/4">🚐 3/4</option>
+                                    <option value="TRUCK">🚛 TRUCK</option>
+                                    <option value="TOCO">🚚 TOCO</option>
+                                    <option value="VUC">🚐 VUC</option>
+                                    <option value="BITRUCK">🚛 BITRUCK</option>
+                                    <option value="TRUCADO">🚛 TRUCADO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Veículo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar veículo -->
+<div class="modal fade" id="editVeiculoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" id="editForm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i>
+                        Editar Veículo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title mb-0" id="edit_placa_display">
+                                        <i class="fas fa-car"></i>
+                                        <span id="edit_placa_text"></span>
+                                    </h4>
+                                    <small class="text-muted">Placa do Veículo</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_status" class="form-label">
+                                    <i class="fas fa-tag"></i>
+                                    Status *
+                                </label>
+                                <select class="form-select form-select-lg" id="edit_status" name="status" required>
+                                    <option value="FIXO">🟢 FIXO</option>
+                                    <option value="SPOT">🟡 SPOT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_tipologia" class="form-label">
+                                    <i class="fas fa-truck"></i>
+                                    Tipologia *
+                                </label>
+                                <select class="form-select form-select-lg" id="edit_tipologia" name="tipologia" required>
+                                    <option value="3/4">🚐 3/4</option>
+                                    <option value="TRUCK">🚛 TRUCK</option>
+                                    <option value="TOCO">🚚 TOCO</option>
+                                    <option value="VUC">🚐 VUC</option>
+                                    <option value="BITRUCK">🚛 BITRUCK</option>
+                                    <option value="TRUCADO">🚛 TRUCADO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-toggle-on"></i>
+                                        Status do Cadastro
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="edit_ativo" name="ativo">
+                                        <label class="form-check-label" for="edit_ativo">
+                                            <strong>Veículo Ativo</strong>
+                                            <br>
+                                            <small class="text-muted">Desmarque para desativar o veículo sem excluir do sistema</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detectar placas novas (reutilizado do suporte.html) -->
+<div class="modal fade" id="placasNovasModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Placas Novas Detectadas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="placasNovasContent">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editVeiculo(placa, status, tipologia, ativo) {
+    document.getElementById('edit_placa_text').textContent = placa;
+    document.getElementById('edit_status').value = status;
+    document.getElementById('edit_tipologia').value = tipologia;
+    document.getElementById('edit_ativo').checked = ativo;
+    document.getElementById('editForm').action = `{{ url_for('suporte.edit_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
+    new bootstrap.Modal(document.getElementById('editVeiculoModal')).show();
+}
+
+function deleteVeiculo(placa) {
+    if (confirm(`Tem certeza que deseja excluir o veículo ${placa}?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `{{ url_for('suporte.delete_veiculo', placa='PLACEHOLDER') }}`.replace('PLACEHOLDER', placa);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function detectarPlacasNovas() {
+    fetch('{{ url_for("suporte.detect_placas_novas") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Erro: ' + data.error);
+                return;
+            }
+            
+            let content = `
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h5>${data.total_manifesto}</h5>
+                                <small>Total no Manifesto</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h5>${data.total_cadastradas}</h5>
+                                <small>Já Cadastradas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h5>${data.total_novas}</h5>
+                                <small>Novas (precisam cadastro)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (data.placas_novas.length > 0) {
+                content += '<h6>Placas que precisam ser cadastradas:</h6>';
+                content += '<div class="row">';
+                data.placas_novas.forEach(placa => {
+                    content += `<div class="col-md-3 mb-2"><span class="badge bg-warning">${placa}</span></div>`;
+                });
+                content += '</div>';
+                content += `
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" onclick="adicionarPlacasRapido(${JSON.stringify(data.placas_novas)})">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Todas como SPOT/3-4
+                        </button>
+                    </div>
+                `;
+            } else {
+                content += '<div class="alert alert-success">Todas as placas do manifesto já estão cadastradas!</div>';
+            }
+            
+            document.getElementById('placasNovasContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('placasNovasModal')).show();
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao detectar placas novas');
+        });
+}
+
+function adicionarPlacasRapido(placas) {
+    if (confirm(`Adicionar ${placas.length} placas como SPOT/3-4?`)) {
+        placas.forEach(placa => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("suporte.add_veiculo") }}';
+            form.style.display = 'none';
+            
+            const inputs = [
+                {name: 'placa', value: placa},
+                {name: 'status', value: 'SPOT'},
+                {name: 'tipologia', value: '3/4'}
+            ];
+            
+            inputs.forEach(input => {
+                const field = document.createElement('input');
+                field.type = 'hidden';
+                field.name = input.name;
+                field.value = input.value;
+                form.appendChild(field);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+}
+
+// Auto-uppercase placa input
+document.getElementById('placa').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+</script>
+{% endblock %}
