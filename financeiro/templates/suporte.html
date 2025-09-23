@@ -3,20 +3,311 @@
 {% block title %}Suporte - Frete{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="h3 mb-4">🔧 Suporte - Frete</h1>
-            <p class="text-muted">Selecione uma opção abaixo. Por enquanto deixei apenas o necessário — outras opções serão ativadas depois.</p>
+<style>
+* {
+    box-sizing: border-box;
+}
 
-            <div class="d-grid gap-2 col-8 mx-auto mt-4">
-                <a href="{{ url_for('suporte.veiculos') }}" class="btn btn-lg btn-primary">🚚 Gerenciar Veículos</a>
-                <a href="{{ url_for('suporte.clientes') }}" class="btn btn-lg btn-success">👥 Gerenciar Clientes</a>
+body {
+    overflow-x: hidden;
+}
+
+.suporte-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 80vh;
+    padding: 2rem 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.suporte-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    margin: 1rem auto;
+    max-width: 90%;
+    width: 100%;
+}
+
+.suporte-title {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.suporte-subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+}
+
+.option-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+.option-card {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+.option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.option-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    color: inherit;
+}
+
+.option-card:hover::before {
+    transform: scaleX(1);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.card-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.card-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #495057;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+}
+
+.help-section {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 3rem;
+    border-left: 4px solid #667eea;
+}
+
+.help-title {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.help-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .suporte-content {
+        margin: 0.5rem;
+        padding: 1.5rem 1rem;
+        max-width: 95%;
+        border-radius: 15px;
+    }
+    
+    .suporte-title {
+        font-size: 1.8rem;
+    }
+    
+    .suporte-subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .option-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .option-card {
+        padding: 1.2rem;
+        border-radius: 12px;
+    }
+    
+    .card-icon {
+        font-size: 2.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+    }
+    
+    .card-description {
+        font-size: 0.9rem;
+    }
+    
+    .help-section {
+        padding: 1.2rem;
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .suporte-container {
+        padding: 1rem 0;
+    }
+    
+    .suporte-content {
+        margin: 0.25rem;
+        padding: 1rem;
+        max-width: 98%;
+    }
+    
+    .suporte-title {
+        font-size: 1.6rem;
+    }
+    
+    .card-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+}
+</style>
+
+<div class="suporte-container">
+    <div class="container-fluid px-2">
+        <div class="suporte-content">
+            <div class="text-center">
+                <h1 class="suporte-title">🔧 Central de Suporte</h1>
+                <p class="suporte-subtitle">
+                    Gerencie veículos e clientes do sistema de frete.<br>
+                    Escolha uma das opções abaixo para começar.
+                </p>
             </div>
 
-            <div class="mt-5 text-muted small">
-                Dica: clique em "Gerenciar Veículos" para adicionar ou listar os veículos cadastrados.<br>
-                Ou clique em "Gerenciar Clientes" para gerenciar sua base de clientes.
+            <div class="option-cards">
+                <a href="{{ url_for('suporte.veiculos') }}" class="option-card">
+                    <span class="card-icon">🚚</span>
+                    <h3 class="card-title">Gerenciar Veículos</h3>
+                    <p class="card-description">
+                        Adicione, edite ou remova veículos da frota. 
+                        Configure placas, tipos de contrato e status dos veículos.
+                    </p>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">242</span>
+                            <div class="stat-label">Veículos</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">FIXO/SPOT</span>
+                            <div class="stat-label">Contratos</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">✅</span>
+                            <div class="stat-label">Ativo</div>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('suporte.clientes') }}" class="option-card">
+                    <span class="card-icon">👥</span>
+                    <h3 class="card-title">Gerenciar Clientes</h3>
+                    <p class="card-description">
+                        Mantenha sua base de clientes atualizada.
+                        Gerencie nomes, informações e status dos clientes.
+                    </p>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">22</span>
+                            <div class="stat-label">Clientes</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">MAPEADOS</span>
+                            <div class="stat-label">Status</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">✅</span>
+                            <div class="stat-label">Integrado</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="help-section">
+                <h4 class="help-title">
+                    💡 Como usar
+                </h4>
+                <p class="help-text">
+                    <strong>Veículos:</strong> Clique para gerenciar sua frota, adicionar novos veículos ou atualizar contratos existentes. Os dados são integrados automaticamente com o sistema de manifestos.
+                    <br><br>
+                    <strong>Clientes:</strong> Mantenha sua base de clientes organizada. Os nomes são mapeados automaticamente para facilitar a identificação nos manifestos e relatórios.
+                </p>
             </div>
         </div>
     </div>
