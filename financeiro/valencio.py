@@ -74,19 +74,22 @@ def processar_valencio(arquivo_upload):
         # Ler dados do Excel
         dados_excel = ler_excel_valencio(arquivo_upload)
         
-        # Processar cálculos específicos do Valencio
+        # Aplicar nova lógica automática do Valencio (apenas blocos com Valencio)
+        print("🔄 Aplicando lógica APENAS em blocos com Valencio...")
         calculos = processar_calculos_valencio(dados_excel)
         
-        # Salvar resultado
-        resultado_csv = salvar_valencio_csv(calculos, nome_original)
+        # Modificar arquivo ORIGINAL (não criar novo)
+        resultado_excel = salvar_valencio_csv(calculos, nome_original, arquivo_upload if isinstance(arquivo_upload, str) else None)
         
         return {
             "success": True,
-            "message": f"Valencio processado: {resultado_csv['linhas']} linhas calculadas em {resultado_csv['arquivo']}",
+            "message": f"Valencio processado: {resultado_excel['blocos_valencio']} blocos com Valencio de {resultado_excel['blocos']} total, R$ {resultado_excel['total']:.2f} - Arquivo original modificado",
             "dados": {
-                "linhas_processadas": resultado_csv['linhas'],
-                "arquivo_csv": resultado_csv['arquivo'],
-                "total_calculado": calculos.get('total_geral', 0)
+                "arquivo_modificado": resultado_excel['arquivo'],
+                "total_geral": resultado_excel['total'],
+                "blocos_processados": resultado_excel['blocos'],
+                "blocos_com_valencio": resultado_excel['blocos_valencio'],
+                "linhas_processadas": resultado_excel['linhas']
             }
         }
         
@@ -139,103 +142,323 @@ def ler_excel_valencio(arquivo_upload):
 
 def processar_calculos_valencio(dados_excel):
     """
-    Processa cálculos específicos do Valencio
+    Processa cálculos específicos do Valencio com nova lógica:
+    - Trabalha APENAS em blocos que contêm FRIGORIFICO VALENCIO LTDA
+    - Outros blocos ficam vazios na coluna Valor_Real
+    - Modifica arquivo original (não cria novo)
     """
     resultados = {
         "dados_originais": dados_excel['dados'],
         "colunas": dados_excel['colunas'],
         "calculos": [],
-        "total_geral": 0
+        "total_geral": 0,
+        "blocos_processados": 0,
+        "blocos_com_valencio": 0
     }
     
-    # Procurar colunas de valores para cálculo
-    colunas = dados_excel['colunas']
-    col_valor = None
+    print(f"🔍 ESTRUTURA DO ARQUIVO VALENCIO:")
+    print(f"   Total de linhas: {len(dados_excel['dados'])}")
     
-    for i, col in enumerate(colunas):
-        if any(palavra in col.lower() for palavra in ['valor', 'preco', 'total', 'frete']):
-            col_valor = i
-            break
+    # Usar coluna N (índice 13) que já existe no arquivo original
+    col_n = 13  # Coluna N (base 0)
     
-    if col_valor is not None:
-        total = 0
-        linhas_calculadas = 0
+    # Processar dados linha por linha
+    bloco_atual = []
+    total_geral = 0
+    linha_cabecalho = None
+    
+    i = 0
+    while i < len(dados_excel['dados']):
+        linha = dados_excel['dados'][i]
         
-        for linha in dados_excel['dados']:
-            try:
-                if col_valor < len(linha) and linha[col_valor] != "":
-                    valor = linha[col_valor]
+        # Verificar coluna A para identificar estrutura
+        col_a_valor = str(linha[0]).strip() if len(linha) > 0 else ""
+        
+        if col_a_valor.startswith("Manifesto:"):
+            # Início de novo bloco
+            print(f"📦 Analisando bloco: {col_a_valor}")
+            
+            # Processar bloco anterior se existir
+            if bloco_atual and linha_cabecalho:
+                tem_valencio = verificar_se_bloco_tem_valencio(bloco_atual, linha_cabecalho, dados_excel['dados'])
+                
+                if tem_valencio:
+                    print(f"   🏭 BLOCO COM VALENCIO - Processando...")
+                    total_bloco = processar_bloco_valencio_real(bloco_atual, linha_cabecalho, col_n, dados_excel['dados'])
+                    total_geral += total_bloco
+                    resultados['blocos_com_valencio'] += 1
+                else:
+                    print(f"   ⚪ Bloco sem Valencio - Deixando vazio")
+                    # Deixar linhas do bloco vazias na coluna N
+                    for idx in bloco_atual:
+                        linha_bloco = dados_excel['dados'][idx]
+                        while len(linha_bloco) <= col_n:
+                            linha_bloco.append('')
+                        linha_bloco[col_n] = ''
+                
+                resultados['blocos_processados'] += 1
+            
+            bloco_atual = []
+            linha_cabecalho = None
+            
+            # Próxima linha deve ser cabeçalho
+            if i + 1 < len(dados_excel['dados']):
+                linha_cabecalho = i + 1
+            
+        elif col_a_valor.startswith("Total - Manifesto:"):
+            # Final de bloco
+            if bloco_atual and linha_cabecalho is not None:
+                tem_valencio = verificar_se_bloco_tem_valencio(bloco_atual, linha_cabecalho, dados_excel['dados'])
+                
+                if tem_valencio:
+                    print(f"   🏭 PROCESSANDO BLOCO COM VALENCIO...")
+                    total_bloco = processar_bloco_valencio_real(bloco_atual, linha_cabecalho, col_n, dados_excel['dados'])
                     
-                    # Se já é número, usar direto como inteiro
-                    if isinstance(valor, (int, float)):
-                        valor_final = int(float(valor))
-                    else:
-                        # String: tentar converter para inteiro
-                        valor_str = str(valor).replace(',', '.')
-                        valor_final = int(float(valor_str))
+                    # Colocar total na linha de Total - Manifesto
+                    while len(linha) <= col_n:
+                        linha.append('')
+                    linha[col_n] = total_bloco
+                    # Também modificar diretamente no dados original
+                    dados_excel['dados'][i][col_n] = total_bloco
                     
-                    total += valor_final
-                    linhas_calculadas += 1
+                    total_geral += total_bloco
+                    resultados['blocos_com_valencio'] += 1
+                    print(f"   ✅ Bloco Valencio finalizado: R$ {total_bloco:.2f}")
+                else:
+                    print(f"   ⚪ Bloco sem Valencio - Total vazio")
+                    # Deixar Total vazio também
+                    while len(linha) <= col_n:
+                        linha.append('')
+                    linha[col_n] = ''
+                    # Também modificar diretamente no dados original
+                    dados_excel['dados'][i][col_n] = ''
                     
-                    resultados['calculos'].append({
-                        "linha": linha,
-                        "valor": valor_final,
-                        "valor_original": valor
-                    })
-                    
-            except (ValueError, TypeError) as e:
-                # Log do erro para debug
+                    # Deixar linhas do bloco vazias na coluna N
+                    for idx in bloco_atual:
+                        linha_bloco = dados_excel['dados'][idx]
+                        while len(linha_bloco) <= col_n:
+                            linha_bloco.append('')
+                        linha_bloco[col_n] = ''
+                
+                resultados['blocos_processados'] += 1
+                
                 resultados['calculos'].append({
-                    "linha": linha,
-                    "valor": 0,
-                    "valor_original": linha[col_valor] if col_valor < len(linha) else "",
-                    "erro": f"Erro conversão: {str(e)}"
+                    "tipo": "bloco",
+                    "manifesto": col_a_valor,
+                    "tem_valencio": tem_valencio,
+                    "total": total_bloco if tem_valencio else 0,
+                    "linhas_no_bloco": len(bloco_atual)
                 })
-                continue
+            
+            bloco_atual = []
+            linha_cabecalho = None
+            
+        elif col_a_valor == "Frete" and linha_cabecalho is not None:
+            # Linha de dados dentro de um bloco
+            bloco_atual.append(i)
         
-        resultados['total_geral'] = total
-        resultados['linhas_calculadas'] = linhas_calculadas
+        i += 1
+    
+    # Processar último bloco se não terminou com Total
+    if bloco_atual and linha_cabecalho is not None:
+        tem_valencio = verificar_se_bloco_tem_valencio(bloco_atual, linha_cabecalho, dados_excel['dados'])
+        
+        if tem_valencio:
+            total_bloco = processar_bloco_valencio_real(bloco_atual, linha_cabecalho, col_n, dados_excel['dados'])
+            total_geral += total_bloco
+            resultados['blocos_com_valencio'] += 1
+            print(f"   ✅ Último bloco Valencio finalizado: R$ {total_bloco:.2f}")
+        else:
+            # Deixar vazio
+            for idx in bloco_atual:
+                linha_bloco = dados_excel['dados'][idx]
+                while len(linha_bloco) <= col_n:
+                    linha_bloco.append('')
+                linha_bloco[col_n] = ''
+        
+        resultados['blocos_processados'] += 1
+    
+    resultados['total_geral'] = total_geral
+    resultados['colunas'] = dados_excel['colunas']  # Atualizar com nova coluna
+    
+    print(f"🎉 VALENCIO PROCESSADO:")
+    print(f"   {resultados['blocos_processados']} blocos analisados")
+    print(f"   {resultados['blocos_com_valencio']} blocos com Valencio processados")
+    print(f"   Total geral (só Valencio): R$ {total_geral:.2f}")
     
     return resultados
 
-def salvar_valencio_csv(calculos, nome_original):
+def verificar_se_bloco_tem_valencio(indices_linhas, linha_cabecalho, dados):
     """
-    Salva resultado dos cálculos Valencio
+    Verifica se um bloco contém FRIGORIFICO VALENCIO LTDA
     """
-    pasta_saida = "financeiro/uploads/valencio"
-    os.makedirs(pasta_saida, exist_ok=True)
+    # Identificar coluna do Remetente
+    cabecalho = dados[linha_cabecalho]
+    col_d = None
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    nome_csv = f"VALENCIO_{timestamp}_{nome_original.replace('.xlsx', '.csv')}"
-    caminho_completo = os.path.join(pasta_saida, nome_csv)
+    for i, header in enumerate(cabecalho):
+        header_str = str(header).strip().lower()
+        if 'remetente' in header_str:
+            col_d = i
+            break
     
-    with open(caminho_completo, 'w', encoding='utf-8-sig', newline='') as arquivo_csv:
-        writer = csv.writer(arquivo_csv, delimiter=';')
-        
-        # Cabeçalho com informações adicionais
-        colunas_saida = calculos['colunas'] + ['VALOR_CALCULADO', 'VALOR_ORIGINAL', 'STATUS']
-        writer.writerow(colunas_saida)
-        
-        # Adicionar linha de resumo
-        writer.writerow(['=== RESUMO ===', f'Total Geral: {calculos["total_geral"]}', 
-                        f'Linhas processadas: {calculos.get("linhas_calculadas", 0)}', 
-                        f'Total linhas: {len(calculos["calculos"])}'])
-        writer.writerow([])  # Linha vazia
-        
-        # Dados com cálculos e debug
-        for item in calculos['calculos']:
-            status = "ERRO" if "erro" in item else "OK"
-            linha_saida = (item['linha'] + 
-                          [item['valor'], 
-                           item.get('valor_original', ''), 
-                           item.get('erro', status)])
-            writer.writerow(linha_saida)
+    if col_d is None:
+        return False
     
-    return {
-        "arquivo": nome_csv,
-        "caminho": caminho_completo,
-        "linhas": len(calculos['calculos'])
-    }
+    # Verificar se alguma linha tem FRIGORIFICO VALENCIO
+    for idx in indices_linhas:
+        if idx >= len(dados):
+            continue
+        
+        linha = dados[idx]
+        cliente = str(linha[col_d]).strip().upper() if col_d < len(linha) else ""
+        
+        if "FRIGORIFICO VALENCIO LTDA" in cliente or "VALENCIO" in cliente:
+            return True
+    
+    return False
+
+def processar_bloco_valencio_real(indices_linhas, linha_cabecalho, col_n, dados):
+    """
+    Processa um bloco individual do manifesto Valencio
+    Em blocos que TÊM Valencio:
+    - FRIGORIFICO VALENCIO LTDA: J * 0,67 / 0,88
+    - Outros clientes: COPIAR valor da coluna J
+    """
+    # Identificar colunas do cabeçalho
+    cabecalho = dados[linha_cabecalho]
+    col_d = None  # Remetente
+    col_j = None  # Kg Taxado
+    
+    for i, header in enumerate(cabecalho):
+        header_str = str(header).strip().lower()
+        if 'remetente' in header_str:
+            col_d = i
+        elif 'kg taxado' in header_str:
+            col_j = i
+    
+    if col_d is None or col_j is None:
+        print(f"❌ Erro: Não encontrou colunas necessárias no cabeçalho")
+        return 0
+    
+    print(f"   Colunas: D(Remetente)={col_d}, J(Kg Taxado)={col_j}")
+    
+    total_bloco = 0
+    
+    for idx in indices_linhas:
+        if idx >= len(dados):
+            continue
+            
+        linha = dados[idx]
+        
+        # Expandir linha se necessário
+        while len(linha) <= col_n:
+            linha.append('')
+        
+        # Pegar valores das colunas
+        cliente = str(linha[col_d]).strip().upper() if col_d < len(linha) else ""
+        kg_taxado_str = str(linha[col_j]).strip() if col_j < len(linha) else "0"
+        
+        try:
+            # Converter Kg Taxado para número
+            if kg_taxado_str and kg_taxado_str != "None":
+                kg_taxado = float(kg_taxado_str.replace(',', '.'))
+            else:
+                kg_taxado = 0
+            
+            if kg_taxado <= 0:
+                valor_real = 0
+            elif "FRIGORIFICO VALENCIO LTDA" in cliente or "VALENCIO" in cliente:
+                # Aplicar fórmula: J * 0,67 / 0,88
+                valor_real = kg_taxado * 0.67 / 0.88
+                print(f"     🏭 VALENCIO: {kg_taxado} * 0.67/0.88 = {valor_real:.2f}")
+            else:
+                # Outros clientes no bloco com Valencio: COPIAR valor de J
+                valor_real = kg_taxado
+                print(f"     📋 {cliente[:20]}...: {kg_taxado} (cópia de J)")
+            
+            # Colocar valor na coluna N
+            linha[col_n] = round(valor_real, 2)
+            # Também modificar diretamente no dados original para garantir
+            dados[idx][col_n] = round(valor_real, 2)
+            print(f"       ✓ Salvou {round(valor_real, 2)} na linha {idx}, coluna {col_n}")
+            total_bloco += valor_real
+            
+        except (ValueError, TypeError) as e:
+            print(f"❌ Erro convertendo Kg Taxado '{kg_taxado_str}': {e}")
+            linha[col_n] = 0
+    
+    return round(total_bloco, 2)
+
+def salvar_valencio_csv(calculos, nome_original, arquivo_original_path=None):
+    """
+    Modifica o arquivo Excel ORIGINAL com os cálculos do Valencio
+    NÃO cria arquivo novo - sobrescreve o original
+    """
+    import openpyxl
+    
+    if arquivo_original_path and os.path.exists(arquivo_original_path):
+        # Usar o arquivo original
+        caminho_arquivo = arquivo_original_path
+    else:
+        # Fallback para pasta uploads/valencio
+        pasta_valencio = "financeiro/uploads/valencio"
+        caminho_arquivo = os.path.join(pasta_valencio, nome_original)
+    
+    try:
+        # Abrir arquivo original
+        print(f"📝 Modificando arquivo original: {caminho_arquivo}")
+        wb = openpyxl.load_workbook(caminho_arquivo)
+        ws = wb.active
+        
+        # Escrever dados modificados de volta
+        for row_idx, linha in enumerate(calculos['dados_originais'], 1):  # Excel começa em 1
+            for col_idx, valor in enumerate(linha, 1):  # Excel começa em 1
+                if valor != '':  # Só escrever se não for vazio
+                    ws.cell(row=row_idx, column=col_idx, value=valor)
+        
+        # Salvar arquivo original modificado
+        wb.save(caminho_arquivo)
+        
+        print(f"✅ Arquivo original modificado com sucesso!")
+        
+        return {
+            "arquivo": nome_original,
+            "caminho": caminho_arquivo,
+            "linhas": len(calculos['dados_originais']),
+            "blocos": calculos['blocos_processados'],
+            "blocos_valencio": calculos['blocos_com_valencio'],
+            "total": calculos['total_geral']
+        }
+        
+    except Exception as e:
+        print(f"❌ Erro ao modificar arquivo original: {e}")
+        # Fallback: criar arquivo novo se não conseguir modificar original
+        pasta_saida = "financeiro/uploads/valencio"
+        os.makedirs(pasta_saida, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nome_backup = f"VALENCIO_MODIFICADO_{timestamp}_{nome_original}"
+        caminho_backup = os.path.join(pasta_saida, nome_backup)
+        
+        wb_novo = openpyxl.Workbook()
+        ws_novo = wb_novo.active
+        
+        # Escrever dados
+        for row_idx, linha in enumerate(calculos['dados_originais'], 1):
+            for col_idx, valor in enumerate(linha, 1):
+                ws_novo.cell(row=row_idx, column=col_idx, value=valor)
+        
+        wb_novo.save(caminho_backup)
+        
+        return {
+            "arquivo": nome_backup,
+            "caminho": caminho_backup,
+            "linhas": len(calculos['dados_originais']),
+            "blocos": calculos['blocos_processados'],
+            "blocos_valencio": calculos['blocos_com_valencio'],
+            "total": calculos['total_geral']
+        }
 
 def validar_estrutura_valencio(dados_excel):
     """
