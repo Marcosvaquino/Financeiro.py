@@ -65,6 +65,12 @@ def processar_valencio(arquivo_upload):
         dict: {"success": bool, "message": str, "dados": dict}
     """
     try:
+        # Determinar nome original quando arquivo_upload for caminho string
+        if isinstance(arquivo_upload, str):
+            nome_original = os.path.basename(arquivo_upload)
+        else:
+            nome_original = getattr(arquivo_upload, 'filename', 'uploaded_valencio.xlsx')
+
         # Ler dados do Excel
         dados_excel = ler_excel_valencio(arquivo_upload)
         
@@ -72,7 +78,7 @@ def processar_valencio(arquivo_upload):
         calculos = processar_calculos_valencio(dados_excel)
         
         # Salvar resultado
-        resultado_csv = salvar_valencio_csv(calculos, arquivo_upload.filename)
+        resultado_csv = salvar_valencio_csv(calculos, nome_original)
         
         return {
             "success": True,

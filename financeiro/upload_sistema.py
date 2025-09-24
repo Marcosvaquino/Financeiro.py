@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 import os
-from .manifesto import processar_manifesto
-from .valencio import processar_valencio
+import re
+from werkzeug.utils import secure_filename
+from datetime import datetime
+from .manifesto import processar_manifesto, extrair_mes_ano_de_arquivo
 
 bp = Blueprint('upload_sistema', __name__, url_prefix='/upload')
 
@@ -38,16 +40,60 @@ def processar():
         tipo_final = tipo_detectado
     else:
         tipo_final = tipo_usuario
+
+    # Se for manifesto, tentar extrair mês/ano e renomear antes de processar
+    saved_path = None
+    if tipo_final == 'manifesto':
+        # Extrair mês/ano do arquivo (usa file-like)
+        try:
+            mes_ano = extrair_mes_ano_de_arquivo(arquivo)
+        except Exception:
+            mes_ano = None
+
+        # Vamos usar o nome curto solicitado: Manifesto_Frete_{MM-YY}.xlsx
+        ext = os.path.splitext(secure_filename(arquivo.filename))[1] or '.xlsx'
+        novo_nome = f"Manifesto_Frete_{mes_ano}{ext}" if mes_ano else f"Manifesto_Frete_unknown{ext}"
+
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads', 'manifestos'))
+        os.makedirs(uploads_dir, exist_ok=True)
+        destino = os.path.join(uploads_dir, novo_nome)
+
+        # Se existir, sobrescrevemos (usuário quer apenas um arquivo por mês)
+        arquivo.stream.seek(0)
+        arquivo.save(destino)
+        saved_path = destino
     
     # Por enquanto só mostra que recebeu o arquivo com o tipo
     if tipo_final == 'manifesto':
-        resultado = processar_manifesto(arquivo)
+        # Se salvamos o arquivo, processe pelo caminho salvo; caso contrário processe o file-like
+        if saved_path:
+            resultado = processar_manifesto(saved_path)
+        else:
+            resultado = processar_manifesto(arquivo)
         if resultado['success']:
             flash(f'✅ MANIFESTO: {resultado["message"]}')
         else:
             flash(f'❌ ERRO MANIFESTO: {resultado["message"]}')
     elif tipo_final == 'valencio':
-        resultado = processar_valencio(arquivo)
+        # Para Valencio: extrair mês/ano e renomear para Valencio_Frete_{MM-YY}
+        try:
+            mes_ano = extrair_mes_ano_de_arquivo(arquivo)
+        except Exception:
+            mes_ano = None
+
+        ext = os.path.splitext(secure_filename(arquivo.filename))[1] or '.xlsx'
+        novo_nome = f"Valencio_Frete_{mes_ano}{ext}" if mes_ano else f"Valencio_Frete_unknown{ext}"
+
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads', 'valencio'))
+        os.makedirs(uploads_dir, exist_ok=True)
+        destino = os.path.join(uploads_dir, novo_nome)
+
+        # salvar (sobrescrever se necessário)
+        arquivo.stream.seek(0)
+        arquivo.save(destino)
+
+        from .valencio import processar_valencio
+        resultado = processar_valencio(destino)
         if resultado['success']:
             flash(f'✅ VALENCIO: {resultado["message"]}')
         else:
