@@ -239,6 +239,105 @@ class ClienteHelper:
             return {}
     
     @staticmethod
+    def buscar_multiplos_nomes_reais(nomes_reais: List[str]) -> Dict[str, Dict]:
+        """
+        Busca informações de múltiplos nomes REAIS de uma vez
+        (Diferente da função anterior que buscava por nome_ajustado)
+        
+        Args:
+            nomes_reais (List[str]): Lista de nomes reais para buscar (como aparecem no manifesto)
+            
+        Returns:
+            Dict com nome_real como chave e dados como valor
+        """
+        if not nomes_reais:
+            return {}
+            
+        # Normalizar todos os nomes (manter maiúscula e sem espaços extras)
+        nomes_normalizados = [str(n).upper().strip() for n in nomes_reais if n]
+        
+        if not nomes_normalizados:
+            return {}
+            
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # Primeiro tentar busca exata
+            placeholders = ','.join(['?' for _ in nomes_normalizados])
+            
+            cursor.execute(f"""
+                SELECT nome_real, nome_ajustado, data_cadastro, ativo
+                FROM clientes_suporte 
+                WHERE UPPER(TRIM(nome_real)) IN ({placeholders}) AND ativo = 1
+            """, nomes_normalizados)
+            
+            resultados_exatos = cursor.fetchall()
+            
+            # Criar dicionário de resposta
+            dados_encontrados = {}
+            nomes_encontrados = set()
+            
+            for resultado in resultados_exatos:
+                nome_real_original = str(resultado[0]).upper().strip()
+                dados_encontrados[nome_real_original] = {
+                    'nome_real': resultado[0],
+                    'nome_ajustado': resultado[1],
+                    'data_cadastro': resultado[2],
+                    'ativo': bool(resultado[3]),
+                    'encontrado': True
+                }
+                nomes_encontrados.add(nome_real_original)
+            
+            # Para nomes não encontrados, tentar busca similaridade (sem acentos)
+            import unicodedata
+            def remover_acentos(texto):
+                return ''.join(c for c in unicodedata.normalize('NFD', str(texto)) 
+                              if unicodedata.category(c) != 'Mn')
+            
+            nomes_nao_encontrados = [n for n in nomes_normalizados if n not in nomes_encontrados]
+            
+            if nomes_nao_encontrados:
+                # Buscar todos os nomes da base para comparação sem acentos
+                cursor.execute("SELECT nome_real, nome_ajustado FROM clientes_suporte WHERE ativo = 1")
+                todos_clientes = cursor.fetchall()
+                
+                for nome_manifesto in nomes_nao_encontrados:
+                    nome_sem_acento = remover_acentos(nome_manifesto).upper().strip()
+                    
+                    for cliente_real, cliente_ajustado in todos_clientes:
+                        cliente_sem_acento = remover_acentos(cliente_real).upper().strip()
+                        
+                        if nome_sem_acento == cliente_sem_acento:
+                            dados_encontrados[nome_manifesto] = {
+                                'nome_real': cliente_real,
+                                'nome_ajustado': cliente_ajustado,
+                                'data_cadastro': None,
+                                'ativo': True,
+                                'encontrado': True
+                            }
+                            nomes_encontrados.add(nome_manifesto)
+                            break
+            
+            # Adicionar nomes ainda não encontrados
+            for nome in nomes_normalizados:
+                if nome not in dados_encontrados:
+                    dados_encontrados[nome] = {
+                        'nome_real': nome,
+                        'nome_ajustado': '0',  # Valor padrão quando não encontrado
+                        'data_cadastro': None,
+                        'ativo': False,
+                        'encontrado': False
+                    }
+            
+            conn.close()
+            return dados_encontrados
+            
+        except Exception as e:
+            print(f"❌ Erro ao buscar múltiplos nomes reais: {e}")
+            return {}
+
+    @staticmethod
     def mapear_nomes_manifesto(nomes_manifesto: List[str]) -> Dict[str, str]:
         """
         Mapeia nomes do manifesto para nomes ajustados conhecidos
