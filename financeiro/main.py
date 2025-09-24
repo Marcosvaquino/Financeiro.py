@@ -10,6 +10,11 @@ app.secret_key = "frz-secret"  # chave de sessão
 
 # Registra blueprints de módulos adicionais (placeholders)
 try:
+    from .upload_sistema import bp as upload_bp
+    app.register_blueprint(upload_bp)
+except Exception:
+    pass
+try:
     from .frete import bp as frete_bp
     app.register_blueprint(frete_bp)
 except Exception:

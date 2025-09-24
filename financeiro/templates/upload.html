@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Upload de Arquivos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1 class="page-title">📤 Sistema de Upload</h1>
+        <p class="page-subtitle">Upload de arquivos para processamento</p>
+    </div>
+
+    <div class="content-grid">
+        <!-- Seção de Upload -->
+        <div class="content-card">
+            <h2 class="section-title">Upload de Arquivo</h2>
+            
+            <form method="POST" action="{{ url_for('upload_sistema.processar') }}" enctype="multipart/form-data" class="upload-form">
+                <!-- Seleção do tipo de arquivo -->
+                <div class="tipo-arquivo-section">
+                    <h3>Tipo de Arquivo:</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_arquivo" value="manifesto" checked>
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">📋 Manifesto</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_arquivo" value="valencio">
+                            <span class="radio-custom"></span>
+                            <span class="radio-label">🧮 Valencio</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Arraste arquivos aqui ou clique para selecionar</h3>
+                    <p class="upload-info">Formatos aceitos: .xlsx, .csv</p>
+                    <input type="file" name="arquivo" id="arquivo" accept=".xlsx,.csv" required class="file-input">
+                    <label for="arquivo" class="file-label">Escolher Arquivo</label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-icon">⬆️</span>
+                        Processar Arquivo
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Seção de Status -->
+        <div class="content-card">
+            <h2 class="section-title">Status</h2>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="message message-success">
+                                <span class="message-icon">✅</span>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="status-empty">
+                        <span class="status-icon">💤</span>
+                        <p>Nenhum arquivo processado ainda</p>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed var(--border-color, #ddd);
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background: var(--background-light, #fafafa);
+    transition: all 0.3s ease;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color, #007bff);
+    background: var(--background-hover, #f0f8ff);
+}
+
+.upload-area.dragover {
+    border-color: var(--success-color, #28a745);
+    background: var(--success-light, #d4edda);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.upload-info {
+    color: var(--text-muted, #666);
+    font-size: 0.9rem;
+    margin: 10px 0;
+}
+
+.file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-label {
+    display: inline-block;
+    background: var(--primary-color, #007bff);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.file-label:hover {
+    background: var(--primary-dark, #0056b3);
+    transform: translateY(-1px);
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--success-color, #28a745);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--success-dark, #218838);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.messages {
+    margin-top: 20px;
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.message-success {
+    background: var(--success-light, #d4edda);
+    color: var(--success-dark, #155724);
+    border: 1px solid var(--success-color, #28a745);
+}
+
+.status-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted, #666);
+}
+
+.status-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.tipo-arquivo-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: var(--background-light, #f8f9fa);
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e9ecef);
+}
+
+.tipo-arquivo-section h3 {
+    margin: 0 0 15px 0;
+    color: var(--text-primary, #333);
+    font-size: 1.1rem;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 20px;
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.radio-option:hover {
+    border-color: var(--primary-color, #007bff);
+    background: var(--background-hover, #f0f8ff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: 50%;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-color: var(--primary-color, #007bff);
+    background: var(--primary-color, #007bff);
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.radio-option input[type="radio"]:checked ~ .radio-label {
+    color: var(--primary-color, #007bff);
+    font-weight: 600;
+}
+
+.radio-label {
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('arquivo');
+    
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        uploadArea.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        uploadArea.classList.remove('dragover');
+    }
+    
+    uploadArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            updateFileDisplay(files[0].name);
+        }
+    }
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            updateFileDisplay(this.files[0].name);
+        }
+    });
+    
+    function updateFileDisplay(fileName) {
+        const uploadIcon = uploadArea.querySelector('.upload-icon');
+        const uploadTitle = uploadArea.querySelector('h3');
+        
+        uploadIcon.textContent = '📄';
+        uploadTitle.textContent = 'Arquivo selecionado: ' + fileName;
+        uploadArea.style.borderColor = 'var(--success-color, #28a745)';
+        uploadArea.style.background = 'var(--success-light, #d4edda)';
+    }
+});
+</script>
+{% endblock %}
