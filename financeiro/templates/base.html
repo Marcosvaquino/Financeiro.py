@@ -24,9 +24,9 @@
                     </ul>
                 </li>
                 <li class="menu-item has-children">
-                    <span class="menu-parent">Upload Sistema</span>
+                    <span class="menu-parent">Frete</span>
                     <ul class="menu-children">
-                        <li class="child-item"><a href="{{ url_for('upload_sistema.index') }}">� Upload</a></li>
+                        <li class="child-item"><a href="{{ url_for('upload_sistema.index') }}">📂 Importação</a></li>
                         <li class="child-item"><a href="{{ url_for('suporte.index') }}">🔧 Suporte</a></li>
                     </ul>
                 </li>
@@ -161,7 +161,8 @@
             // Mapear caminhos para seus menus pais
             const menuMappings = {
                 'Financeiro': ['/planejamento', '/projecao', '/dashboard', '/resumo', '/consolidacao', '/importacao', '/painel'],
-                'Frete': ['/frete'],
+                // Também considerar a rota /upload como pertencente ao menu Frete
+                'Frete': ['/frete', '/upload'],
                 'Armazem': ['/armazem'], 
                 'Logistica': ['/logistica']
             };
