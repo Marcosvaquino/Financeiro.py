@@ -15,8 +15,8 @@ from financeiro.main import app
 if __name__ == "__main__":
     print("🚀 Iniciando servidor Flask...")
     print("📊 Sistema Financeiro FRZ")
-    print("🌐 Acesse: http://127.0.0.1:5000")
-    print("⭐ Para testar semanas estáticas: http://127.0.0.1:5000/planejamento_frz?mes=3&ano=2025")
+    print("🌐 Acesse: http://IP_DO_SERVIDOR:5000")
+    print("⭐ Para testar semanas estáticas: http://IP_DO_SERVIDOR:5000/planejamento_frz?mes=3&ano=2025")
     print()
     
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
