@@ -952,13 +952,22 @@ def projecao():
 
                 # Remove duplicado
                 cur.execute("""
-                    DELETE FROM projecao
-                    WHERE cliente = ? AND dia = ? AND mes = ? AND ano = ?
-                """, (cliente_id, dia, mes, ano))
-
-                cur.execute("""
-                    INSERT INTO projecao (cliente, dia, mes, ano, valor)
-                    VALUES (?, ?, ?, ?, ?)
+    
+    # Se o usuário escolheu um MÊS válido (mes != 'Todos'), aplicar filtro por mês (ano pode ser 'Todos')
+    # Se ano for 'Todos' usamos o ano atual como fallback para buscar projeções/lançamentos naquele mês do ano atual.
+    from datetime import datetime
+    now = datetime.now()
+    if mes and mes != 'Todos':
+        # se o ano for 'Todos' ou vazio, usar ano atual
+        ano_param = ano if ano and ano != 'Todos' else str(now.year)
+        data = build_dashboard_data_with_filters(mes, ano_param, status_filter=status_filter, client_filter=client_filter, min_value=min_value, max_value=max_value, search=search)
+    elif ano and ano != 'Todos':
+        # caso apenas ano seja informado, filtrar por ano (mês será vazio e a função tratará)
+        mes_param = mes if mes and mes != 'Todos' else f"{now.month:02d}"
+        data = build_dashboard_data_with_filters(mes_param, ano, status_filter=status_filter, client_filter=client_filter, min_value=min_value, max_value=max_value, search=search)
+    else:
+        # nenhum filtro de mês/ano: usar agregador geral
+        data = build_dashboard_data()
                 """, (cliente_id, dia, mes, ano, valor))
 
         conn.commit()
