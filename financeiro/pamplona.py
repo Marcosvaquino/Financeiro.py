@@ -9,6 +9,7 @@ import openpyxl
 from datetime import datetime
 import pandas as pd
 import traceback
+import shutil
 
 
 def tentar_converter_numero_brasileiro(texto):
@@ -55,32 +56,79 @@ def processar_pamplona(arquivo_upload):
     """
     try:
         print(f"🏢 INICIANDO PROCESSAMENTO PAMPLONA: {os.path.basename(arquivo_upload)}")
-        
-        # Ler o arquivo Excel
-        dados_excel = ler_excel_pamplona(arquivo_upload)
-        
-        # Processar cálculos específicos do Pamplona (implementar depois)
-        resultado_calculos = processar_calculos_pamplona(dados_excel)
-        
-        # Salvar resultado de volta no Excel
-        resultado_salvar = salvar_pamplona_csv(arquivo_upload, resultado_calculos['dados'])
-        
-        if resultado_salvar['success']:
-            return {
-                "success": True,
-                "message": f"✅ PAMPLONA PROCESSADO: {resultado_calculos['message']}",
-                "detalhes": {
-                    "arquivo": os.path.basename(arquivo_upload),
-                    "linhas_processadas": resultado_calculos.get('linhas_processadas', 0),
-                    "blocos_processados": resultado_calculos.get('blocos_processados', 0)
-                }
-            }
-        else:
-            return {
-                "success": False,
-                "message": f"❌ ERRO AO SALVAR: {resultado_salvar['message']}",
-                "detalhes": {}
-            }
+
+        # Abrir workbook e processar blocos diretamente (para preservar formato)
+        wb = openpyxl.load_workbook(arquivo_upload)
+        ws = wb.active
+
+        try:
+            backup_dir = os.path.join(os.path.dirname(__file__), 'uploads', 'backups')
+            os.makedirs(backup_dir, exist_ok=True)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_name = f"backup_pamplona_{timestamp}_{os.path.basename(arquivo_upload)}"
+            backup_path = os.path.join(backup_dir, backup_name)
+            shutil.copy2(arquivo_upload, backup_path)
+            print(f"💾 Backup criado: {backup_name}")
+        except Exception as e:
+            print(f"⚠️ Não conseguiu criar backup automático: {e}")
+
+        # Processar blocos: acumular PESO (coluna H -> índice 8), detectar TOTAL em coluna C (índice 3)
+        blocos = 0
+        linhas_processadas = 0
+        soma_atual = 0.0
+        rows = list(ws.iter_rows(min_row=2, max_row=ws.max_row))
+        for idx, row in enumerate(rows, start=2):
+                cell_nf = row[2].value  # coluna C
+                cell_peso = row[7].value  # coluna H
+
+                # Normalizar cell_nf para string
+                nf_text = str(cell_nf).strip() if cell_nf is not None else ''
+
+                # Tentar converter peso
+                peso_val = None
+                if cell_peso is None or (isinstance(cell_peso, str) and str(cell_peso).strip() == ''):
+                    peso_val = 0.0
+                else:
+                    peso_val = tentar_converter_numero_brasileiro(cell_peso)
+                    if peso_val is None:
+                        # tentar conversão direta se for número em outro formato
+                        try:
+                            peso_val = float(cell_peso)
+                        except Exception:
+                            peso_val = 0.0
+
+                # Se não for linha TOTAL, acumular
+                if not re.search(r'\bTOTAL\b', nf_text, re.IGNORECASE):
+                    soma_atual += float(peso_val or 0.0)
+                    linhas_processadas += 1
+                else:
+                    # Linha TOTAL: gravar soma na coluna H e resultado na coluna I
+                    soma_round = round(soma_atual, 2)
+                    # Escrever soma em H (coluna 8 -> index 7)
+                    ws.cell(row=idx, column=8, value=soma_round)
+
+                    # Calcular resultado = soma * 0.63 / 0.97
+                    resultado = 0.0
+                    try:
+                        resultado = (soma_atual * 0.63) / 0.97
+                    except Exception:
+                        resultado = 0.0
+                    resultado_round = round(resultado, 2)
+
+                    # Escrever resultado em I (coluna 9 -> index 8)
+                    ws.cell(row=idx, column=9, value=resultado_round)
+
+                    blocos += 1
+                    soma_atual = 0.0
+
+        # Salvar workbook (substituindo o original)
+        try:
+            wb.save(arquivo_upload)
+            print(f"✅ PAMPLONA PROCESSADO: {blocos} blocos, {linhas_processadas} linhas analisadas. Arquivo salvo: {os.path.basename(arquivo_upload)}")
+            return {"success": True, "message": f"{blocos} blocos, {linhas_processadas} linhas analisadas", "detalhes": {"arquivo": os.path.basename(arquivo_upload), "backup": os.path.basename(backup_path) if 'backup_path' in locals() else None}}
+        except Exception as e:
+            traceback.print_exc()
+            return {"success": False, "message": f"Erro ao salvar: {e}", "detalhes": {}}
             
     except Exception as e:
         traceback.print_exc()
@@ -139,29 +187,10 @@ def ler_excel_pamplona(arquivo_upload):
 
 def processar_calculos_pamplona(dados_excel):
     """
-    Processa os cálculos específicos do Pamplona.
-    
-    TODO: Implementar lógica específica do Pamplona quando você me disser as regras.
-    Por enquanto, apenas retorna os dados sem modificação.
+    Função legada (mantida apenas para compatibilidade). A nova lógica
+    processa diretamente o workbook em `processar_pamplona`.
     """
-    try:
-        print("🔄 Processando cálculos Pamplona...")
-        
-        # Por enquanto, apenas registra que foi chamado
-        linhas_processadas = len(dados_excel["dados"])
-        
-        print(f"✅ Cálculos Pamplona processados: {linhas_processadas} linhas")
-        
-        return {
-            "dados": dados_excel["dados"],
-            "message": f"{linhas_processadas} linhas processadas",
-            "linhas_processadas": linhas_processadas,
-            "blocos_processados": 0  # Para compatibilidade
-        }
-        
-    except Exception as e:
-        print(f"❌ Erro no processamento: {e}")
-        raise
+    raise NotImplementedError("Use processar_pamplona() que processa o workbook diretamente.")
 
 
 def salvar_pamplona_csv(arquivo_original, dados_processados):
