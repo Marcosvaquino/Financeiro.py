@@ -9,6 +9,83 @@ import importlib.util
 import traceback
 
 
+def extrair_mes_ano_de_nome_arquivo(nome_arquivo):
+    """
+    Extrai mês-ano a partir do NOME do arquivo procurando por nomes/abreviações de meses.
+    Retorna no formato MM-YY (ex: '09-25') ou None se não encontrar.
+    Regras:
+    - Aceita variações em português: jan, janeiro, fev, fevereiro, mar, março, etc.
+    - Se encontrar ano com 4 dígitos (ex: 2025) usa ele; se encontrar apenas 2 dígitos usa-os;
+      se não encontrar, usa o ano atual.
+    """
+    if not nome_arquivo:
+        return None
+
+    nome = os.path.basename(nome_arquivo).lower()
+
+    # Mapas de meses (abreviações e nomes comuns em pt)
+    meses_map = {
+        'jan': 1, 'janeiro': 1,
+        'fev': 2, 'fevereiro': 2,
+        'mar': 3, 'marco': 3, 'março': 3,
+        'abr': 4, 'abril': 4,
+        'mai': 5, 'maio': 5,
+        'jun': 6, 'junho': 6,
+        'jul': 7, 'julho': 7,
+        'ago': 8, 'agosto': 8,
+        'set': 9, 'setembro': 9, 'setem': 9,
+        'out': 10, 'outubro': 10,
+        'nov': 11, 'novembro': 11,
+        'dez': 12, 'dezembro': 12
+    }
+
+    # Regex para encontrar um token de mês (palavra)
+    mes_regex = re.compile(r'\b(' + '|'.join(re.escape(k) for k in sorted(meses_map.keys(), key=len, reverse=True)) + r')\b', re.IGNORECASE)
+    m = mes_regex.search(nome)
+    mes = None
+    if m:
+        chave = m.group(1).lower()
+        mes = meses_map.get(chave)
+
+    # Tentar encontrar ano (4 dígitos preferencialmente)
+    ano = None
+    m4 = re.search(r'20\d{2}', nome)
+    if m4:
+        ano = int(m4.group(0))
+    else:
+        # procurar dois dígitos que pareçam ano (ex: _25, -25, 25.xlsx)
+        m2 = re.search(r'[^0-9](\d{2})[^0-9]', f' {nome} ')
+        if m2:
+            ano_candidate = int(m2.group(1))
+            # Heurística: se candidato entre 0 e 30 -> assumir 2000+xx, senão 1900+xx
+            if 0 <= ano_candidate <= 99:
+                ano = 2000 + ano_candidate if ano_candidate <= 50 else 1900 + ano_candidate
+
+    # Se não encontrou mês, tentar extrair par numérico MM-YY ou MM-YYYY
+    if mes is None:
+        m_num = re.search(r'\b(0[1-9]|1[0-2])[\-_/]?(\d{2,4})\b', nome)
+        if m_num:
+            try:
+                mes = int(m_num.group(1))
+                yy = m_num.group(2)
+                if len(yy) == 2:
+                    ano = 2000 + int(yy)
+                else:
+                    ano = int(yy)
+            except Exception:
+                pass
+
+    # Se ainda não tiver ano, usar o ano atual
+    if ano is None:
+        ano = datetime.now().year
+
+    if mes is None:
+        return None
+
+    return f"{mes:02d}-{str(ano)[-2:]}"
+
+
+
 def schedule_acumulador_background():
     """Dispara criar_manifesto_acumulado.py em background. Usa um lock por arquivo para evitar concorrência."""
     try:
@@ -280,7 +357,7 @@ def processar():
     elif tipo_final == 'valencio':
         # Para Valencio: extrair mês/ano e renomear para Valencio_Frete_{MM-YY}
         try:
-            mes_ano = extrair_mes_ano_de_arquivo(arquivo)
+            mes_ano = extrair_mes_ano_de_nome_arquivo(arquivo.filename if hasattr(arquivo, 'filename') else str(arquivo))
         except Exception:
             mes_ano = None
 

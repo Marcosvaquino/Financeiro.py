@@ -17,6 +17,7 @@ Uso: execute o script na raiz do projeto (ele assume paths relativos ao workspac
 import os
 import glob
 from openpyxl import load_workbook, Workbook
+from datetime import datetime
 
 
 def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.xlsx'):
@@ -379,14 +380,74 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
 
         # Construir mapa manifesto->valor a partir dos arquivos Valencio
         valencio_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'financeiro', 'uploads', 'valencio'))
-        val_map = {}
+        # val_map_by_month: { 'YYYY-MM' or None: { manifesto_num: (mtime, value) } }
+        val_map_by_month = {}
         if os.path.isdir(valencio_dir):
             val_files = sorted([p for p in glob.glob(os.path.join(valencio_dir, '*.xlsx')) if not os.path.basename(p).startswith('~$')])
+
+            # função helper para extrair mês/ano do NOME do arquivo (aceita nomes/abreviações pt)
+            def extrair_periodo_de_nome(nome_arquivo):
+                if not nome_arquivo:
+                    return None
+                nome = os.path.basename(nome_arquivo).lower()
+                meses_map = {
+                    'jan': 1, 'janeiro': 1,
+                    'fev': 2, 'fevereiro': 2,
+                    'mar': 3, 'marco': 3, 'março': 3,
+                    'abr': 4, 'abril': 4,
+                    'mai': 5, 'maio': 5,
+                    'jun': 6, 'junho': 6,
+                    'jul': 7, 'julho': 7,
+                    'ago': 8, 'agosto': 8,
+                    'set': 9, 'setembro': 9, 'setem': 9,
+                    'out': 10, 'outubro': 10,
+                    'nov': 11, 'novembro': 11,
+                    'dez': 12, 'dezembro': 12
+                }
+                import re
+                mes_regex = re.compile(r'\b(' + '|'.join(re.escape(k) for k in sorted(meses_map.keys(), key=len, reverse=True)) + r')\b', re.IGNORECASE)
+                m = mes_regex.search(nome)
+                mes = None
+                ano = None
+                if m:
+                    chave = m.group(1).lower()
+                    mes = meses_map.get(chave)
+
+                m4 = re.search(r'20\d{2}', nome)
+                if m4:
+                    ano = int(m4.group(0))
+                else:
+                    m2 = re.search(r'[^0-9](\d{2})[^0-9]', f' {nome} ')
+                    if m2:
+                        ano_candidate = int(m2.group(1))
+                        ano = 2000 + ano_candidate if ano_candidate <= 50 else 1900 + ano_candidate
+
+                # fallback: tentar MM-YY numérico
+                if mes is None:
+                    m_num = re.search(r'\b(0[1-9]|1[0-2])[\-_/]?(\d{2,4})\b', nome)
+                    if m_num:
+                        try:
+                            mes = int(m_num.group(1))
+                            yy = m_num.group(2)
+                            if len(yy) == 2:
+                                ano = 2000 + int(yy)
+                            else:
+                                ano = int(yy)
+                        except Exception:
+                            pass
+
+                if mes is None:
+                    return None
+                if ano is None:
+                    ano = datetime.now().year
+                return f"{ano}-{mes:02d}"
+
             # varrer arquivos e coletar linhas que contenham 'Total' e 'Manifesto' na coluna A
             import re
             key_re = re.compile(r'\bTOTAL\b.*\bMANIFESTO\b', flags=re.IGNORECASE)
             num_re = re.compile(r'(\d{3,})')
             for vf in val_files:
+                periodo = extrair_periodo_de_nome(vf)
                 wbv = None
                 try:
                     wbv = load_workbook(vf, data_only=True)
@@ -409,27 +470,100 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
                         except Exception:
                             raw_val = None
                         parsed = parse_num_br(raw_val)
-                        # priorizar arquivo mais recente por mtime
+                        # priorizar arquivo mais recente por mtime dentro do mesmo periodo
                         mtime = os.path.getmtime(vf)
-                        prev = val_map.get(manifesto_num)
+                        month_bucket = periodo
+                        if month_bucket not in val_map_by_month:
+                            val_map_by_month[month_bucket] = {}
+                        prev = val_map_by_month[month_bucket].get(manifesto_num)
                         if prev is None or mtime > prev[0]:
-                            val_map[manifesto_num] = (mtime, parsed if parsed is not None else raw_val)
+                            val_map_by_month[month_bucket][manifesto_num] = (mtime, parsed if parsed is not None else raw_val)
                 except Exception:
                     # ignorar arquivo Valencio com problemas
                     continue
 
         # Agora preencher cada linha do acumulado
+        # identificar índice da coluna 'Data' no arquivo de saída para casar por mês
+        out_headers = [ws_out.cell(1, c).value for c in range(1, ws_out.max_column + 1)]
+        out_headers_norm = [normalizar_texto(h) for h in out_headers]
+        try:
+            data_idx = out_headers_norm.index(normalizar_texto('Data')) + 1
+        except ValueError:
+            data_idx = None
+
+        def parse_ano_mes_de_data(v):
+            # espera formatos como 'dd/mm/yyyy' ou 'dd/mm/yy' ou datetime
+            if v is None:
+                return None
+            if isinstance(v, (int, float)):
+                return None
+            s = str(v).strip()
+            if not s:
+                return None
+            # procurar padrão dd/mm/yyyy ou dd/mm/yy
+            import re
+            m = re.search(r'(\d{1,2})/(\d{1,2})/(\d{2,4})', s)
+            if m:
+                dd = int(m.group(1)); mm = int(m.group(2)); yy = m.group(3)
+                if len(yy) == 2:
+                    ano = 2000 + int(yy)
+                else:
+                    ano = int(yy)
+                return f"{ano}-{mm:02d}"
+            # tentar extrair mês por palavra no campo Data (menos provável)
+            m2 = re.search(r'([A-Za-zçãé]+)', s)
+            if m2:
+                token = m2.group(1)
+                # reutilizar lógica de nomes de meses simplificada
+                meses_short = {'jan':1,'fev':2,'mar':3,'abr':4,'mai':5,'jun':6,'jul':7,'ago':8,'set':9,'out':10,'nov':11,'dez':12}
+                t = token.lower()[:3]
+                if t in meses_short:
+                    ano = datetime.now().year
+                    return f"{ano}-{meses_short[t]:02d}"
+            return None
+
         for r in range(2, ws_out.max_row + 1):
             manifest_val = ws_out.cell(r, 1).value
             if manifest_val is None:
-                # limpar
                 ws_out.cell(r, out_idx_frete, None)
                 continue
+
+            # determinar periodo da linha usando coluna Data
+            periodo_linha = None
+            if data_idx:
+                try:
+                    data_val = ws_out.cell(r, data_idx).value
+                    periodo_linha = parse_ano_mes_de_data(data_val)
+                except Exception:
+                    periodo_linha = None
+
             # normalizar número do manifesto (apenas dígitos)
             mstr = ''.join(ch for ch in str(manifest_val) if ch.isdigit())
             chosen = None
-            if mstr and mstr in val_map:
-                chosen = val_map[mstr][1]
+
+            # tentar lookup no bucket do mesmo período
+            if mstr:
+                if periodo_linha and periodo_linha in val_map_by_month:
+                    chosen = val_map_by_month[periodo_linha].get(mstr)
+                    if chosen:
+                        chosen = chosen[1]
+                # fallback para bucket None (arquivos Valencio sem mês no nome)
+                if chosen is None and None in val_map_by_month:
+                    prev = val_map_by_month[None].get(mstr)
+                    if prev:
+                        chosen = prev[1]
+
+            # último fallback: procurar em qualquer bucket e escolher valor com maior mtime
+            if chosen is None and mstr:
+                best = None
+                for bucket, mapping in val_map_by_month.items():
+                    if mstr in mapping:
+                        cand = mapping[mstr]
+                        if best is None or cand[0] > best[0]:
+                            best = cand
+                if best:
+                    chosen = best[1]
+
             if chosen is None:
                 # fallback para valor na coluna N do próprio acumulado (coluna 14)
                 try:
@@ -437,6 +571,7 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
                     chosen = parse_num_br(fallback_raw)
                 except Exception:
                     chosen = None
+
             # escrever como número (ou None)
             ws_out.cell(r, out_idx_frete, chosen)
     except Exception:
