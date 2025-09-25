@@ -297,7 +297,7 @@ def calcular_semanas_sabado_sexta(mes, ano):
     semanas_do_mes = semanas_estaticas.get(mes, [])
     
     semanas = []
-    for semana_config in semanas_do_mes:
+    for idx, semana_config in enumerate(semanas_do_mes):
         if semana_config['inicio_dia'] is None:
             # Semana vazia
             semanas.append({
@@ -305,21 +305,56 @@ def calcular_semanas_sabado_sexta(mes, ano):
                 'fim': None,
                 'label': '-'
             })
-        else:
-            # Calcular as datas reais (usando o mês atual como base)
-            try:
-                inicio = datetime(ano, mes, semana_config['inicio_dia'])
-                fim = datetime(ano, mes, min(semana_config['fim_dia'], 31))  # Ajustar para últimos dias
-            except ValueError:
-                # Se o dia não existe no mês, usar None
-                inicio = None
-                fim = None
-            
-            semanas.append({
-                'inicio': inicio,
-                'fim': fim,
-                'label': semana_config['label']
-            })
+            continue
+
+        # Calcular as datas reais (suportando semanas que cruzam mês anterior/próximo)
+        start_day = semana_config['inicio_dia']
+        end_day = semana_config['fim_dia']
+        try:
+            # Inicializar anos/meses para inicio e fim
+            inicio_year = ano
+            inicio_month = mes
+            fim_year = ano
+            fim_month = mes
+
+            if start_day > end_day:
+                # A semana cruza um mês: decidir se o início é no mês anterior ou o fim é no mês seguinte
+                # Regra: se for a primeira semana (idx==0) assume que começa no mês anterior e termina no mês corrente.
+                # Se for a última semana (idx==4) assume que começa no mês corrente e termina no mês seguinte.
+                if idx == 0:
+                    # início no mês anterior
+                    if mes == 1:
+                        inicio_month = 12
+                        inicio_year = ano - 1
+                    else:
+                        inicio_month = mes - 1
+                    fim_month = mes
+                    fim_year = ano
+                elif idx == 4:
+                    # fim no mês seguinte
+                    inicio_month = mes
+                    inicio_year = ano
+                    if mes == 12:
+                        fim_month = 1
+                        fim_year = ano + 1
+                    else:
+                        fim_month = mes + 1
+                else:
+                    # Caso intermediário: por segurança assumir início no mês corrente e fim no mês corrente
+                    inicio_month = mes
+                    fim_month = mes
+
+            inicio = datetime(inicio_year, inicio_month, start_day)
+            fim = datetime(fim_year, fim_month, min(end_day, 31))
+        except ValueError:
+            inicio = None
+            fim = None
+
+        semanas.append({
+            'inicio': inicio,
+            'fim': fim,
+            'label': semana_config['label']
+        })
     
     return semanas
 
@@ -330,15 +365,27 @@ def buscar_valor_projetado(cur, cliente, semana, mes, ano):
     if semana['inicio'] is None or semana['fim'] is None:
         return 0.0
     
-    # Buscar na tabela projecao
-    cur.execute("""
-        SELECT SUM(valor) FROM projecao 
-        WHERE cliente = ? AND mes = ? AND ano = ? 
-        AND dia BETWEEN ? AND ?
-    """, (cliente, mes, ano, semana['inicio'].day, semana['fim'].day))
-    
-    resultado = cur.fetchone()[0]
-    return resultado if resultado else 0.0
+    # Se a semana cruza meses (inicio e fim em meses diferentes), somar em dois intervalos
+    inicio = semana['inicio']
+    fim = semana['fim']
+    if inicio is None or fim is None:
+        return 0.0
+
+    if inicio.month == fim.month and inicio.year == fim.year:
+        cur.execute("SELECT SUM(valor) FROM projecao WHERE cliente = ? AND mes = ? AND ano = ? AND dia BETWEEN ? AND ?",
+                    (cliente, inicio.month, inicio.year, inicio.day, fim.day))
+        resultado = cur.fetchone()[0]
+        return resultado if resultado else 0.0
+    else:
+        # parte 1: inicio.month/inicio.year de inicio.day..31
+        cur.execute("SELECT SUM(valor) FROM projecao WHERE cliente = ? AND mes = ? AND ano = ? AND dia BETWEEN ? AND 31",
+                    (cliente, inicio.month, inicio.year, inicio.day))
+        p1 = cur.fetchone()[0] or 0.0
+        # parte 2: fim.month/fim.year de 1..fim.day
+        cur.execute("SELECT SUM(valor) FROM projecao WHERE cliente = ? AND mes = ? AND ano = ? AND dia BETWEEN 1 AND ?",
+                    (cliente, fim.month, fim.year, fim.day))
+        p2 = cur.fetchone()[0] or 0.0
+        return p1 + p2
 
 
 def buscar_valor_realizado(cur, cliente, semana, mes, ano):
@@ -352,28 +399,64 @@ def buscar_valor_realizado(cur, cliente, semana, mes, ano):
     # Converter datas da semana para formato de comparação
     inicio_semana = semana['inicio']
     fim_semana = semana['fim']
-    
-    # Buscar na tabela contas_receber com status 'RECEBIDO' 
-    # filtrando por data de vencimento dentro da semana específica
-    # Formato esperado: DD/MM/YYYY
-    cur.execute("""
-        SELECT SUM(valor_principal) FROM contas_receber 
-        WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
-        AND (
-            CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
-            CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
-            CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
-        )
-    """, (
-        cliente, 
-        ano,  # Ano (YYYY)
-        mes,  # Mês (MM)
-        inicio_semana.day,  # Dia inicial da semana
-        fim_semana.day      # Dia final da semana
-    ))
-    
-    resultado = cur.fetchone()[0]
-    return resultado if resultado else 0.0
+
+    if inicio_semana is None or fim_semana is None:
+        return 0.0
+
+    # Se a semana está no mesmo mês/ano
+    if inicio_semana.month == fim_semana.month and inicio_semana.year == fim_semana.year:
+        cur.execute("""
+            SELECT SUM(valor_principal) FROM contas_receber 
+            WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND (
+                CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
+            )
+        """, (
+            cliente,
+            inicio_semana.year,
+            inicio_semana.month,
+            inicio_semana.day,
+            fim_semana.day
+        ))
+        resultado = cur.fetchone()[0]
+        return resultado if resultado else 0.0
+    else:
+        # Somar parte no mês/ano de inicio (dia inicio..31)
+        cur.execute("""
+            SELECT SUM(valor_principal) FROM contas_receber 
+            WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND (
+                CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND 31
+            )
+        """, (
+            cliente,
+            inicio_semana.year,
+            inicio_semana.month,
+            inicio_semana.day
+        ))
+        p1 = cur.fetchone()[0] or 0.0
+
+        # Somar parte no mês/ano de fim (1..dia fim)
+        cur.execute("""
+            SELECT SUM(valor_principal) FROM contas_receber 
+            WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND (
+                CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN 1 AND ?
+            )
+        """, (
+            cliente,
+            fim_semana.year,
+            fim_semana.month,
+            fim_semana.day
+        ))
+        p2 = cur.fetchone()[0] or 0.0
+        return p1 + p2
 
 
 def calcular_totais_frz(dados):
