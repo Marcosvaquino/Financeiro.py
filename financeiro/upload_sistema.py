@@ -162,6 +162,8 @@ def processar():
         tipo_detectado = 'manifesto'
     elif 'valencio' in nome_arquivo or 'valen' in nome_arquivo or 'calculo' in nome_arquivo:
         tipo_detectado = 'valencio'
+    elif 'pamplona' in nome_arquivo or 'pamp' in nome_arquivo:
+        tipo_detectado = 'pamplona'
     
     # Verificar se há conflito entre seleção e detecção
     if tipo_detectado and tipo_detectado != tipo_usuario:
@@ -378,6 +380,30 @@ def processar():
             flash(f'✅ VALENCIO: {resultado["message"]}')
         else:
             flash(f'❌ ERRO VALENCIO: {resultado["message"]}')
+    elif tipo_final == 'pamplona':
+        # Para Pamplona: extrair mês/ano e renomear para Pamplona_Frete_{MM-YY}
+        try:
+            mes_ano = extrair_mes_ano_de_nome_arquivo(arquivo.filename if hasattr(arquivo, 'filename') else str(arquivo))
+        except Exception:
+            mes_ano = None
+
+        ext = os.path.splitext(secure_filename(arquivo.filename))[1] or '.xlsx'
+        novo_nome = f"Pamplona_Frete_{mes_ano}{ext}" if mes_ano else f"Pamplona_Frete_unknown{ext}"
+
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads', 'pamplona'))
+        os.makedirs(uploads_dir, exist_ok=True)
+        destino = os.path.join(uploads_dir, novo_nome)
+
+        # salvar (sobrescrever se necessário)
+        arquivo.stream.seek(0)
+        arquivo.save(destino)
+
+        from .pamplona import processar_pamplona
+        resultado = processar_pamplona(destino)
+        if resultado['success']:
+            flash(f'✅ PAMPLONA: {resultado["message"]}')
+        else:
+            flash(f'❌ ERRO PAMPLONA: {resultado["message"]}')
     else:
         flash(f'❓ Arquivo "{arquivo.filename}" de tipo indefinido foi recebido!')
     
