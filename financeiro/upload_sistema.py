@@ -378,6 +378,12 @@ def processar():
         resultado = processar_valencio(destino)
         if resultado['success']:
             flash(f'✅ VALENCIO: {resultado["message"]}')
+            # Agendar atualização do Manifesto_Acumulado em background (Valencio afeta coluna "Frete Correto")
+            try:
+                schedule_acumulador_background()
+            except Exception:
+                # não bloquear a resposta principal
+                pass
         else:
             flash(f'❌ ERRO VALENCIO: {resultado["message"]}')
     elif tipo_final == 'pamplona':
@@ -402,6 +408,12 @@ def processar():
         resultado = processar_pamplona(destino)
         if resultado['success']:
             flash(f'✅ PAMPLONA: {resultado["message"]}')
+            # Agendar atualização do Manifesto_Acumulado em background (Pamplona pode afetar o acumulado)
+            try:
+                schedule_acumulador_background()
+            except Exception:
+                # não bloquear a resposta principal
+                pass
         else:
             flash(f'❌ ERRO PAMPLONA: {resultado["message"]}')
     else:
