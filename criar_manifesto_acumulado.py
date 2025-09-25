@@ -30,23 +30,17 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
     if not arquivos:
         return {'success': False, 'message': f'Nenhum arquivo .xlsx encontrado em {upload_dir}'}
 
-    # Escolher base: preferir arquivo com _08 ou 08- ou 08_
-    base_file = None
-    for a in arquivos:
-        nome = os.path.basename(a)
-        if '_08' in nome or '08-' in nome or '08_' in nome or '_08-' in nome:
-            base_file = a
-            break
-    if not base_file:
-        base_file = arquivos[0]
+    # Usar cabeçalho fixo (extraído do Manifesto_Acumulado existente)
+    # FIXED_HEADERS foi extraído e salvo aqui para não depender de um arquivo base dinâmico
+    FIXED_HEADERS = [
+        'Manifesto', 'Filial', 'Data', 'Veículo', 'Destino', 'Serviços', 'NFs', 'Kg Real', 'Kg Taxado', 'M3',
+        'Vale frete', 'Valor NF', 'Valor Fretes', 'valor final', 'Capacidade Veículo', '% Aprov. Veículo',
+        'Km saída', 'Km chegada', 'Km final', 'Valor Frete', 'Classificação', 'Observaçoes operacionais',
+        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real'
+    ]
 
-    # Construir lista de colunas inicial a partir do base
-    wb_base = load_workbook(base_file, data_only=True)
-    ws_base = wb_base.active
-    base_headers = []
-    for col in range(1, ws_base.max_column + 1):
-        h = ws_base.cell(1, col).value
-        base_headers.append('' if h is None else str(h))
+    # Usaremos FIXED_HEADERS como full_headers de saída (mantendo a normalização interna)
+    base_headers = list(FIXED_HEADERS)
 
     # Função para normalizar cabeçalhos (remover acentos, maiúsculas, strip)
     import unicodedata
@@ -90,14 +84,13 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
             duplicatas_base.append((idx + 1, h))
 
     if duplicatas_base:
-        print(f"⚠️ Duplicatas de cabeçalho detectadas no arquivo base '{os.path.basename(base_file)}':")
+        print(f"⚠️ Duplicatas de cabeçalho detectadas no cabeçalho fixo:")
         for pos, nome in duplicatas_base:
             print(f"  - Coluna {pos}: '{nome}' (ignorada na criação do acumulado)")
 
     # Examinar outros arquivos e coletar colunas extras (apenas se normalized não existir)
+    # Examinar outros arquivos e coletar colunas extras (apenas se normalized não existir)
     for a in arquivos:
-        if a == base_file:
-            continue
         wb = load_workbook(a, data_only=True)
         ws = wb.active
         for col in range(1, ws.max_column + 1):
@@ -167,10 +160,37 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
     total_rows = 0
     files_processed = 0
 
-    # Ordem: base primeiro, depois os demais (na ordem dos arquivos)
-    ordem = [base_file] + [a for a in arquivos if a != base_file]
+    # Selecionar um arquivo por mês/ano: agrupar arquivos por padrão no nome (MM/YY ou MM/YYYY)
+    import re
+    month_re = re.compile(r'(0[1-9]|1[0-2])[-_]?((?:\d{2})|(?:\d{4}))')
 
-    for a in ordem:
+    arquivos_por_mes = {}
+    for a in arquivos:
+        nome = os.path.basename(a)
+        m = month_re.search(nome)
+        if not m:
+            # arquivo sem mês detectado: colocar em chave None (tratamento posterior)
+            key = None
+        else:
+            mm = m.group(1)
+            yy = m.group(2)
+            # normalizar ano para 4 dígitos
+            if len(yy) == 2:
+                ano = '20' + yy
+            else:
+                ano = yy
+            key = f"{ano}-{mm}"
+        arquivos_por_mes.setdefault(key, []).append(a)
+
+    # Para cada mês (incluindo None), escolher o arquivo mais recente (mtime)
+    arquivos_selecionados = []
+    for key, lista in arquivos_por_mes.items():
+        # escolher mais recente por last modified
+        chosen = max(lista, key=lambda p: os.path.getmtime(p))
+        arquivos_selecionados.append(chosen)
+
+    # Agora processar apenas os arquivos selecionados (um por mês ou os sem mês)
+    for a in arquivos_selecionados:
         wb = load_workbook(a, data_only=True)
         ws = wb.active
 
@@ -326,6 +346,24 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
     # Salvar arquivo
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'financeiro', 'uploads', output_name))
     try:
+        # se arquivo já existe, fazer backup antes de sobrescrever
+        if os.path.exists(output_path):
+            backup_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'financeiro', 'uploads', 'backups'))
+            os.makedirs(backup_dir, exist_ok=True)
+            import time
+            stamp = time.strftime('%Y%m%d_%H%M%S')
+            backup_path = os.path.join(backup_dir, f"Manifesto_Acumulado_{stamp}.xlsx")
+            try:
+                os.replace(output_path, backup_path)
+            except Exception:
+                # se não conseguir mover, tentar copiar
+                try:
+                    from shutil import copy2
+                    copy2(output_path, backup_path)
+                except Exception:
+                    # não bloquear a execução apenas por falha no backup
+                    pass
+
         wb_out.save(output_path)
     except PermissionError:
         # Arquivo pode estar aberto no Excel; tentar salvar com sufixo
@@ -348,7 +386,7 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
         'success': True,
         'message': f'Processados {files_processed} arquivos, {total_rows} linhas escritas em {output_path}',
         'output_path': output_path,
-        'files': ordem
+        'files': arquivos_selecionados if 'arquivos_selecionados' in locals() else arquivos
     }
 
 

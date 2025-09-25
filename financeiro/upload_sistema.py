@@ -4,6 +4,58 @@ import re
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from .manifesto import processar_manifesto, extrair_mes_ano_de_arquivo
+import threading
+import importlib.util
+import traceback
+
+
+def schedule_acumulador_background():
+    """Dispara criar_manifesto_acumulado.py em background. Usa um lock por arquivo para evitar concorrência."""
+    try:
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads'))
+        lockfile = os.path.join(uploads_dir, 'manifesto_acumulado.lock')
+        # tentar criar lock atomically
+        fd = None
+        try:
+            fd = os.open(lockfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode('utf-8'))
+            os.close(fd)
+            fd = None
+        except FileExistsError:
+            # já em execução
+            return
+
+        def _runner():
+            try:
+                # carregar o módulo pelo caminho absoluto
+                script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'criar_manifesto_acumulado.py'))
+                spec = importlib.util.spec_from_file_location('criar_manifesto_acumulado', script_path)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                # chamar função principal
+                try:
+                    mod.criar_manifesto_acumulado()
+                except Exception:
+                    # se módulo tiver comportamento diferente, tentar chamar via main
+                    if hasattr(mod, '__main__'):
+                        pass
+            except Exception:
+                traceback.print_exc()
+            finally:
+                try:
+                    if os.path.exists(lockfile):
+                        os.remove(lockfile)
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=_runner, daemon=True)
+        t.start()
+    finally:
+        try:
+            if fd:
+                os.close(fd)
+        except Exception:
+            pass
 
 bp = Blueprint('upload_sistema', __name__, url_prefix='/upload')
 
@@ -217,6 +269,12 @@ def processar():
         if resultado['success']:
             backup_info = f" (backup: {os.path.basename(resultado['backup_path'])})" if resultado['backup_path'] else ""
             flash(f'✅ MANIFESTO INTEGRADO: {resultado["message"]}{backup_info}')
+            # Agendar atualização do Manifesto_Acumulado em background
+            try:
+                schedule_acumulador_background()
+            except Exception:
+                # não bloquear a resposta principal
+                pass
         else:
             flash(f'❌ ERRO INTEGRAÇÃO: {resultado["message"]}')
     elif tipo_final == 'valencio':
