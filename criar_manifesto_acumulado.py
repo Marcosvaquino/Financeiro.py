@@ -343,6 +343,106 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
         # Não falhar o processo caso o pós-processamento não funcione; apenas continuar
         pass
 
+    # --- Nova lógica: criar coluna 'Frete Correto' e preencher a partir dos arquivos Valencio
+    try:
+        # localizar/garantir coluna 'Frete Correto' no final
+        out_headers = [ws_out.cell(1, c).value for c in range(1, ws_out.max_column + 1)]
+        out_headers_norm = [normalizar_texto(h) for h in out_headers]
+        if normalizar_texto('Frete Correto') in out_headers_norm:
+            out_idx_frete = out_headers_norm.index(normalizar_texto('Frete Correto')) + 1
+        else:
+            out_idx_frete = ws_out.max_column + 1
+            ws_out.cell(1, out_idx_frete, 'Frete Correto')
+
+        # Função para parsear número com formatação BR (1.234,56) ou US (1234.56)
+        def parse_num_br(v):
+            if v is None:
+                return None
+            if isinstance(v, (int, float)):
+                return float(v)
+            s = str(v).strip()
+            if s == '':
+                return None
+            # remover espaços e pontos de milhar, trocar vírgula por ponto
+            s2 = s.replace(' ', '')
+            # detectar se usa vírgula como decimal
+            if ',' in s2 and s2.count(',') >= 1:
+                # remover pontos (milhares)
+                s2 = s2.replace('.', '')
+                s2 = s2.replace(',', '.')
+            else:
+                s2 = s2.replace(',', '')
+            try:
+                return float(s2)
+            except Exception:
+                return None
+
+        # Construir mapa manifesto->valor a partir dos arquivos Valencio
+        valencio_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'financeiro', 'uploads', 'valencio'))
+        val_map = {}
+        if os.path.isdir(valencio_dir):
+            val_files = sorted([p for p in glob.glob(os.path.join(valencio_dir, '*.xlsx')) if not os.path.basename(p).startswith('~$')])
+            # varrer arquivos e coletar linhas que contenham 'Total' e 'Manifesto' na coluna A
+            import re
+            key_re = re.compile(r'\bTOTAL\b.*\bMANIFESTO\b', flags=re.IGNORECASE)
+            num_re = re.compile(r'(\d{3,})')
+            for vf in val_files:
+                wbv = None
+                try:
+                    wbv = load_workbook(vf, data_only=True)
+                    wsv = wbv.active
+                    for r in range(1, wsv.max_row + 1):
+                        a_val = wsv.cell(r, 1).value
+                        if not a_val:
+                            continue
+                        a_text = str(a_val)
+                        if not key_re.search(a_text):
+                            continue
+                        # extrair número do manifesto da célula
+                        mnum = num_re.search(a_text)
+                        if not mnum:
+                            continue
+                        manifesto_num = mnum.group(1)
+                        # pegar valor na coluna N (14)
+                        try:
+                            raw_val = wsv.cell(r, 14).value
+                        except Exception:
+                            raw_val = None
+                        parsed = parse_num_br(raw_val)
+                        # priorizar arquivo mais recente por mtime
+                        mtime = os.path.getmtime(vf)
+                        prev = val_map.get(manifesto_num)
+                        if prev is None or mtime > prev[0]:
+                            val_map[manifesto_num] = (mtime, parsed if parsed is not None else raw_val)
+                except Exception:
+                    # ignorar arquivo Valencio com problemas
+                    continue
+
+        # Agora preencher cada linha do acumulado
+        for r in range(2, ws_out.max_row + 1):
+            manifest_val = ws_out.cell(r, 1).value
+            if manifest_val is None:
+                # limpar
+                ws_out.cell(r, out_idx_frete, None)
+                continue
+            # normalizar número do manifesto (apenas dígitos)
+            mstr = ''.join(ch for ch in str(manifest_val) if ch.isdigit())
+            chosen = None
+            if mstr and mstr in val_map:
+                chosen = val_map[mstr][1]
+            if chosen is None:
+                # fallback para valor na coluna N do próprio acumulado (coluna 14)
+                try:
+                    fallback_raw = ws_out.cell(r, 14).value
+                    chosen = parse_num_br(fallback_raw)
+                except Exception:
+                    chosen = None
+            # escrever como número (ou None)
+            ws_out.cell(r, out_idx_frete, chosen)
+    except Exception:
+        # não falhar inteiramente se houver erro aqui
+        pass
+
     # Salvar arquivo
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'financeiro', 'uploads', output_name))
     try:
