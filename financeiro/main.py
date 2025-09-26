@@ -8,6 +8,26 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "frz-secret"  # chave de sessão
 
+# Função para formatação brasileira de valores
+def format_currency(value):
+    """Formata valores para padrão brasileiro: 1.234.567,89"""
+    if value is None or value == '':
+        return "0,00"
+    
+    # Converte para float e trata erros
+    try:
+        num_value = float(value)
+    except (ValueError, TypeError):
+        return "0,00"
+    
+    # Formata e converte para padrão brasileiro
+    formatted = "{:,.2f}".format(num_value)
+    # Troca separadores: vírgula por X, ponto por vírgula, X por ponto
+    return formatted.replace(',', 'X').replace('.', ',').replace('X', '.')
+
+# Registra a função no Jinja2
+app.jinja_env.filters['currency'] = format_currency
+
 # --- helper: login required decorator ---
 from functools import wraps
 def login_required(f):

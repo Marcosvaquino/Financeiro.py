@@ -70,9 +70,9 @@
                         {% if dados.kpis.receita.percentual >= 80 %}↗️{% elif dados.kpis.receita.percentual >= 50 %}⚠️{% else %}↘️{% endif %}
                     </span>
                 </div>
-                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                <div class="kpi-main-value">R$ {{ dados.kpis.receita.realizada|currency }}</div>
                 <div class="kpi-sub-info">
-                    <span class="kpi-meta">Meta: R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</span>
+                    <span class="kpi-meta">Meta: R$ {{ dados.kpis.receita.meta|currency }}</span>
                     <span class="kpi-percent {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
                         {{ "{:.1f}".format(dados.kpis.receita.percentual) }}%
                     </span>
@@ -88,7 +88,7 @@
                         {{ '💚' if dados.kpis.fluxo_caixa.positivo else '❤️' }}
                     </span>
                 </div>
-                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
+                <div class="kpi-main-value">R$ {{ dados.kpis.fluxo_caixa.valor|currency }}</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">Receber - Pagar</span>
                     <span class="kpi-percent {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
@@ -106,7 +106,7 @@
                         {% if dados.kpis.receber.count_vencidas == 0 %}✅{% else %}⚠️{% endif %}
                     </span>
                 </div>
-                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                <div class="kpi-main-value">R$ {{ dados.kpis.receber.total|currency }}</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">{{ dados.kpis.receber.count }} títulos</span>
                     <span class="kpi-percent {{ 'danger' if dados.kpis.receber.count_vencidas > 0 else 'success' }}">
@@ -124,7 +124,7 @@
                         {% if dados.kpis.pagar.count_vencidas == 0 %}✅{% else %}⚠️{% endif %}
                     </span>
                 </div>
-                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                <div class="kpi-main-value">R$ {{ dados.kpis.pagar.total|currency }}</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">{{ dados.kpis.pagar.count }} títulos</span>
                     <span class="kpi-percent {{ 'danger' if dados.kpis.pagar.count_vencidas > 0 else 'success' }}">
@@ -140,7 +140,7 @@
                     <h3>Ticket Médio</h3>
                     <span class="kpi-trend-compact up">📊</span>
                 </div>
-                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                <div class="kpi-main-value">R$ {{ dados.ticket_medio|currency }}</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">Por transação</span>
                     <span class="kpi-percent success">Média</span>
@@ -183,21 +183,21 @@
                             <div class="stat-icon">💧</div>
                             <div class="stat-content">
                                 <div class="stat-label">Fluxo de Caixa</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.fluxo_caixa.valor|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card primary">
                             <div class="stat-icon">📈</div>
                             <div class="stat-content">
                                 <div class="stat-label">Total a Receber</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receber.total|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card warning">
                             <div class="stat-icon">📉</div>
                             <div class="stat-content">
                                 <div class="stat-label">Total a Pagar</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.pagar.total|currency }}</div>
                             </div>
                         </div>
                     </div>
@@ -208,7 +208,7 @@
                             {% for mes_proj in dados.projecao_fluxo %}
                             <div class="projection-card {{ 'positive' if mes_proj.valor >= 0 else 'negative' }}">
                                 <div class="projection-month">{{ mes_proj.nome }}</div>
-                                <div class="projection-value">R$ {{ "{:,.0f}".format(mes_proj.valor) }}</div>
+                                <div class="projection-value">R$ {{ mes_proj.valor|currency }}</div>
                                 <div class="projection-status">{{ 'Positivo' if mes_proj.valor >= 0 else 'Negativo' }}</div>
                             </div>
                             {% endfor %}
@@ -222,7 +222,7 @@
                                 <div class="breakdown-icon">💰</div>
                                 <div class="breakdown-content">
                                     <div class="breakdown-label">Entradas Previstas</div>
-                                    <div class="breakdown-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                                    <div class="breakdown-value">R$ {{ dados.kpis.receber.total|currency }}</div>
                                     <div class="breakdown-detail">{{ dados.kpis.receber.count }} títulos</div>
                                 </div>
                             </div>
@@ -230,7 +230,7 @@
                                 <div class="breakdown-icon">💸</div>
                                 <div class="breakdown-content">
                                     <div class="breakdown-label">Saídas Previstas</div>
-                                    <div class="breakdown-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                                    <div class="breakdown-value">R$ {{ dados.kpis.pagar.total|currency }}</div>
                                     <div class="breakdown-detail">{{ dados.kpis.pagar.count }} títulos</div>
                                 </div>
                             </div>
@@ -255,7 +255,7 @@
                             <div class="stat-icon">📈</div>
                             <div class="stat-content">
                                 <div class="stat-label">Total a Receber</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receber.total|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card secondary">
@@ -313,7 +313,7 @@
                             
                             <div class="insight info">
                                 <span class="insight-icon">📊</span>
-                                <span class="insight-text">Valor médio por título: R$ {{ "{:,.0f}".format(dados.kpis.receber.total / dados.kpis.receber.count if dados.kpis.receber.count > 0 else 0) }}</span>
+                                <span class="insight-text">Valor médio por título: R$ {{ (dados.kpis.receber.total / dados.kpis.receber.count if dados.kpis.receber.count > 0 else 0)|currency }}</span>
                             </div>
                         </div>
                     </div>
@@ -336,7 +336,7 @@
                             <div class="stat-icon">📉</div>
                             <div class="stat-content">
                                 <div class="stat-label">Total a Pagar</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.pagar.total|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card secondary">
@@ -394,7 +394,7 @@
                             
                             <div class="insight info">
                                 <span class="insight-icon">📊</span>
-                                <span class="insight-text">Valor médio por título: R$ {{ "{:,.0f}".format(dados.kpis.pagar.total / dados.kpis.pagar.count if dados.kpis.pagar.count > 0 else 0) }}</span>
+                                <span class="insight-text">Valor médio por título: R$ {{ (dados.kpis.pagar.total / dados.kpis.pagar.count if dados.kpis.pagar.count > 0 else 0)|currency }}</span>
                             </div>
                         </div>
                     </div>
@@ -417,7 +417,7 @@
                             <div class="stat-icon">🎯</div>
                             <div class="stat-content">
                                 <div class="stat-label">Ticket Médio Atual</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                                <div class="stat-value">R$ {{ dados.ticket_medio|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card secondary">
@@ -431,7 +431,7 @@
                             <div class="stat-icon">💰</div>
                             <div class="stat-content">
                                 <div class="stat-label">Receita Total</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receita.realizada|currency }}</div>
                             </div>
                         </div>
                     </div>
@@ -442,22 +442,22 @@
                             <div class="chart-bar">
                                 <div class="bar-label">3 meses atrás</div>
                                 <div class="bar" style="height: 60%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.85) }}</div>
+                                <div class="bar-value">R$ {{ (dados.ticket_medio * 0.85)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">2 meses atrás</div>
                                 <div class="bar" style="height: 75%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.92) }}</div>
+                                <div class="bar-value">R$ {{ (dados.ticket_medio * 0.92)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">Mês anterior</div>
                                 <div class="bar" style="height: 85%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.98) }}</div>
+                                <div class="bar-value">R$ {{ (dados.ticket_medio * 0.98)|currency }}</div>
                             </div>
                             <div class="chart-bar current-month">
                                 <div class="bar-label">Atual</div>
                                 <div class="bar" style="height: 100%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                                <div class="bar-value">R$ {{ dados.ticket_medio|currency }}</div>
                             </div>
                         </div>
                     </div>
@@ -467,7 +467,7 @@
                         <div class="insights-list">
                             <div class="insight info">
                                 <span class="insight-icon">📊</span>
-                                <span class="insight-text">Ticket médio atual: R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                                <span class="insight-text">Ticket médio atual: R$ {{ dados.ticket_medio|currency }}</span>
                             </div>
                             <div class="insight success">
                                 <span class="insight-icon">🎯</span>
@@ -475,7 +475,7 @@
                             </div>
                             <div class="insight warning">
                                 <span class="insight-icon">💡</span>
-                                <span class="insight-text">Meta sugerida: R$ {{ "{:,.0f}".format(dados.ticket_medio * 1.15) }} (+15%)</span>
+                                <span class="insight-text">Meta sugerida: R$ {{ (dados.ticket_medio * 1.15)|currency }} (+15%)</span>
                             </div>
                         </div>
                     </div>
@@ -505,14 +505,14 @@
                             <div class="stat-icon">💰</div>
                             <div class="stat-content">
                                 <div class="stat-label">Receita Atual</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receita.realizada|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card secondary">
                             <div class="stat-icon">📊</div>
                             <div class="stat-content">
                                 <div class="stat-label">Receita Anterior</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</div>
+                                <div class="stat-value">R$ {{ dados.comparacao.receita_anterior|currency }}</div>
                             </div>
                         </div>
                     </div>
@@ -523,32 +523,32 @@
                             <div class="chart-bar">
                                 <div class="bar-label">6m atrás</div>
                                 <div class="bar" style="height: 45%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.7) }}</div>
+                                <div class="bar-value">R$ {{ (dados.comparacao.receita_anterior * 0.7)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">5m atrás</div>
                                 <div class="bar" style="height: 55%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.8) }}</div>
+                                <div class="bar-value">R$ {{ (dados.comparacao.receita_anterior * 0.8)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">4m atrás</div>
                                 <div class="bar" style="height: 70%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.9) }}</div>
+                                <div class="bar-value">R$ {{ (dados.comparacao.receita_anterior * 0.9)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">3m atrás</div>
                                 <div class="bar" style="height: 80%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.95) }}</div>
+                                <div class="bar-value">R$ {{ (dados.comparacao.receita_anterior * 0.95)|currency }}</div>
                             </div>
                             <div class="chart-bar">
                                 <div class="bar-label">Anterior</div>
                                 <div class="bar" style="height: 85%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</div>
+                                <div class="bar-value">R$ {{ dados.comparacao.receita_anterior|currency }}</div>
                             </div>
                             <div class="chart-bar current-month">
                                 <div class="bar-label">Atual</div>
                                 <div class="bar" style="height: {% if dados.comparacao.crescimento_receita >= 0 %}95{% else %}75{% endif %}%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                                <div class="bar-value">R$ {{ dados.kpis.receita.realizada|currency }}</div>
                             </div>
                         </div>
                     </div>
@@ -575,7 +575,7 @@
                             
                             <div class="insight info">
                                 <span class="insight-icon">🎯</span>
-                                <span class="insight-text">Variação: {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada - dados.comparacao.receita_anterior) }}</span>
+                                <span class="insight-text">Variação: {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}R$ {{ (dados.kpis.receita.realizada - dados.comparacao.receita_anterior)|currency }}</span>
                             </div>
                             
                             <div class="insight info">
@@ -608,11 +608,11 @@
                     <div class="comparison-values">
                         <div class="current-value">
                             <span class="label">Atual</span>
-                            <span class="value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</span>
+                            <span class="value">R$ {{ dados.kpis.receita.realizada|currency }}</span>
                         </div>
                         <div class="previous-value">
                             <span class="label">Anterior</span>
-                            <span class="value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</span>
+                            <span class="value">R$ {{ dados.comparacao.receita_anterior|currency }}</span>
                         </div>
                         <div class="growth-indicator">
                             <span class="growth-percent {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
@@ -636,7 +636,7 @@
                         <div class="cashflow-month">
                             <span class="month-name">{{ mes_proj.nome }}</span>
                             <span class="cashflow-value {{ 'positive' if mes_proj.valor >= 0 else 'negative' }}">
-                                R$ {{ "{:,.0f}".format(mes_proj.valor) }}
+                                R$ {{ mes_proj.valor|currency }}
                             </span>
                         </div>
                         {% endfor %}
@@ -672,7 +672,7 @@
                         </div>
                         <div class="metric">
                             <span class="metric-label">Ticket Médio</span>
-                            <span class="metric-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                            <span class="metric-value">R$ {{ dados.ticket_medio|currency }}</span>
                         </div>
                     </div>
                 </div>
@@ -731,7 +731,7 @@
                             <div class="client-info">
                                 <div class="client-name">{{ cliente[:30] }}{{ "..." if cliente|length > 30 else "" }}</div>
                                 <div class="client-details">
-                                    <span class="client-value">R$ {{ "{:,.0f}".format(valor) }}</span>
+                                    <span class="client-value">R$ {{ valor|currency }}</span>
                                     <span class="client-participation">{{ "{:.1f}".format((valor / dados.kpis.receita.realizada * 100) if dados.kpis.receita.realizada > 0 else 0) }}% do total</span>
                                 </div>
                             </div>
@@ -761,7 +761,7 @@
                         <div class="debt-overview">
                             <div class="debt-stat">
                                 <span class="debt-label">Total Vencido</span>
-                                <span class="debt-value danger">R$ {{ "{:,.0f}".format(dados.kpis.receber.vencidas + dados.kpis.pagar.vencidas) }}</span>
+                                <span class="debt-value danger">R$ {{ (dados.kpis.receber.vencidas + dados.kpis.pagar.vencidas)|currency }}</span>
                             </div>
                             <div class="debt-stat">
                                 <span class="debt-label">Títulos Vencidos</span>
@@ -771,11 +771,11 @@
                         <div class="debt-breakdown">
                             <div class="debt-item">
                                 <span class="debt-type">A Receber</span>
-                                <span class="debt-amount">R$ {{ "{:,.0f}".format(dados.kpis.receber.vencidas) }}</span>
+                                <span class="debt-amount">R$ {{ dados.kpis.receber.vencidas|currency }}</span>
                             </div>
                             <div class="debt-item">
                                 <span class="debt-type">A Pagar</span>
-                                <span class="debt-amount">R$ {{ "{:,.0f}".format(dados.kpis.pagar.vencidas) }}</span>
+                                <span class="debt-amount">R$ {{ dados.kpis.pagar.vencidas|currency }}</span>
                             </div>
                         </div>
                     </div>
@@ -809,7 +809,7 @@
                     </div>
                     <div class="growth-metric">
                         <span class="growth-label">Ticket Médio</span>
-                        <span class="growth-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                        <span class="growth-value">R$ {{ dados.ticket_medio|currency }}</span>
                     </div>
                     <div class="growth-metric">
                         <span class="growth-label">Eficiência</span>
@@ -977,14 +977,14 @@
                             <div class="stat-icon">💰</div>
                             <div class="stat-content">
                                 <div class="stat-label">Receita Realizada</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receita.realizada|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card secondary">
                             <div class="stat-icon">🎯</div>
                             <div class="stat-content">
                                 <div class="stat-label">Meta do Mês</div>
-                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</div>
+                                <div class="stat-value">R$ {{ dados.kpis.receita.meta|currency }}</div>
                             </div>
                         </div>
                         <div class="stat-card {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
@@ -1005,7 +1005,7 @@
                             <div class="progress-bar" style="width: {% if dados.kpis.receita.percentual > 100 %}100{% else %}{{ dados.kpis.receita.percentual }}{% endif %}%"></div>
                         </div>
                         <div class="progress-info">
-                            <span>{% if dados.kpis.receita.meta > dados.kpis.receita.realizada %}Faltam R$ {{ "{:,.0f}".format(dados.kpis.receita.meta - dados.kpis.receita.realizada) }} para a meta{% else %}Meta superada!{% endif %}</span>
+                            <span>{% if dados.kpis.receita.meta > dados.kpis.receita.realizada %}Faltam R$ {{ (dados.kpis.receita.meta - dados.kpis.receita.realizada)|currency }} para a meta{% else %}Meta superada!{% endif %}</span>
                         </div>
                     </div>
 
@@ -1014,11 +1014,11 @@
                         <div class="comparison-stats">
                             <div class="comparison-item">
                                 <span class="comparison-label">Mês Atual</span>
-                                <span class="comparison-value current">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</span>
+                                <span class="comparison-value current">R$ {{ dados.kpis.receita.realizada|currency }}</span>
                             </div>
                             <div class="comparison-item">
                                 <span class="comparison-label">Mês Anterior</span>
-                                <span class="comparison-value previous">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</span>
+                                <span class="comparison-value previous">R$ {{ dados.comparacao.receita_anterior|currency }}</span>
                             </div>
                             <div class="comparison-item">
                                 <span class="comparison-label">Variação</span>
@@ -1050,7 +1050,7 @@
                             <div class="chart-bar current-month">
                                 <div class="bar-label">Atual</div>
                                 <div class="bar" style="height: {% if dados.kpis.receita.percentual > 100 %}100{% else %}{{ dados.kpis.receita.percentual }}{% endif %}%"></div>
-                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada/1000) }}k</div>
+                                <div class="bar-value">R$ {{ (dados.kpis.receita.realizada/1000)|currency }}k</div>
                             </div>
                         </div>
                     </div>
@@ -1089,7 +1089,7 @@
 
                             <div class="insight info">
                                 <span class="insight-icon">🎯</span>
-                                <span class="insight-text">Ticket médio atual: R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                                <span class="insight-text">Ticket médio atual: R$ {{ dados.ticket_medio|currency }}</span>
                             </div>
                         </div>
                     </div>
