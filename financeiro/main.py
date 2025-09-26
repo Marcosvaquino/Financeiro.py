@@ -8,6 +8,16 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "frz-secret"  # chave de sessão
 
+# --- helper: login required decorator ---
+from functools import wraps
+def login_required(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrapped
+
 # Registra blueprints de módulos adicionais (placeholders)
 try:
     from .upload_sistema import bp as upload_bp
@@ -117,6 +127,7 @@ def logout():
 # ============================
 
 @app.route("/planejamento")
+@login_required
 def planejamento():
     # Pega parâmetros de filtro
     mes = request.args.get('mes')
@@ -139,6 +150,7 @@ def planejamento():
 
 
 @app.route("/planejamento_frz")
+@login_required
 def planejamento_frz():
     """Página de Planejamento FRZ com dados dos bancos."""
     # Parâmetros de filtro (padrão: setembro 2025)
@@ -934,6 +946,7 @@ def build_dashboard_data(limit_recent=20):
 
 
 @app.route("/projecao", methods=["GET", "POST"])
+@login_required
 def projecao():
     conn = get_connection()
     cur = conn.cursor()
@@ -1095,6 +1108,7 @@ def api_post_projecao():
 
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
     # Obter mês e ano atual como padrão
     mes_atual = request.args.get('mes', datetime.now().month)
@@ -1114,6 +1128,7 @@ def dashboard():
 
 
 @app.route("/resumo")
+@login_required
 def resumo():
     """Página de resumo executivo com KPIs principais e alertas"""
     from datetime import datetime, timedelta
@@ -1299,6 +1314,7 @@ def resumo():
 
 
 @app.route("/consolidacao")
+@login_required
 def consolidacao():
     return "<h2>Página de Consolidação (em construção)</h2>"
 
@@ -1308,6 +1324,7 @@ def consolidacao():
 # ============================
 
 @app.route("/importacao", methods=["GET", "POST"])
+@login_required
 def importacao():
     if request.method == "POST":
         if "files" not in request.files:

@@ -91,6 +91,38 @@ body {
     padding-left: 6px;
 }
 
+/* User info section */
+.user-info {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-left: 3px solid #667eea;
+}
+
+.user-name {
+    color: #e8e8e8;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.logout-btn {
+    color: #ff6b6b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.3s ease;
+}
+
+.logout-btn:hover {
+    color: #ff5252;
+    text-decoration: underline;
+}
+
 /* Toggle button in the sidebar header */
 .sidebar-toggle {
     position: fixed; /* stay in viewport; JS will set left to align with sidebar */
