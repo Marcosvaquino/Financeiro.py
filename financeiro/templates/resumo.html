@@ -156,51 +156,319 @@
         </div>
     </div>
 
-    <!-- Análises Avançadas -->
-    <div class="analytics-grid">
-            <!-- Alertas (card compacto) -->
-            <div class="analytics-card tendencias">
-                <h3>🚨 Alertas do Sistema</h3>
-                <div class="alerts-card">
-                    {% if dados.alertas|length == 0 %}
-                        <div class="alert-item">Nenhum alerta no período</div>
-                    {% else %}
-                        {% for alerta in dados.alertas %}
-                            <div class="alert-item">
-                                <div class="alert-text">{{ alerta }}</div>
-                                {% if 'vencida' in alerta %}
-                                    <div class="alert-badge">VENCIDO</div>
-                                {% elif 'vencido' in alerta or 'vencidos' in alerta %}
-                                    <div class="alert-badge">VENC.</div>
-                                {% elif 'negativo' in alerta or 'Fluxo de caixa negativo' in alerta %}
-                                    <div class="alert-badge" style="background:#fff0e6;color:#e65a00;">NEG.</div>
-                                {% elif 'Meta' in alerta %}
-                                    <div class="alert-badge" style="background:#fff9e6;color:#b86b00;">META</div>
-                                {% else %}
-                                    <div class="alert-badge" style="background:#eef9f3;color:#1b7a4b;">INFO</div>
-                                {% endif %}
-                            </div>
+    <!-- Dashboard Executivo Avançado -->
+    <div class="executive-dashboard">
+        <!-- Análise Comparativa -->
+        <div class="comparison-section">
+            <div class="comparison-header">
+                <h3>📊 Análise Comparativa & Tendências</h3>
+                <p>Performance vs. período anterior e projeções futuras</p>
+            </div>
+            
+            <div class="comparison-grid">
+                <!-- Receita Comparativa -->
+                <div class="comparison-card">
+                    <div class="comparison-title">
+                        <h4>💰 Receita</h4>
+                        <span class="period-info">{{ dados.mes }}/{{ dados.ano }} vs {{ dados.comparacao.mes_anterior }}/{{ dados.comparacao.ano_anterior }}</span>
+                    </div>
+                    <div class="comparison-values">
+                        <div class="current-value">
+                            <span class="label">Atual</span>
+                            <span class="value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</span>
+                        </div>
+                        <div class="previous-value">
+                            <span class="label">Anterior</span>
+                            <span class="value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</span>
+                        </div>
+                        <div class="growth-indicator">
+                            <span class="growth-percent {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
+                                {{ "↗" if dados.comparacao.crescimento_receita >= 0 else "↘" }} {{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="trend-line">
+                        <div class="trend-bar" style="width: {{ dados.comparacao.barra_crescimento }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Fluxo de Caixa Projetado -->
+                <div class="comparison-card">
+                    <div class="comparison-title">
+                        <h4>💧 Fluxo de Caixa</h4>
+                        <span class="period-info">Projeção próximos 3 meses</span>
+                    </div>
+                    <div class="cashflow-projection">
+                        {% for mes_proj in dados.projecao_fluxo %}
+                        <div class="cashflow-month">
+                            <span class="month-name">{{ mes_proj.nome }}</span>
+                            <span class="cashflow-value {{ 'positive' if mes_proj.valor >= 0 else 'negative' }}">
+                                R$ {{ "{:,.0f}".format(mes_proj.valor) }}
+                            </span>
+                        </div>
                         {% endfor %}
-                    {% endif %}
+                    </div>
+                    <div class="cashflow-alert">
+                        {% if dados.alertas_fluxo %}
+                            <span class="alert-text">⚠️ {{ dados.alertas_fluxo|length }} período(s) com alerta</span>
+                        {% else %}
+                            <span class="success-text">✅ Fluxo estável projetado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Performance Geral -->
+                <div class="comparison-card">
+                    <div class="comparison-title">
+                        <h4>🎯 Performance</h4>
+                        <span class="period-info">Indicadores de eficiência</span>
+                    </div>
+                    <div class="performance-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Meta Atingida</span>
+                            <div class="metric-progress">
+                                <div class="progress-bar" style="width: {{ dados.kpis.receita.percentual }}%"></div>
+                                <span class="progress-text">{{ "{:.1f}".format(dados.kpis.receita.percentual) }}%</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Inadimplência</span>
+                            <span class="metric-value {{ 'danger' if dados.inadimplencia.percentual > 5 else 'warning' if dados.inadimplencia.percentual > 2 else 'success' }}">
+                                {{ "{:.1f}".format(dados.inadimplencia.percentual) }}%
+                            </span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Ticket Médio</span>
+                            <span class="metric-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Análises Detalhadas -->
+        <div class="detailed-analytics">
+            <div class="analytics-grid">
+                <!-- Alertas Inteligentes -->
+                <div class="analytics-card alerts-premium">
+                    <div class="card-header">
+                        <h3>🚨 Centro de Alertas</h3>
+                        <span class="alert-count">{{ dados.alertas|length }} alertas</span>
+                    </div>
+                    <div class="alerts-list">
+                        {% if dados.alertas|length == 0 %}
+                            <div class="alert-item-premium success">
+                                <div class="alert-icon">✅</div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Tudo sob controle</div>
+                                    <div class="alert-desc">Nenhum alerta crítico detectado</div>
+                                </div>
+                            </div>
+                        {% else %}
+                            {% for alerta in dados.alertas[:5] %}
+                            <div class="alert-item-premium {{ 'danger' if 'vencida' in alerta or 'vencido' in alerta else 'warning' if 'Meta' in alerta or 'negativo' in alerta else 'info' }}">
+                                <div class="alert-icon">
+                                    {% if 'vencida' in alerta or 'vencido' in alerta %}⏰
+                                    {% elif 'negativo' in alerta %}📉
+                                    {% elif 'Meta' in alerta %}🎯
+                                    {% else %}💡{% endif %}
+                                </div>
+                                <div class="alert-content">
+                                    <div class="alert-title">{{ alerta.split(' - ')[0] }}</div>
+                                    {% if ' - ' in alerta %}
+                                    <div class="alert-desc">{{ alerta.split(' - ')[1] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Top Clientes com Análise -->
+                <div class="analytics-card clients-premium">
+                    <div class="card-header">
+                        <h3>🏆 Ranking de Clientes</h3>
+                        <span class="period-label">{{ dados.mes }}/{{ dados.ano }}</span>
+                    </div>
+                    <div class="clients-ranking">
+                        {% for cliente, valor in dados.top_clientes %}
+                        <div class="client-item-premium">
+                            <div class="client-rank">#{{ loop.index }}</div>
+                            <div class="client-info">
+                                <div class="client-name">{{ cliente[:30] }}{{ "..." if cliente|length > 30 else "" }}</div>
+                                <div class="client-details">
+                                    <span class="client-value">R$ {{ "{:,.0f}".format(valor) }}</span>
+                                    <span class="client-participation">{{ "{:.1f}".format((valor / dados.kpis.receita.realizada * 100) if dados.kpis.receita.realizada > 0 else 0) }}% do total</span>
+                                </div>
+                            </div>
+                            <div class="client-trend">
+                                <div class="trend-icon">📈</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if dados.top_clientes|length == 0 %}
+                        <div class="no-data-premium">
+                            <div class="no-data-icon">📋</div>
+                            <div class="no-data-text">Nenhum faturamento no período</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Análise de Inadimplência -->
+                <div class="analytics-card debt-analysis">
+                    <div class="card-header">
+                        <h3>⚠️ Análise de Inadimplência</h3>
+                        <span class="status-indicator {{ 'success' if dados.inadimplencia.percentual < 2 else 'warning' if dados.inadimplencia.percentual < 5 else 'danger' }}">
+                            {{ "Baixa" if dados.inadimplencia.percentual < 2 else "Moderada" if dados.inadimplencia.percentual < 5 else "Alta" }}
+                        </span>
+                    </div>
+                    <div class="debt-metrics">
+                        <div class="debt-overview">
+                            <div class="debt-stat">
+                                <span class="debt-label">Total Vencido</span>
+                                <span class="debt-value danger">R$ {{ "{:,.0f}".format(dados.kpis.receber.vencidas + dados.kpis.pagar.vencidas) }}</span>
+                            </div>
+                            <div class="debt-stat">
+                                <span class="debt-label">Títulos Vencidos</span>
+                                <span class="debt-value">{{ dados.kpis.receber.count_vencidas + dados.kpis.pagar.count_vencidas }}</span>
+                            </div>
+                        </div>
+                        <div class="debt-breakdown">
+                            <div class="debt-item">
+                                <span class="debt-type">A Receber</span>
+                                <span class="debt-amount">R$ {{ "{:,.0f}".format(dados.kpis.receber.vencidas) }}</span>
+                            </div>
+                            <div class="debt-item">
+                                <span class="debt-type">A Pagar</span>
+                                <span class="debt-amount">R$ {{ "{:,.0f}".format(dados.kpis.pagar.vencidas) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centro de Comando Executivo -->
+    <div class="command-center">
+        <div class="command-header">
+            <h3>🎮 Centro de Comando Executivo</h3>
+            <p>Controle total da operação financeira</p>
+        </div>
+        
+        <div class="command-grid">
+            <!-- Análise de Crescimento -->
+            <div class="command-section growth-analysis">
+                <div class="section-header">
+                    <h4>📈 Análise de Crescimento</h4>
+                    <span class="growth-badge {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
+                        {{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%
+                    </span>
+                </div>
+                <div class="growth-content">
+                    <div class="growth-metric">
+                        <span class="growth-label">Receita MoM</span>
+                        <span class="growth-value {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
+                            {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}{{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%
+                        </span>
+                    </div>
+                    <div class="growth-metric">
+                        <span class="growth-label">Ticket Médio</span>
+                        <span class="growth-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                    </div>
+                    <div class="growth-metric">
+                        <span class="growth-label">Eficiência</span>
+                        <span class="growth-value {{ 'positive' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'negative' }}">
+                            {{ "{:.0f}".format(dados.kpis.receita.percentual) }}%
+                        </span>
+                    </div>
                 </div>
             </div>
 
-        <!-- Top 3 Clientes -->
-        <div class="analytics-card top-clientes">
-            <h3>🏆 Top 3 Clientes do Mês</h3>
-            <div class="ranking-list">
-                {% for cliente, valor in dados.top_clientes %}
-                <div class="ranking-item">
-                    <span class="rank">#{{ loop.index }}</span>
-                    <span class="client-name">{{ cliente[:25] }}{{ "..." if cliente|length > 25 else "" }}</span>
-                    <span class="client-value">R$ {{ "{:,.0f}".format(valor) }}</span>
+            <!-- Saúde Financeira -->
+            <div class="command-section financial-health">
+                <div class="section-header">
+                    <h4>💊 Saúde Financeira</h4>
+                    <span class="health-indicator {{ 'excellent' if dados.inadimplencia.percentual < 2 and dados.kpis.fluxo_caixa.positivo else 'good' if dados.inadimplencia.percentual < 5 else 'warning' }}">
+                        {% if dados.inadimplencia.percentual < 2 and dados.kpis.fluxo_caixa.positivo %}Excelente
+                        {% elif dados.inadimplencia.percentual < 5 %}Boa
+                        {% else %}Atenção{% endif %}
+                    </span>
                 </div>
-                {% endfor %}
-                {% if dados.top_clientes|length == 0 %}
-                <div class="ranking-item">
-                    <span class="no-data">Nenhum cliente com faturamento no período</span>
+                <div class="health-metrics">
+                    <div class="health-item">
+                        <div class="health-icon">💰</div>
+                        <div class="health-info">
+                            <span class="health-title">Liquidez</span>
+                            <span class="health-desc">{{ "Positiva" if dados.kpis.fluxo_caixa.positivo else "Negativa" }}</span>
+                        </div>
+                        <div class="health-status {{ 'good' if dados.kpis.fluxo_caixa.positivo else 'bad' }}">
+                            {{ "✅" if dados.kpis.fluxo_caixa.positivo else "❌" }}
+                        </div>
+                    </div>
+                    <div class="health-item">
+                        <div class="health-icon">📊</div>
+                        <div class="health-info">
+                            <span class="health-title">Inadimplência</span>
+                            <span class="health-desc">{{ "{:.1f}".format(dados.inadimplencia.percentual) }}%</span>
+                        </div>
+                        <div class="health-status {{ 'good' if dados.inadimplencia.percentual < 5 else 'bad' }}">
+                            {{ "✅" if dados.inadimplencia.percentual < 5 else "⚠️" }}
+                        </div>
+                    </div>
+                    <div class="health-item">
+                        <div class="health-icon">🎯</div>
+                        <div class="health-info">
+                            <span class="health-title">Performance</span>
+                            <span class="health-desc">{{ "{:.0f}".format(dados.kpis.receita.percentual) }}% da meta</span>
+                        </div>
+                        <div class="health-status {{ 'good' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'bad' }}">
+                            {{ "✅" if dados.kpis.receita.percentual >= 80 else "⚠️" if dados.kpis.receita.percentual >= 50 else "❌" }}
+                        </div>
+                    </div>
                 </div>
-                {% endif %}
+            </div>
+
+            <!-- Próximas Ações -->
+            <div class="command-section next-actions">
+                <div class="section-header">
+                    <h4>🚀 Próximas Ações</h4>
+                    <span class="action-count">{{ (dados.alertas|length + dados.alertas_fluxo|length) }} ações</span>
+                </div>
+                <div class="actions-list">
+                    {% if dados.kpis.receber.count_vencidas > 0 %}
+                    <div class="action-item urgent">
+                        <span class="action-priority">🔴</span>
+                        <span class="action-text">Cobrar {{ dados.kpis.receber.count_vencidas }} contas vencidas</span>
+                    </div>
+                    {% endif %}
+                    {% if dados.kpis.pagar.count_vencidas > 0 %}
+                    <div class="action-item urgent">
+                        <span class="action-priority">🔴</span>
+                        <span class="action-text">Pagar {{ dados.kpis.pagar.count_vencidas }} contas em atraso</span>
+                    </div>
+                    {% endif %}
+                    {% if dados.kpis.receita.percentual < 50 %}
+                    <div class="action-item high">
+                        <span class="action-priority">🟡</span>
+                        <span class="action-text">Intensificar vendas - Meta baixa</span>
+                    </div>
+                    {% endif %}
+                    {% if dados.alertas_fluxo|length > 0 %}
+                    <div class="action-item medium">
+                        <span class="action-priority">🟠</span>
+                        <span class="action-text">Planejar fluxo para próximos meses</span>
+                    </div>
+                    {% endif %}
+                    {% if dados.kpis.receber.count_vencidas == 0 and dados.kpis.pagar.count_vencidas == 0 and dados.kpis.receita.percentual >= 80 %}
+                    <div class="action-item success">
+                        <span class="action-priority">✅</span>
+                        <span class="action-text">Manter excelente performance</span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -713,32 +981,857 @@
     }
 }
 
-/* Alertas compactos */
-.alerts-card {
-    background: white;
-    border-radius: 12px;
-    padding: 14px 18px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.04);
-    max-width: 720px;
+/* Dashboard Executivo Avançado */
+.executive-dashboard {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 40px;
 }
-.alert-item {
+
+.comparison-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 40px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.comparison-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: backgroundFloat 15s ease-in-out infinite;
+}
+
+.comparison-header {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.comparison-header h3 {
+    font-size: 2rem;
+    margin: 0 0 10px 0;
+    font-weight: 700;
+}
+
+.comparison-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.comparison-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 25px;
+    color: #2c3e50;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.comparison-title {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.comparison-title h4 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.period-info {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.comparison-values {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.current-value, .previous-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.current-value .label, .previous-value .label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.current-value .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.previous-value .value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #95a5a6;
+}
+
+.growth-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.growth-percent {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 8px 15px;
+    border-radius: 20px;
+}
+
+.growth-percent.positive {
+    background: #d4edda;
+    color: #155724;
+}
+
+.growth-percent.negative {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.trend-line {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.trend-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+.cashflow-projection {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.cashflow-month {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.month-name {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.cashflow-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.cashflow-value.positive {
+    color: #28a745;
+}
+
+.cashflow-value.negative {
+    color: #dc3545;
+}
+
+.cashflow-alert {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.alert-text {
+    color: #856404;
+    background: #fff3cd;
+    padding: 8px 15px;
+    border-radius: 15px;
+}
+
+.success-text {
+    color: #155724;
+    background: #d4edda;
+    padding: 8px 15px;
+    border-radius: 15px;
+}
+
+.performance-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.metric-progress {
+    display: flex;
+    align-items: center;
     gap: 10px;
+    flex: 1;
+    margin-left: 20px;
+    background: #e9ecef;
+    height: 8px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    min-width: 0;
+    transition: width 1s ease;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #667eea;
+    min-width: 40px;
+}
+
+.metric-value {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.metric-value.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.metric-value.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.metric-value.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Análises Detalhadas */
+.detailed-analytics {
+    margin-top: 40px;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.analytics-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.alert-count {
+    background: #667eea;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.period-label {
+    background: #f8f9fa;
+    color: #6c757d;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-indicator {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-indicator.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-indicator.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-indicator.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Alertas Premium */
+.alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alert-item-premium {
+    display: flex;
     align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 4px solid;
+}
+
+.alert-item-premium.success {
+    background: #f8fff8;
+    border-left-color: #28a745;
+}
+
+.alert-item-premium.warning {
+    background: #fffcf0;
+    border-left-color: #ffc107;
+}
+
+.alert-item-premium.danger {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.alert-item-premium.info {
+    background: #f0f8ff;
+    border-left-color: #17a2b8;
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+    margin-top: 2px;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-title {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 3px;
+}
+
+.alert-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Clientes Premium */
+.clients-ranking {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.client-item-premium {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.client-item-premium:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.client-rank {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #667eea;
+    min-width: 30px;
+    text-align: center;
+}
+
+.client-info {
+    flex: 1;
+}
+
+.client-name {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.client-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.client-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.client-participation {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.client-trend {
+    display: flex;
+    align-items: center;
+}
+
+.trend-icon {
+    font-size: 1.2rem;
+    color: #28a745;
+}
+
+/* Análise de Inadimplência */
+.debt-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.debt-overview {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.debt-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.debt-label {
+    font-size: 0.8rem;
+    color: #6c757d;
     margin-bottom: 8px;
+}
+
+.debt-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.debt-value.danger {
+    color: #dc3545;
+}
+
+.debt-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.debt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.debt-type {
     font-weight: 600;
     color: #2c3e50;
 }
-.alert-badge {
-    display: inline-block;
-    background: #ffecec;
-    color: #c0392b;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
+
+.debt-amount {
     font-weight: 700;
-    margin-left: auto;
+    color: #dc3545;
+}
+
+.no-data-premium {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    color: #6c757d;
+}
+
+.no-data-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.no-data-text {
+    font-size: 0.9rem;
+}
+
+/* Animações */
+@keyframes backgroundFloat {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+}
+
+/* Centro de Comando Executivo */
+.command-center {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin: 40px auto;
+    max-width: 1600px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.command-center::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    animation: commandFloat 20s ease-in-out infinite reverse;
+}
+
+.command-header {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.command-header h3 {
+    font-size: 2rem;
+    margin: 0 0 10px 0;
+    font-weight: 700;
+}
+
+.command-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.command-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.command-section {
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.section-header h4 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.growth-badge {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.growth-badge.positive {
+    background: rgba(40, 167, 69, 0.3);
+    color: #6ef291;
+    border: 1px solid #6ef291;
+}
+
+.growth-badge.negative {
+    background: rgba(220, 53, 69, 0.3);
+    color: #ff6b7d;
+    border: 1px solid #ff6b7d;
+}
+
+.health-indicator {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.health-indicator.excellent {
+    background: rgba(40, 167, 69, 0.3);
+    color: #6ef291;
+    border: 1px solid #6ef291;
+}
+
+.health-indicator.good {
+    background: rgba(255, 193, 7, 0.3);
+    color: #ffd43b;
+    border: 1px solid #ffd43b;
+}
+
+.health-indicator.warning {
+    background: rgba(220, 53, 69, 0.3);
+    color: #ff6b7d;
+    border: 1px solid #ff6b7d;
+}
+
+.action-count {
+    background: rgba(102, 126, 234, 0.3);
+    color: #8fa8ff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 1px solid #8fa8ff;
+}
+
+.growth-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.growth-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.growth-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.growth-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.growth-value.positive {
+    color: #6ef291;
+}
+
+.growth-value.negative {
+    color: #ff6b7d;
+}
+
+.growth-value.warning {
+    color: #ffd43b;
+}
+
+.health-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.health-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+}
+
+.health-icon {
+    font-size: 1.5rem;
+}
+
+.health-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.health-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.health-desc {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.health-status {
+    font-size: 1.2rem;
+}
+
+.actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    border-left: 4px solid;
+}
+
+.action-item.urgent {
+    border-left-color: #ff6b7d;
+}
+
+.action-item.high {
+    border-left-color: #ffd43b;
+}
+
+.action-item.medium {
+    border-left-color: #8fa8ff;
+}
+
+.action-item.success {
+    border-left-color: #6ef291;
+}
+
+.action-priority {
+    font-size: 1rem;
+}
+
+.action-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@keyframes commandFloat {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(90deg) scale(1.05); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .executive-dashboard {
+        padding: 0 20px;
+    }
+    
+    .comparison-section {
+        padding: 25px 20px;
+    }
+    
+    .comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .comparison-values {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .debt-overview {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .command-center {
+        padding: 25px 20px;
+        margin: 30px auto;
+    }
+    
+    .command-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }
 </style>
 

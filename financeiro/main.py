@@ -1410,6 +1410,89 @@ def resumo():
     """, (pattern,))
     top_clientes = cur.fetchall()
     
+    # ===== DADOS COMPARATIVOS E PROJEÇÕES =====
+    
+    # Calcular mês anterior
+    mes_anterior = mes - 1 if mes > 1 else 12
+    ano_anterior = ano if mes > 1 else ano - 1
+    pattern_anterior = f"%/{mes_anterior:02d}/{ano_anterior}%"
+    
+    # Receita do período anterior
+    cur.execute("""
+        SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
+        FROM contas_receber
+        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+    """, (pattern_anterior,))
+    receita_anterior = cur.fetchone()[0] or 0.0
+    
+    # Crescimento percentual
+    crescimento_receita = ((receita_realizada - receita_anterior) / receita_anterior * 100) if receita_anterior > 0 else 0
+    
+    # Calcular largura da barra de crescimento (entre 10% e 100%)
+    barra_crescimento = max(10, min(100, 50 + crescimento_receita))
+    
+    # Projeção de fluxo de caixa para próximos 3 meses
+    projecao_fluxo = []
+    meses_nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    
+    for i in range(1, 4):  # Próximos 3 meses
+        mes_proj = mes + i
+        ano_proj = ano
+        if mes_proj > 12:
+            mes_proj -= 12
+            ano_proj += 1
+        
+        pattern_proj = f"%/{mes_proj:02d}/{ano_proj}%"
+        
+        # Estimativa baseada na média dos últimos 3 meses
+        cur.execute("""
+            SELECT COALESCE(AVG(valor_total), 0.0) FROM (
+                SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
+                FROM contas_receber
+                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'RECEBIDO'
+                GROUP BY SUBSTR(vencimento, 7, 4)
+                ORDER BY SUBSTR(vencimento, 7, 4) DESC
+                LIMIT 3
+            )
+        """)
+        receita_estimada = cur.fetchone()[0] or 0.0
+        
+        # Estimativa de gastos
+        cur.execute("""
+            SELECT COALESCE(AVG(valor_total), 0.0) FROM (
+                SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
+                FROM contas_pagar
+                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'PAGO'
+                GROUP BY SUBSTR(vencimento, 7, 4)
+                ORDER BY SUBSTR(vencimento, 7, 4) DESC
+                LIMIT 3
+            )
+        """)
+        gastos_estimados = cur.fetchone()[0] or 0.0
+        
+        fluxo_projetado = receita_estimada - gastos_estimados
+        
+        projecao_fluxo.append({
+            'nome': meses_nomes[mes_proj - 1],
+            'valor': fluxo_projetado
+        })
+    
+    # Alertas de fluxo
+    alertas_fluxo = [proj for proj in projecao_fluxo if proj['valor'] < 0]
+    
+    # Cálculo de inadimplência
+    total_títulos = count_receber + count_pagar
+    títulos_vencidos = count_receber_vencidas + count_pagar_vencidas
+    percentual_inadimplencia = (títulos_vencidos / total_títulos * 100) if total_títulos > 0 else 0
+    
+    # Ticket médio
+    cur.execute("""
+        SELECT COUNT(*) FROM contas_receber 
+        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+    """, (pattern,))
+    total_transacoes = cur.fetchone()[0] or 1
+    ticket_medio = receita_realizada / total_transacoes if total_transacoes > 0 else 0
+    
     # ===== CALCULAR STATUS GERAL =====
     # Lógica: Verde se receita > 80% da meta e fluxo positivo
     #         Amarelo se receita > 50% da meta OU fluxo positivo
@@ -1424,7 +1507,7 @@ def resumo():
     else:
         status_geral = {"cor": "danger", "texto": "Ação Urgente", "emoji": "🔴"}
     
-    # ===== ALERTAS CONTEXTUAIS =====
+    # ===== ALERTAS CONTEXTUAIS APRIMORADOS =====
     alertas = []
     
     if count_receber_vencidas > 0:
@@ -1437,7 +1520,16 @@ def resumo():
         alertas.append(f"Meta do mês: apenas {percentual_meta:.1f}% atingida")
     
     if fluxo_caixa < 0:
-        alertas.append(f"Fluxo de caixa negativo: R$ {fluxo_caixa:,.0f}")
+        alertas.append(f"Fluxo de caixa negativo - R$ {fluxo_caixa:,.0f}")
+    
+    if percentual_inadimplencia > 5:
+        alertas.append(f"Alta inadimplência: {percentual_inadimplencia:.1f}% dos títulos vencidos")
+    
+    if crescimento_receita < -10:
+        alertas.append(f"Queda na receita: {crescimento_receita:.1f}% vs mês anterior")
+    
+    if len(alertas_fluxo) > 1:
+        alertas.append(f"Fluxo de caixa negativo projetado para {len(alertas_fluxo)} meses")
     
     if not alertas:
         alertas.append("Nenhum alerta crítico no momento")
@@ -1470,6 +1562,21 @@ def resumo():
                 'count_vencidas': count_pagar_vencidas
             }
         },
+        'comparacao': {
+            'mes_anterior': mes_anterior,
+            'ano_anterior': ano_anterior,
+            'receita_anterior': receita_anterior,
+            'crescimento_receita': crescimento_receita,
+            'barra_crescimento': barra_crescimento
+        },
+        'projecao_fluxo': projecao_fluxo,
+        'alertas_fluxo': alertas_fluxo,
+        'inadimplencia': {
+            'percentual': percentual_inadimplencia,
+            'total_vencidos': títulos_vencidos,
+            'total_titulos': total_títulos
+        },
+        'ticket_medio': ticket_medio,
         'top_clientes': top_clientes,
         'alertas': alertas
     }
