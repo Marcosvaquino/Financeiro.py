@@ -62,7 +62,7 @@
     <div class="kpi-section-compact">
         <div class="kpi-row">
             <!-- Receita -->
-            <div class="kpi-card-compact receita">
+            <div class="kpi-card-compact receita" onclick="abrirModalReceita()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">💰</span>
                     <h3>Receita</h3>
@@ -542,6 +542,141 @@
             </a>
         </div>
     </div>
+
+    <!-- Modal de Receita -->
+    <div id="modalReceita" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💰 Análise Detalhada da Receita</h2>
+                <span class="close" onclick="fecharModalReceita()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="receita-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Receita Realizada</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card secondary">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Meta do Mês</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Performance</div>
+                                <div class="stat-value">{{ "{:.1f}".format(dados.kpis.receita.percentual) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-progress">
+                        <div class="progress-header">
+                            <span class="progress-title">Progresso da Meta</span>
+                            <span class="progress-percentage">{{ "{:.1f}".format(dados.kpis.receita.percentual) }}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: {% if dados.kpis.receita.percentual > 100 %}100{% else %}{{ dados.kpis.receita.percentual }}{% endif %}%"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span>{% if dados.kpis.receita.meta > dados.kpis.receita.realizada %}Faltam R$ {{ "{:,.0f}".format(dados.kpis.receita.meta - dados.kpis.receita.realizada) }} para a meta{% else %}Meta superada!{% endif %}</span>
+                        </div>
+                    </div>
+
+                    <div class="receita-comparison">
+                        <h3>📈 Comparativo Mensal</h3>
+                        <div class="comparison-stats">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Mês Atual</span>
+                                <span class="comparison-value current">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Mês Anterior</span>
+                                <span class="comparison-value previous">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Variação</span>
+                                <span class="comparison-value {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
+                                    {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}{{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-chart-placeholder">
+                        <h3>📊 Evolução da Receita</h3>
+                        <div class="chart-container">
+                            <div class="chart-bar">
+                                <div class="bar-label">Jan</div>
+                                <div class="bar" style="height: 60%"></div>
+                                <div class="bar-value">R$ 80k</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">Fev</div>
+                                <div class="bar" style="height: 75%"></div>
+                                <div class="bar-value">R$ 95k</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">Mar</div>
+                                <div class="bar" style="height: 45%"></div>
+                                <div class="bar-value">R$ 65k</div>
+                            </div>
+                            <div class="chart-bar current-month">
+                                <div class="bar-label">Atual</div>
+                                <div class="bar" style="height: {% if dados.kpis.receita.percentual > 100 %}100{% else %}{{ dados.kpis.receita.percentual }}{% endif %}%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada/1000) }}k</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-insights">
+                        <h3>💡 Insights & Recomendações</h3>
+                        <div class="insights-list">
+                            {% if dados.kpis.receita.percentual >= 80 %}
+                            <div class="insight success">
+                                <span class="insight-icon">✅</span>
+                                <span class="insight-text">Performance excelente! Meta quase atingida.</span>
+                            </div>
+                            {% elif dados.kpis.receita.percentual >= 50 %}
+                            <div class="insight warning">
+                                <span class="insight-icon">⚠️</span>
+                                <span class="insight-text">Performance moderada. Intensificar esforços de vendas.</span>
+                            </div>
+                            {% else %}
+                            <div class="insight danger">
+                                <span class="insight-icon">🚨</span>
+                                <span class="insight-text">Meta baixa. Ação imediata necessária!</span>
+                            </div>
+                            {% endif %}
+
+                            {% if dados.comparacao.crescimento_receita > 0 %}
+                            <div class="insight success">
+                                <span class="insight-icon">📈</span>
+                                <span class="insight-text">Crescimento positivo em relação ao mês anterior.</span>
+                            </div>
+                            {% else %}
+                            <div class="insight warning">
+                                <span class="insight-icon">📉</span>
+                                <span class="insight-text">Queda em relação ao mês anterior. Analisar causas.</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="insight info">
+                                <span class="insight-icon">🎯</span>
+                                <span class="insight-text">Ticket médio atual: R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -695,7 +830,7 @@
 /* KPIs Compactos */
 .kpi-section-compact {
     max-width: 1600px;
-    margin: 0 auto 30px auto;
+    margin: 0 auto 15px auto;
     padding: 0 40px;
 }
 
@@ -708,11 +843,11 @@
 .kpi-card-compact {
     background: white;
     border-radius: 12px;
-    padding: 16px;
+    padding: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border-left: 4px solid;
     transition: all 0.3s ease;
-    min-height: 90px;
+    min-height: 75px;
 }
 
 .kpi-card-compact:hover {
@@ -1005,8 +1140,8 @@
 .comparison-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 16px;
-    padding: 25px;
-    margin-bottom: 25px;
+    padding: 20px;
+    margin-bottom: 20px;
     color: white;
     position: relative;
     overflow: hidden;
@@ -1025,19 +1160,19 @@
 
 .comparison-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     position: relative;
     z-index: 2;
 }
 
 .comparison-header h3 {
-    font-size: 1.5rem;
-    margin: 0 0 6px 0;
+    font-size: 1.3rem;
+    margin: 0 0 4px 0;
     font-weight: 700;
 }
 
 .comparison-header p {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     opacity: 0.9;
     margin: 0;
 }
@@ -1045,7 +1180,7 @@
 .comparison-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 15px;
     position: relative;
     z-index: 2;
 }
@@ -1053,7 +1188,7 @@
 .comparison-card {
     background: rgba(255,255,255,0.95);
     border-radius: 12px;
-    padding: 18px;
+    padding: 15px;
     color: #2c3e50;
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     backdrop-filter: blur(10px);
@@ -1064,12 +1199,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 }
 
 .comparison-title h4 {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
 }
 
@@ -1083,7 +1218,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
 }
 
 .current-value, .previous-value {
@@ -1099,13 +1234,13 @@
 }
 
 .current-value .value {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #667eea;
 }
 
 .previous-value .value {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #95a5a6;
 }
@@ -1117,9 +1252,9 @@
 }
 
 .growth-percent {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    padding: 8px 15px;
+    padding: 4px 10px;
     border-radius: 20px;
 }
 
@@ -1907,6 +2042,465 @@
         gap: 15px;
     }
 }
+
+/* Modal de Receita */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    animation: modalFadeIn 0.3s ease;
+}
+
+.modal-content {
+    position: relative;
+    background-color: white;
+    margin: 2% auto;
+    padding: 0;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.4s ease;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 20px 20px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.close {
+    color: white;
+    float: right;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.receita-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.receita-main-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.primary {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+}
+
+.stat-card.secondary {
+    border-left-color: #667eea;
+    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+}
+
+.stat-card.success {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+}
+
+.stat-card.warning {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fffcf0 0%, #ffffff 100%);
+}
+
+.stat-card.danger {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.receita-progress {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.progress-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.progress-percentage {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.progress-bar-container {
+    background: #e9ecef;
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1.5s ease;
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.3) 25%, rgba(255,255,255,0.3) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.3) 75%);
+    background-size: 20px 20px;
+    animation: progressStripes 1s linear infinite;
+}
+
+.progress-info {
+    text-align: center;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.receita-comparison {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.receita-comparison h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.comparison-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.comparison-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.comparison-item:hover {
+    background: #e9ecef;
+    transform: translateY(-3px);
+}
+
+.comparison-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.comparison-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.comparison-value.current {
+    color: #667eea;
+}
+
+.comparison-value.previous {
+    color: #95a5a6;
+}
+
+.comparison-value.positive {
+    color: #28a745;
+}
+
+.comparison-value.negative {
+    color: #dc3545;
+}
+
+.receita-chart-placeholder {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.receita-chart-placeholder h3 {
+    margin: 0 0 25px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: end;
+    height: 200px;
+    gap: 20px;
+}
+
+.chart-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 80px;
+}
+
+.bar-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.bar {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 5px 5px 0 0;
+    min-height: 20px;
+    transition: height 1s ease;
+    position: relative;
+}
+
+.current-month .bar {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
+}
+
+.bar-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-top: 8px;
+}
+
+.receita-insights {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.receita-insights h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.insights-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.insight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+}
+
+.insight.success {
+    background: #f8fff8;
+    border-left-color: #28a745;
+}
+
+.insight.warning {
+    background: #fffcf0;
+    border-left-color: #ffc107;
+}
+
+.insight.danger {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.insight.info {
+    background: #f0f8ff;
+    border-left-color: #17a2b8;
+}
+
+.insight-icon {
+    font-size: 1.5rem;
+}
+
+.insight-text {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Animações */
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes progressStripes {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 0; }
+}
+
+/* Responsividade do Modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        padding: 20px;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .receita-main-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .comparison-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .chart-container {
+        height: 150px;
+        gap: 10px;
+    }
+    
+    .receita-overview {
+        gap: 20px;
+    }
+}
 </style>
 
 <script>
@@ -1932,6 +2526,44 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.animationDelay = `${index * 0.1}s`;
         }, 100);
     });
+});
+
+// Funções do Modal de Receita
+function abrirModalReceita() {
+    const modal = document.getElementById('modalReceita');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Previne scroll do body
+    
+    // Anima as barras do gráfico
+    setTimeout(() => {
+        const bars = document.querySelectorAll('.chart-bar .bar');
+        bars.forEach((bar, index) => {
+            setTimeout(() => {
+                bar.style.transition = 'height 0.8s ease';
+            }, index * 100);
+        });
+    }, 300);
+}
+
+function fecharModalReceita() {
+    const modal = document.getElementById('modalReceita');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restaura scroll do body
+}
+
+// Fecha modal ao clicar fora dele
+window.onclick = function(event) {
+    const modal = document.getElementById('modalReceita');
+    if (event.target === modal) {
+        fecharModalReceita();
+    }
+}
+
+// Fecha modal com ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        fecharModalReceita();
+    }
 });
 </script>
 {% endblock %}
