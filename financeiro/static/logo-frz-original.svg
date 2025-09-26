@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" width="400" height="150">
+  <!-- Cubo geométrico laranja - exatamente como seu logo original -->
+  <g transform="translate(20,30)">
+    <!-- Parte superior do cubo (forma de losango/diamante) -->
+    <polygon points="30,0 60,15 30,30 0,15" fill="#ff6600"/>
+    
+    <!-- Faces laterais do cubo -->
+    <polygon points="0,15 30,30 30,60 0,45" fill="#e55a00"/>
+    <polygon points="30,30 60,15 60,45 30,60" fill="#ff8533"/>
+    
+    <!-- Base inferior -->
+    <polygon points="0,45 30,60 60,45 30,30" fill="#cc4400"/>
+    
+    <!-- Linhas estruturais internas (efeito 3D) -->
+    <line x1="30" y1="0" x2="30" y2="60" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <line x1="0" y1="15" x2="60" y2="15" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <line x1="15" y1="7.5" x2="45" y2="37.5" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+    <line x1="45" y1="7.5" x2="15" y2="37.5" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  </g>
+  
+  <!-- Texto FRZ - igual ao seu logo -->
+  <text x="100" y="85" fill="#434343" font-family="Arial Black, sans-serif" font-size="48" font-weight="900">FRZ</text>
+  
+  <!-- Texto Logística - igual ao seu logo -->
+  <text x="100" y="110" fill="#434343" font-family="Arial, sans-serif" font-size="20" font-style="italic" font-weight="300">Logística</text>
+</svg>

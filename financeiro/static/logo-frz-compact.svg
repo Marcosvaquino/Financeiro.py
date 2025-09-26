@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200" width="500" height="200">
+  <!-- Cubo geométrico laranja baseado no logo original -->
+  <g transform="translate(30,50)">
+    <!-- Face frontal -->
+    <polygon points="20,40 40,20 80,20 100,40 80,60 40,60" fill="#ff6600"/>
+    
+    <!-- Face superior -->
+    <polygon points="40,20 60,0 100,0 80,20" fill="#ff8533"/>
+    
+    <!-- Face direita -->
+    <polygon points="80,20 100,0 120,20 100,40 80,60" fill="#e55a00"/>
+    
+    <!-- Linhas de estrutura (mais próximas do original) -->
+    <polygon points="20,40 40,60 60,40 40,20" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <polygon points="60,40 80,20 100,40 80,60" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    <polygon points="40,20 60,0 80,20 60,40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+    
+    <!-- Detalhes internos do cubo -->
+    <line x1="60" y1="0" x2="60" y2="40" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+    <line x1="60" y1="40" x2="100" y2="40" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
+  </g>
+  
+  <!-- Texto FRZ (mais próximo do original) -->
+  <text x="180" y="120" fill="#434343" font-family="Arial Black, sans-serif" font-size="64" font-weight="900">FRZ</text>
+  
+  <!-- Texto Logística -->
+  <text x="180" y="150" fill="#434343" font-family="Arial, sans-serif" font-size="24" font-style="italic" font-weight="400">Logística</text>
+</svg>

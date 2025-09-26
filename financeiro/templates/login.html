@@ -13,21 +13,26 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #434343;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255, 102, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 102, 0, 0.1) 0%, transparent 50%);
         }
 
         .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: #e3e3e3;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             margin: 20px;
+            position: relative;
+            border: 1px solid rgba(255, 102, 0, 0.2);
         }
 
         .login-header {
@@ -35,15 +40,24 @@
             margin-bottom: 2rem;
         }
 
+        .logo {
+            width: 250px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 3px 6px rgba(67, 67, 67, 0.2));
+        }
+
         .login-header h1 {
-            color: #333;
-            font-size: 2rem;
+            color: #434343;
+            font-size: 2.2rem;
             margin-bottom: 0.5rem;
+            font-weight: 700;
         }
 
         .login-header p {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-weight: 500;
         }
 
         .form-group {
@@ -52,83 +66,125 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #555;
-            font-weight: 500;
+            margin-bottom: 0.7rem;
+            color: #434343;
+            font-weight: 600;
+            font-size: 0.95rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e1e1e1;
-            border-radius: 5px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: white;
+            color: #434343;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ff6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+            transform: translateY(-1px);
         }
 
         .btn-login {
             width: 100%;
-            padding: 0.75rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem;
+            background: #ff6600;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: 500;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-login:hover {
+            background: #e55a00;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
         }
 
         .btn-login:active {
             transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(255, 102, 0, 0.3);
         }
 
         .alert {
             padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
             font-size: 0.9rem;
+            border: 1px solid;
         }
 
         .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f1aeb5;
+            background-color: #fff5f5;
+            color: #c53030;
+            border-color: #fed7d7;
         }
 
         .demo-credentials {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            font-size: 0.85rem;
+            margin-top: 2rem;
+            padding: 1.2rem;
+            background-color: white;
+            border-radius: 8px;
+            font-size: 0.9rem;
             text-align: center;
+            border: 1px solid #ff6600;
+            border-style: dashed;
         }
 
         .demo-credentials strong {
-            color: #495057;
+            color: #434343;
+            font-size: 1rem;
         }
 
         .demo-credentials span {
-            color: #6c757d;
-            font-family: monospace;
+            color: #ff6600;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            background: rgba(255, 102, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 0 2px;
+        }
+
+        .company-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6600;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ff6600, transparent);
+            margin: 1.5rem 0;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <div class="company-badge">FRZ System</div>
+        
         <div class="login-header">
-            <h1>🏢 Financeiro</h1>
-            <p>Sistema de Gestão Financeira</p>
+            <h1>🏢 FRZ Logística</h1>
+            <p>Acesso ao Sistema</p>
+            <p>Gestão Financeira e Logística</p>
         </div>
 
         {% with messages = get_flashed_messages() %}
@@ -141,20 +197,22 @@
 
         <form method="post" action="/login">
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" placeholder="admin@frz.com" required>
+                <label for="email">📧 Email de acesso:</label>
+                <input type="email" id="email" name="email" placeholder="Digite seu email corporativo" required>
             </div>
 
             <div class="form-group">
-                <label for="senha">Senha:</label>
+                <label for="senha">🔒 Senha:</label>
                 <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
             </div>
 
             <button type="submit" class="btn-login">Entrar no Sistema</button>
         </form>
 
+        <div class="divider"></div>
+
         <div class="demo-credentials">
-            <strong>Credenciais de demonstração:</strong><br>
+            <strong>🔑 Credenciais de teste:</strong><br><br>
             Email: <span>admin@frz.com</span><br>
             Senha: <span>admin123</span>
         </div>
