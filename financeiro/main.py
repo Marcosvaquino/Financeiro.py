@@ -204,6 +204,125 @@ def build_dados_frz(mes, ano):
             'projetado': sum([dados['clientes'][cliente][f'semana_{i+1}']['projetado'] for i in range(5)]),
             'realizado': sum([dados['clientes'][cliente][f'semana_{i+1}']['realizado'] for i in range(5)])
         }
+
+    # --- Novo: calcular totais realizados por semana considerando TODOS os lançamentos em contas_pagar ---
+    # Isso é usado para calcular "despesas gerais" (agora vindo de contas_pagar)
+    semanas_totais_todos_realizado = []
+    for semana in semanas:
+        # se semana vazia
+        if semana['inicio'] is None or semana['fim'] is None:
+            semanas_totais_todos_realizado.append(0.0)
+            continue
+
+        inicio = semana['inicio']
+        fim = semana['fim']
+        # Se a semana estiver no mesmo mês/ano: projetado/realizado virão de contas_pagar
+        if inicio.month == fim.month and inicio.year == fim.year:
+            # realizado: somente status RECEBIDO (interpretado como pago/realizado)
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE UPPER(status) = 'RECEBIDO'
+                AND (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
+                )
+            """, (inicio.year, inicio.month, inicio.day, fim.day))
+            total_real_sem = cur.fetchone()[0] or 0.0
+
+            # projetado: todos os registros (sem filtro de status)
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
+                )
+            """, (inicio.year, inicio.month, inicio.day, fim.day))
+            total_proj_sem = cur.fetchone()[0] or 0.0
+            total_sem = (total_proj_sem, total_real_sem)
+        else:
+            # parte no mês/ano de inicio (dia inicio..31)
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND 31
+                )
+            """, (inicio.year, inicio.month, inicio.day))
+            p1_proj = cur.fetchone()[0] or 0.0
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE UPPER(status) = 'RECEBIDO'
+                AND (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND 31
+                )
+            """, (inicio.year, inicio.month, inicio.day))
+            p1_real = cur.fetchone()[0] or 0.0
+
+            # parte no mês/ano de fim (1..dia fim)
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN 1 AND ?
+                )
+            """, (fim.year, fim.month, fim.day))
+            p2_proj = cur.fetchone()[0] or 0.0
+            cur.execute("""
+                SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
+                WHERE UPPER(status) = 'RECEBIDO'
+                AND (
+                    CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
+                    CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN 1 AND ?
+                )
+            """, (fim.year, fim.month, fim.day))
+            p2_real = cur.fetchone()[0] or 0.0
+            total_sem = (p1_proj + p2_proj, p1_real + p2_real)
+
+        semanas_totais_todos_realizado.append(total_sem)
+
+    # anexa ao dicionário de dados para uso em cálculo de totais
+    # cada item agora é (projetado_total_semana, realizado_total_semana)
+    dados['semanas_totais_todos_realizado'] = semanas_totais_todos_realizado
+
+    # --- Novo: calcular totais projetados por semana considerando TODOS os clientes (tabela projecao) ---
+    semanas_totais_todos_projetado = []
+    for semana in semanas:
+        if semana['inicio'] is None or semana['fim'] is None:
+            semanas_totais_todos_projetado.append(0.0)
+            continue
+
+        inicio = semana['inicio']
+        fim = semana['fim']
+
+        if inicio.month == fim.month and inicio.year == fim.year:
+            cur.execute("""
+                SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0) FROM projecao
+                WHERE mes = ? AND ano = ? AND dia BETWEEN ? AND ?
+            """, (inicio.month, inicio.year, inicio.day, fim.day))
+            totalp = cur.fetchone()[0] or 0.0
+        else:
+            cur.execute("""
+                SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0) FROM projecao
+                WHERE mes = ? AND ano = ? AND dia BETWEEN ? AND 31
+            """, (inicio.month, inicio.year, inicio.day))
+            p1 = cur.fetchone()[0] or 0.0
+            cur.execute("""
+                SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0) FROM projecao
+                WHERE mes = ? AND ano = ? AND dia BETWEEN 1 AND ?
+            """, (fim.month, fim.year, fim.day))
+            p2 = cur.fetchone()[0] or 0.0
+            totalp = p1 + p2
+
+        semanas_totais_todos_projetado.append(totalp)
+
+    dados['semanas_totais_todos_projetado'] = semanas_totais_todos_projetado
     
     # Calcular totais gerais
     dados['totais'] = calcular_totais_frz(dados)
@@ -496,9 +615,55 @@ def calcular_totais_frz(dados):
     
     # Calcular despesas por semana (10% do total de cada semana)
     for semana_num in range(1, 6):
+        # projetado: preferimos usar o total projetado de TODOS os clientes (quando disponível)
+        projetado_val = None
+        # projetado: preferir o total de contas_pagar calculado por semana (quando disponível)
+        projetado_val = None
+        try:
+            todos_sem = dados.get('semanas_totais_todos_realizado')
+            if todos_sem and len(todos_sem) >= semana_num:
+                sem_item = todos_sem[semana_num-1]
+                # sem_item pode ser tupla (proj_total_pagar, real_total_pagar)
+                if isinstance(sem_item, (list, tuple)) and len(sem_item) >= 2:
+                    projetado_val = float(sem_item[0])
+        except Exception:
+            projetado_val = None
+
+        # se não houver o total vindo de contas_pagar, tentar a tabela 'projecao' (se disponível)
+        if projetado_val is None:
+            try:
+                todos_projetados = dados.get('semanas_totais_todos_projetado')
+                if todos_projetados and len(todos_projetados) >= semana_num:
+                    projetado_val = float(todos_projetados[semana_num-1])
+            except Exception:
+                projetado_val = None
+
+        # fallback final: usa o comportamento antigo (total dos 19 clientes)
+        if projetado_val is None:
+            projetado_val = totais['semanas'][f'semana_{semana_num}']['projetado']
+
+        # realizado: preferimos usar o total realizado de TODOS os clientes (quando disponível)
+        realizado_val = None
+        try:
+            # dados.semanas_totais_todos_realizado agora contém tuplas (projetado, realizado)
+            todos_sem = dados.get('semanas_totais_todos_realizado')
+            if todos_sem and len(todos_sem) >= semana_num:
+                sem_item = todos_sem[semana_num-1]
+                # sem_item pode ser uma tupla (proj, real) ou apenas um float antigo
+                if isinstance(sem_item, (list, tuple)) and len(sem_item) >= 2:
+                    realizado_val = float(sem_item[1])
+                else:
+                    realizado_val = float(sem_item)
+        except Exception:
+            realizado_val = None
+
+        # fallback: usa o comportamento antigo (10% do total dos 19 clientes) se não tivermos os totais globais
+        if realizado_val is None:
+            realizado_val = totais['semanas'][f'semana_{semana_num}']['realizado']
+
         totais['despesas_semanas'][f'semana_{semana_num}'] = {
-            'projetado': totais['semanas'][f'semana_{semana_num}']['projetado'] * 0.1,
-            'realizado': totais['semanas'][f'semana_{semana_num}']['realizado'] * 0.1
+            'projetado': projetado_val,
+            'realizado': realizado_val
         }
     
     # Total de despesas gerais (soma de todas as semanas)
