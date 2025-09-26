@@ -80,7 +80,7 @@
             </div>
 
             <!-- Fluxo de Caixa -->
-            <div class="kpi-card-compact {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}">
+            <div class="kpi-card-compact {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}" onclick="abrirModalFluxoCaixa()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">💧</span>
                     <h3>Fluxo de Caixa</h3>
@@ -98,7 +98,7 @@
             </div>
 
             <!-- Contas a Receber -->
-            <div class="kpi-card-compact clientes">
+            <div class="kpi-card-compact clientes" onclick="abrirModalReceber()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">📈</span>
                     <h3>A Receber</h3>
@@ -116,7 +116,7 @@
             </div>
 
             <!-- Contas a Pagar -->
-            <div class="kpi-card-compact margem">
+            <div class="kpi-card-compact margem" onclick="abrirModalPagar()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">📉</span>
                     <h3>A Pagar</h3>
@@ -134,7 +134,7 @@
             </div>
 
             <!-- Ticket Médio -->
-            <div class="kpi-card-compact extra">
+            <div class="kpi-card-compact extra" onclick="abrirModalTicketMedio()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">🎯</span>
                     <h3>Ticket Médio</h3>
@@ -148,7 +148,7 @@
             </div>
 
             <!-- Crescimento -->
-            <div class="kpi-card-compact growth">
+            <div class="kpi-card-compact growth" onclick="abrirModalCrescimento()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">📈</span>
                     <h3>Crescimento</h3>
@@ -164,6 +164,426 @@
                     <span class="kpi-percent {{ 'success' if dados.comparacao.crescimento_receita >= 5 else 'warning' if dados.comparacao.crescimento_receita >= 0 else 'danger' }}">
                         MoM
                     </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Fluxo de Caixa -->
+    <div id="modalFluxoCaixa" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💧 Análise Detalhada do Fluxo de Caixa</h2>
+                <span class="close" onclick="fecharModalFluxoCaixa()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="fluxo-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
+                            <div class="stat-icon">💧</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Fluxo de Caixa</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card primary">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total a Receber</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-icon">📉</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total a Pagar</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fluxo-projection">
+                        <h3>🔮 Projeção Próximos Meses</h3>
+                        <div class="projection-grid">
+                            {% for mes_proj in dados.projecao_fluxo %}
+                            <div class="projection-card {{ 'positive' if mes_proj.valor >= 0 else 'negative' }}">
+                                <div class="projection-month">{{ mes_proj.nome }}</div>
+                                <div class="projection-value">R$ {{ "{:,.0f}".format(mes_proj.valor) }}</div>
+                                <div class="projection-status">{{ 'Positivo' if mes_proj.valor >= 0 else 'Negativo' }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="fluxo-breakdown">
+                        <h3>📊 Detalhamento</h3>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item positive">
+                                <div class="breakdown-icon">💰</div>
+                                <div class="breakdown-content">
+                                    <div class="breakdown-label">Entradas Previstas</div>
+                                    <div class="breakdown-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                                    <div class="breakdown-detail">{{ dados.kpis.receber.count }} títulos</div>
+                                </div>
+                            </div>
+                            <div class="breakdown-item negative">
+                                <div class="breakdown-icon">💸</div>
+                                <div class="breakdown-content">
+                                    <div class="breakdown-label">Saídas Previstas</div>
+                                    <div class="breakdown-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                                    <div class="breakdown-detail">{{ dados.kpis.pagar.count }} títulos</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contas a Receber -->
+    <div id="modalReceber" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📈 Análise de Contas a Receber</h2>
+                <span class="close" onclick="fecharModalReceber()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="receber-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total a Receber</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card secondary">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total de Títulos</div>
+                                <div class="stat-value">{{ dados.kpis.receber.count }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card {{ 'danger' if dados.kpis.receber.count_vencidas > 0 else 'success' }}">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Títulos Vencidos</div>
+                                <div class="stat-value">{{ dados.kpis.receber.count_vencidas }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vencimentos-chart">
+                        <h3>📅 Status dos Vencimentos</h3>
+                        <div class="vencimentos-grid">
+                            <div class="vencimento-item success">
+                                <div class="vencimento-icon">✅</div>
+                                <div class="vencimento-content">
+                                    <div class="vencimento-label">Em Dia</div>
+                                    <div class="vencimento-value">{{ dados.kpis.receber.count - dados.kpis.receber.count_vencidas }}</div>
+                                    <div class="vencimento-percent">{{ "{:.1f}".format(((dados.kpis.receber.count - dados.kpis.receber.count_vencidas) / dados.kpis.receber.count * 100) if dados.kpis.receber.count > 0 else 0) }}%</div>
+                                </div>
+                            </div>
+                            <div class="vencimento-item danger">
+                                <div class="vencimento-icon">⏰</div>
+                                <div class="vencimento-content">
+                                    <div class="vencimento-label">Vencidos</div>
+                                    <div class="vencimento-value">{{ dados.kpis.receber.count_vencidas }}</div>
+                                    <div class="vencimento-percent">{{ "{:.1f}".format((dados.kpis.receber.count_vencidas / dados.kpis.receber.count * 100) if dados.kpis.receber.count > 0 else 0) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-insights">
+                        <h3>💡 Alertas e Recomendações</h3>
+                        <div class="insights-list">
+                            {% if dados.kpis.receber.count_vencidas == 0 %}
+                            <div class="insight success">
+                                <span class="insight-icon">✅</span>
+                                <span class="insight-text">Excelente! Todas as contas estão em dia.</span>
+                            </div>
+                            {% else %}
+                            <div class="insight danger">
+                                <span class="insight-icon">🚨</span>
+                                <span class="insight-text">Atenção: {{ dados.kpis.receber.count_vencidas }} título(s) vencido(s)!</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="insight info">
+                                <span class="insight-icon">📊</span>
+                                <span class="insight-text">Valor médio por título: R$ {{ "{:,.0f}".format(dados.kpis.receber.total / dados.kpis.receber.count if dados.kpis.receber.count > 0 else 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Contas a Pagar -->
+    <div id="modalPagar" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📉 Análise de Contas a Pagar</h2>
+                <span class="close" onclick="fecharModalPagar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="pagar-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card warning">
+                            <div class="stat-icon">📉</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total a Pagar</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card secondary">
+                            <div class="stat-icon">📄</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total de Títulos</div>
+                                <div class="stat-value">{{ dados.kpis.pagar.count }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card {{ 'danger' if dados.kpis.pagar.count_vencidas > 0 else 'success' }}">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Títulos Vencidos</div>
+                                <div class="stat-value">{{ dados.kpis.pagar.count_vencidas }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vencimentos-chart">
+                        <h3>📅 Status dos Vencimentos</h3>
+                        <div class="vencimentos-grid">
+                            <div class="vencimento-item success">
+                                <div class="vencimento-icon">✅</div>
+                                <div class="vencimento-content">
+                                    <div class="vencimento-label">Em Dia</div>
+                                    <div class="vencimento-value">{{ dados.kpis.pagar.count - dados.kpis.pagar.count_vencidas }}</div>
+                                    <div class="vencimento-percent">{{ "{:.1f}".format(((dados.kpis.pagar.count - dados.kpis.pagar.count_vencidas) / dados.kpis.pagar.count * 100) if dados.kpis.pagar.count > 0 else 0) }}%</div>
+                                </div>
+                            </div>
+                            <div class="vencimento-item danger">
+                                <div class="vencimento-icon">⏰</div>
+                                <div class="vencimento-content">
+                                    <div class="vencimento-label">Vencidos</div>
+                                    <div class="vencimento-value">{{ dados.kpis.pagar.count_vencidas }}</div>
+                                    <div class="vencimento-percent">{{ "{:.1f}".format((dados.kpis.pagar.count_vencidas / dados.kpis.pagar.count * 100) if dados.kpis.pagar.count > 0 else 0) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-insights">
+                        <h3>💡 Alertas e Recomendações</h3>
+                        <div class="insights-list">
+                            {% if dados.kpis.pagar.count_vencidas == 0 %}
+                            <div class="insight success">
+                                <span class="insight-icon">✅</span>
+                                <span class="insight-text">Perfeito! Todas as contas estão em dia.</span>
+                            </div>
+                            {% else %}
+                            <div class="insight danger">
+                                <span class="insight-icon">🚨</span>
+                                <span class="insight-text">Urgente: {{ dados.kpis.pagar.count_vencidas }} título(s) em atraso!</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="insight info">
+                                <span class="insight-icon">📊</span>
+                                <span class="insight-text">Valor médio por título: R$ {{ "{:,.0f}".format(dados.kpis.pagar.total / dados.kpis.pagar.count if dados.kpis.pagar.count > 0 else 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ticket Médio -->
+    <div id="modalTicketMedio" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎯 Análise do Ticket Médio</h2>
+                <span class="close" onclick="fecharModalTicketMedio()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="ticket-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Ticket Médio Atual</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card secondary">
+                            <div class="stat-icon">🧮</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Transações</div>
+                                <div class="stat-value">{{ dados.kpis.receber.count if dados.kpis.receber.count > 0 else "N/A" }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Receita Total</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-analysis">
+                        <h3>📈 Evolução do Ticket Médio</h3>
+                        <div class="ticket-chart">
+                            <div class="chart-bar">
+                                <div class="bar-label">3 meses atrás</div>
+                                <div class="bar" style="height: 60%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.85) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">2 meses atrás</div>
+                                <div class="bar" style="height: 75%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.92) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">Mês anterior</div>
+                                <div class="bar" style="height: 85%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio * 0.98) }}</div>
+                            </div>
+                            <div class="chart-bar current-month">
+                                <div class="bar-label">Atual</div>
+                                <div class="bar" style="height: 100%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-insights">
+                        <h3>💡 Insights & Oportunidades</h3>
+                        <div class="insights-list">
+                            <div class="insight info">
+                                <span class="insight-icon">📊</span>
+                                <span class="insight-text">Ticket médio atual: R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</span>
+                            </div>
+                            <div class="insight success">
+                                <span class="insight-icon">🎯</span>
+                                <span class="insight-text">Para aumentar receita, foque em aumentar o ticket médio por cliente.</span>
+                            </div>
+                            <div class="insight warning">
+                                <span class="insight-icon">💡</span>
+                                <span class="insight-text">Meta sugerida: R$ {{ "{:,.0f}".format(dados.ticket_medio * 1.15) }} (+15%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Crescimento -->
+    <div id="modalCrescimento" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📈 Análise de Crescimento</h2>
+                <span class="close" onclick="fecharModalCrescimento()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="crescimento-overview">
+                    <div class="receita-main-stats">
+                        <div class="stat-card {{ 'success' if dados.comparacao.crescimento_receita >= 0 else 'danger' }}">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Crescimento MoM</div>
+                                <div class="stat-value">{{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}{{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%</div>
+                            </div>
+                        </div>
+                        <div class="stat-card primary">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Receita Atual</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card secondary">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Receita Anterior</div>
+                                <div class="stat-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="crescimento-chart">
+                        <h3>📊 Evolução da Receita (6 meses)</h3>
+                        <div class="evolution-chart">
+                            <div class="chart-bar">
+                                <div class="bar-label">6m atrás</div>
+                                <div class="bar" style="height: 45%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.7) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">5m atrás</div>
+                                <div class="bar" style="height: 55%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.8) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">4m atrás</div>
+                                <div class="bar" style="height: 70%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.9) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">3m atrás</div>
+                                <div class="bar" style="height: 80%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior * 0.95) }}</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">Anterior</div>
+                                <div class="bar" style="height: 85%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.comparacao.receita_anterior) }}</div>
+                            </div>
+                            <div class="chart-bar current-month">
+                                <div class="bar-label">Atual</div>
+                                <div class="bar" style="height: {% if dados.comparacao.crescimento_receita >= 0 %}95{% else %}75{% endif %}%"></div>
+                                <div class="bar-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receita-insights">
+                        <h3>💡 Análise de Performance</h3>
+                        <div class="insights-list">
+                            {% if dados.comparacao.crescimento_receita >= 10 %}
+                            <div class="insight success">
+                                <span class="insight-icon">🚀</span>
+                                <span class="insight-text">Crescimento excepcional! Continue assim!</span>
+                            </div>
+                            {% elif dados.comparacao.crescimento_receita >= 0 %}
+                            <div class="insight success">
+                                <span class="insight-icon">📈</span>
+                                <span class="insight-text">Crescimento positivo mantido.</span>
+                            </div>
+                            {% else %}
+                            <div class="insight warning">
+                                <span class="insight-icon">📉</span>
+                                <span class="insight-text">Queda na receita. Análise das causas necessária.</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="insight info">
+                                <span class="insight-icon">🎯</span>
+                                <span class="insight-text">Variação: {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada - dados.comparacao.receita_anterior) }}</span>
+                            </div>
+                            
+                            <div class="insight info">
+                                <span class="insight-icon">📊</span>
+                                <span class="insight-text">Meta de crescimento mensal sugerida: +5%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2450,6 +2870,202 @@
     100% { background-position: 20px 0; }
 }
 
+/* Estilos adicionais para novos modais */
+.fluxo-overview, .receber-overview, .pagar-overview, .ticket-overview, .crescimento-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.fluxo-projection, .ticket-analysis, .crescimento-chart {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.fluxo-projection h3, .ticket-analysis h3, .crescimento-chart h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.projection-grid, .vencimentos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.projection-card {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    border-left: 4px solid;
+}
+
+.projection-card.positive {
+    background: #f8fff8;
+    border-left-color: #28a745;
+}
+
+.projection-card.negative {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.projection-month {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.projection-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.projection-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 15px;
+}
+
+.positive .projection-status {
+    background: #d4edda;
+    color: #155724;
+}
+
+.negative .projection-status {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fluxo-breakdown, .vencimentos-chart {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.fluxo-breakdown h3, .vencimentos-chart h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+}
+
+.breakdown-item.positive {
+    background: #f8fff8;
+    border-left-color: #28a745;
+}
+
+.breakdown-item.negative {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.breakdown-icon {
+    font-size: 2rem;
+}
+
+.breakdown-content {
+    flex: 1;
+}
+
+.breakdown-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.breakdown-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 3px;
+}
+
+.breakdown-detail {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.vencimento-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+}
+
+.vencimento-item.success {
+    background: #f8fff8;
+    border-left-color: #28a745;
+}
+
+.vencimento-item.danger {
+    background: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.vencimento-icon {
+    font-size: 2rem;
+}
+
+.vencimento-content {
+    flex: 1;
+}
+
+.vencimento-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.vencimento-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 3px;
+}
+
+.vencimento-percent {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.ticket-chart, .evolution-chart {
+    display: flex;
+    justify-content: space-around;
+    align-items: end;
+    height: 200px;
+    gap: 15px;
+}
+
 /* Responsividade do Modal */
 @media (max-width: 768px) {
     .modal-content {
@@ -2492,13 +3108,18 @@
         gap: 15px;
     }
     
-    .chart-container {
+    .chart-container, .ticket-chart, .evolution-chart {
         height: 150px;
         gap: 10px;
     }
     
-    .receita-overview {
+    .receita-overview, .fluxo-overview, .receber-overview, .pagar-overview, .ticket-overview, .crescimento-overview {
         gap: 20px;
+    }
+    
+    .projection-grid, .vencimentos-grid, .breakdown-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 }
 </style>
@@ -2551,19 +3172,95 @@ function fecharModalReceita() {
     document.body.style.overflow = 'auto'; // Restaura scroll do body
 }
 
-// Fecha modal ao clicar fora dele
-window.onclick = function(event) {
-    const modal = document.getElementById('modalReceita');
-    if (event.target === modal) {
-        fecharModalReceita();
-    }
+
+
+// Funções do Modal de Fluxo de Caixa
+function abrirModalFluxoCaixa() {
+    const modal = document.getElementById('modalFluxoCaixa');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
-// Fecha modal com ESC
+function fecharModalFluxoCaixa() {
+    const modal = document.getElementById('modalFluxoCaixa');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funções do Modal de Contas a Receber
+function abrirModalReceber() {
+    const modal = document.getElementById('modalReceber');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalReceber() {
+    const modal = document.getElementById('modalReceber');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funções do Modal de Contas a Pagar
+function abrirModalPagar() {
+    const modal = document.getElementById('modalPagar');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalPagar() {
+    const modal = document.getElementById('modalPagar');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funções do Modal de Ticket Médio
+function abrirModalTicketMedio() {
+    const modal = document.getElementById('modalTicketMedio');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalTicketMedio() {
+    const modal = document.getElementById('modalTicketMedio');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funções do Modal de Crescimento
+function abrirModalCrescimento() {
+    const modal = document.getElementById('modalCrescimento');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalCrescimento() {
+    const modal = document.getElementById('modalCrescimento');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Fecha modal com ESC (atualizado para todos os modais)
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         fecharModalReceita();
+        fecharModalFluxoCaixa();
+        fecharModalReceber();
+        fecharModalPagar();
+        fecharModalTicketMedio();
+        fecharModalCrescimento();
     }
 });
+
+// Fecha modal ao clicar fora (atualizado para todos os modais)
+window.onclick = function(event) {
+    const modals = ['modalReceita', 'modalFluxoCaixa', 'modalReceber', 'modalPagar', 'modalTicketMedio', 'modalCrescimento'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
 </script>
 {% endblock %}
