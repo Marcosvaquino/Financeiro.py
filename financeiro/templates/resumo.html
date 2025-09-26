@@ -616,8 +616,8 @@
 .dashboard-hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 25px 40px;
-    margin-bottom: 20px;
+    padding: 12px 40px;
+    margin-bottom: 15px;
 }
 .hero-content {
     max-width: 1600px;
@@ -629,22 +629,22 @@
     gap: 20px;
 }
 .hero-text h1 {
-    font-size: 1.8em;
-    margin: 0 0 6px 0;
+    font-size: 1.3em;
+    margin: 0 0 2px 0;
     font-weight: 700;
 }
 .hero-subtitle {
-    font-size: 0.95em;
+    font-size: 0.85em;
     opacity: 0.9;
     margin: 0;
 }
 .hero-filters-compact {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     background: rgba(255,255,255,0.1);
-    padding: 8px 16px;
-    border-radius: 25px;
+    padding: 4px 12px;
+    border-radius: 16px;
     backdrop-filter: blur(10px);
 }
 .filter-inline {
@@ -655,12 +655,13 @@
 .select-compact {
     background: rgba(255,255,255,0.9);
     border: none;
-    border-radius: 15px;
-    padding: 6px 12px;
-    font-size: 13px;
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 12px;
+    height: 26px;
     font-weight: 600;
     color: #2c3e50;
-    min-width: 60px;
+    min-width: 55px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -670,7 +671,7 @@
 }
 .filter-separator {
     color: rgba(255,255,255,0.8);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
 }
 .btn-update-compact {
@@ -678,13 +679,13 @@
     border: 1px solid rgba(255,255,255,0.3);
     color: white;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.3s ease;
 }
 .btn-update-compact:hover {
@@ -1809,12 +1810,12 @@
 /* Responsividade */
 @media (max-width: 768px) {
     .dashboard-hero {
-        padding: 20px;
+        padding: 15px 20px;
     }
     
     .hero-content {
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
         text-align: center;
     }
     
@@ -1823,7 +1824,8 @@
     }
     
     .hero-filters-compact {
-        padding: 6px 12px;
+        padding: 5px 12px;
+        gap: 8px;
     }
     
     .select-compact {
