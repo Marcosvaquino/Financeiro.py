@@ -11,27 +11,24 @@
                 <h1>📋 Resumo Executivo FRZ</h1>
                 <p class="hero-subtitle">Visão Geral da Saúde Financeira</p>
             </div>
-            <div class="hero-filters">
-                <div class="filter-group">
-                    <label>Mês:</label>
-                    <select id="mes" class="premium-select">
-                        <option value="1" {{ 'selected' if dados.mes == 1 else '' }}>Janeiro</option>
-                        <option value="2" {{ 'selected' if dados.mes == 2 else '' }}>Fevereiro</option>
-                        <option value="3" {{ 'selected' if dados.mes == 3 else '' }}>Março</option>
-                        <option value="4" {{ 'selected' if dados.mes == 4 else '' }}>Abril</option>
-                        <option value="5" {{ 'selected' if dados.mes == 5 else '' }}>Maio</option>
-                        <option value="6" {{ 'selected' if dados.mes == 6 else '' }}>Junho</option>
-                        <option value="7" {{ 'selected' if dados.mes == 7 else '' }}>Julho</option>
-                        <option value="8" {{ 'selected' if dados.mes == 8 else '' }}>Agosto</option>
-                        <option value="9" {{ 'selected' if dados.mes == 9 else '' }}>Setembro</option>
-                        <option value="10" {{ 'selected' if dados.mes == 10 else '' }}>Outubro</option>
-                        <option value="11" {{ 'selected' if dados.mes == 11 else '' }}>Novembro</option>
-                        <option value="12" {{ 'selected' if dados.mes == 12 else '' }}>Dezembro</option>
+            <div class="hero-filters-compact">
+                <div class="filter-inline">
+                    <select id="mes" class="select-compact">
+                        <option value="1" {{ 'selected' if dados.mes == 1 else '' }}>Jan</option>
+                        <option value="2" {{ 'selected' if dados.mes == 2 else '' }}>Fev</option>
+                        <option value="3" {{ 'selected' if dados.mes == 3 else '' }}>Mar</option>
+                        <option value="4" {{ 'selected' if dados.mes == 4 else '' }}>Abr</option>
+                        <option value="5" {{ 'selected' if dados.mes == 5 else '' }}>Mai</option>
+                        <option value="6" {{ 'selected' if dados.mes == 6 else '' }}>Jun</option>
+                        <option value="7" {{ 'selected' if dados.mes == 7 else '' }}>Jul</option>
+                        <option value="8" {{ 'selected' if dados.mes == 8 else '' }}>Ago</option>
+                        <option value="9" {{ 'selected' if dados.mes == 9 else '' }}>Set</option>
+                        <option value="10" {{ 'selected' if dados.mes == 10 else '' }}>Out</option>
+                        <option value="11" {{ 'selected' if dados.mes == 11 else '' }}>Nov</option>
+                        <option value="12" {{ 'selected' if dados.mes == 12 else '' }}>Dez</option>
                     </select>
-                </div>
-                <div class="filter-group">
-                    <label>Ano:</label>
-                    <select id="ano" class="premium-select">
+                    <span class="filter-separator">/</span>
+                    <select id="ano" class="select-compact">
                         <option value="2023" {{ 'selected' if dados.ano == 2023 else '' }}>2023</option>
                         <option value="2024" {{ 'selected' if dados.ano == 2024 else '' }}>2024</option>
                         <option value="2025" {{ 'selected' if dados.ano == 2025 else '' }}>2025</option>
@@ -39,16 +36,8 @@
                         <option value="2027" {{ 'selected' if dados.ano == 2027 else '' }}>2027</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label>Semestre:</label>
-                    <select id="semestre" class="premium-select">
-                        <option value="1">1º Semestre</option>
-                        <option value="2">2º Semestre</option>
-                        <option value="0">Ano Completo</option>
-                    </select>
-                </div>
-                <button onclick="atualizarResumo()" class="btn-atualizar">
-                    <i>🔄</i> Atualizar
+                <button onclick="atualizarResumo()" class="btn-update-compact">
+                    🔄
                 </button>
             </div>
         </div>
@@ -58,100 +47,124 @@
     <input type="hidden" id="dados-mes" value="{{ dados.mes }}">
     <input type="hidden" id="dados-ano" value="{{ dados.ano }}">
 
-    <!-- Status Geral Premium -->
-    <div class="status-executive-premium">
-        <div class="executive-indicator {{ dados.status_geral.cor }}">
-            <div class="executive-glow"></div>
-            <div class="executive-content">
-                <div class="executive-icon">{{ dados.status_geral.emoji }}</div>
-                <div class="executive-info">
-                    <h2 class="executive-title">{{ dados.status_geral.texto }}</h2>
-                    <p class="executive-subtitle">Status Financeiro Atual</p>
-                </div>
+    <!-- Status Geral Compacto -->
+    <div class="status-compact">
+        <div class="status-indicator {{ dados.status_geral.cor }}">
+            <span class="status-icon">{{ dados.status_geral.emoji }}</span>
+            <div class="status-text">
+                <span class="status-title">{{ dados.status_geral.texto }}</span>
+                <span class="status-subtitle">Status Financeiro</span>
             </div>
-            <div class="executive-pattern"></div>
         </div>
     </div>
 
-    <!-- KPIs Principais -->
-    <div class="kpi-section">
-        <!-- Receita -->
-        <div class="kpi-card receita">
-            <div class="kpi-icon">💰</div>
-            <div class="kpi-content">
-                <h3>Receita do Mês</h3>
-                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
-                <div class="kpi-meta">Meta: R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</div>
-                <div class="kpi-percent {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
-                    {{ "{:.1f}".format(dados.kpis.receita.percentual) }}% atingido
+    <!-- KPIs Principais Compactos -->
+    <div class="kpi-section-compact">
+        <div class="kpi-row">
+            <!-- Receita -->
+            <div class="kpi-card-compact receita">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">💰</span>
+                    <h3>Receita</h3>
+                    <span class="kpi-trend-compact {{ 'up' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'down' }}">
+                        {% if dados.kpis.receita.percentual >= 80 %}↗️{% elif dados.kpis.receita.percentual >= 50 %}⚠️{% else %}↘️{% endif %}
+                    </span>
+                </div>
+                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.receita.realizada) }}</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Meta: R$ {{ "{:,.0f}".format(dados.kpis.receita.meta) }}</span>
+                    <span class="kpi-percent {{ 'success' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'danger' }}">
+                        {{ "{:.1f}".format(dados.kpis.receita.percentual) }}%
+                    </span>
                 </div>
             </div>
-            <div class="kpi-trend">
-                <span class="trend-indicator {{ 'up' if dados.kpis.receita.percentual >= 80 else 'warning' if dados.kpis.receita.percentual >= 50 else 'down' }}">
-                    {% if dados.kpis.receita.percentual >= 80 %}↗️ Ótimo{% elif dados.kpis.receita.percentual >= 50 %}⚠️ Atenção{% else %}↘️ Baixo{% endif %}
-                </span>
-            </div>
-        </div>
 
-        <!-- Fluxo de Caixa -->
-        <div class="kpi-card {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}">
-            <div class="kpi-icon">💧</div>
-            <div class="kpi-content">
-                <h3>Fluxo de Caixa</h3>
-                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
-                <div class="kpi-meta">Receber - Pagar</div>
-                <div class="kpi-percent {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
-                    {{ 'Positivo' if dados.kpis.fluxo_caixa.positivo else 'Negativo' }}
+            <!-- Fluxo de Caixa -->
+            <div class="kpi-card-compact {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">💧</span>
+                    <h3>Fluxo de Caixa</h3>
+                    <span class="kpi-trend-compact {{ 'up' if dados.kpis.fluxo_caixa.positivo else 'down' }}">
+                        {{ '💚' if dados.kpis.fluxo_caixa.positivo else '❤️' }}
+                    </span>
+                </div>
+                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.fluxo_caixa.valor) }}</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Receber - Pagar</span>
+                    <span class="kpi-percent {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
+                        {{ 'Positivo' if dados.kpis.fluxo_caixa.positivo else 'Negativo' }}
+                    </span>
                 </div>
             </div>
-            <div class="kpi-trend">
-                <span class="trend-indicator {{ 'up' if dados.kpis.fluxo_caixa.positivo else 'down' }}">
-                    {{ '💚 Estável' if dados.kpis.fluxo_caixa.positivo else '❤️ Cuidado' }}
-                </span>
-            </div>
-        </div>
 
-        <!-- Contas a Receber -->
-        <div class="kpi-card clientes">
-            <div class="kpi-icon">📈</div>
-            <div class="kpi-content">
-                <h3>Contas a Receber</h3>
-                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
-                <div class="kpi-meta">{{ dados.kpis.receber.count }} títulos</div>
-                <div class="kpi-percent {{ 'danger' if dados.kpis.receber.count_vencidas > 0 else 'success' }}">
-                    {% if dados.kpis.receber.count_vencidas > 0 %}
-                        {{ dados.kpis.receber.count_vencidas }} vencidos
-                    {% else %}
-                        Em dia
-                    {% endif %}
+            <!-- Contas a Receber -->
+            <div class="kpi-card-compact clientes">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">📈</span>
+                    <h3>A Receber</h3>
+                    <span class="kpi-trend-compact {{ 'up' if dados.kpis.receber.count_vencidas == 0 else 'down' }}">
+                        {% if dados.kpis.receber.count_vencidas == 0 %}✅{% else %}⚠️{% endif %}
+                    </span>
+                </div>
+                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.receber.total) }}</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">{{ dados.kpis.receber.count }} títulos</span>
+                    <span class="kpi-percent {{ 'danger' if dados.kpis.receber.count_vencidas > 0 else 'success' }}">
+                        {% if dados.kpis.receber.count_vencidas > 0 %}{{ dados.kpis.receber.count_vencidas }} venc.{% else %}Em dia{% endif %}
+                    </span>
                 </div>
             </div>
-            <div class="kpi-trend">
-                <span class="trend-indicator {{ 'up' if dados.kpis.receber.count_vencidas == 0 else 'down' }}">
-                    {% if dados.kpis.receber.count_vencidas == 0 %}✅ Ok{% else %}⚠️ Vencidos{% endif %}
-                </span>
-            </div>
-        </div>
 
-        <!-- Contas a Pagar -->
-        <div class="kpi-card margem">
-            <div class="kpi-icon">📉</div>
-            <div class="kpi-content">
-                <h3>Contas a Pagar</h3>
-                <div class="kpi-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
-                <div class="kpi-meta">{{ dados.kpis.pagar.count }} títulos</div>
-                <div class="kpi-percent {{ 'danger' if dados.kpis.pagar.count_vencidas > 0 else 'success' }}">
-                    {% if dados.kpis.pagar.count_vencidas > 0 %}
-                        {{ dados.kpis.pagar.count_vencidas }} vencidos
-                    {% else %}
-                        Em dia
-                    {% endif %}
+            <!-- Contas a Pagar -->
+            <div class="kpi-card-compact margem">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">📉</span>
+                    <h3>A Pagar</h3>
+                    <span class="kpi-trend-compact {{ 'up' if dados.kpis.pagar.count_vencidas == 0 else 'down' }}">
+                        {% if dados.kpis.pagar.count_vencidas == 0 %}✅{% else %}⚠️{% endif %}
+                    </span>
+                </div>
+                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.kpis.pagar.total) }}</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">{{ dados.kpis.pagar.count }} títulos</span>
+                    <span class="kpi-percent {{ 'danger' if dados.kpis.pagar.count_vencidas > 0 else 'success' }}">
+                        {% if dados.kpis.pagar.count_vencidas > 0 %}{{ dados.kpis.pagar.count_vencidas }} venc.{% else %}Em dia{% endif %}
+                    </span>
                 </div>
             </div>
-            <div class="kpi-trend">
-                <span class="trend-indicator {{ 'up' if dados.kpis.pagar.count_vencidas == 0 else 'down' }}">
-                    {% if dados.kpis.pagar.count_vencidas == 0 %}✅ Ok{% else %}⚠️ Vencidos{% endif %}
-                </span>
+
+            <!-- Ticket Médio -->
+            <div class="kpi-card-compact extra">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">🎯</span>
+                    <h3>Ticket Médio</h3>
+                    <span class="kpi-trend-compact up">📊</span>
+                </div>
+                <div class="kpi-main-value">R$ {{ "{:,.0f}".format(dados.ticket_medio) }}</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Por transação</span>
+                    <span class="kpi-percent success">Média</span>
+                </div>
+            </div>
+
+            <!-- Crescimento -->
+            <div class="kpi-card-compact growth">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">📈</span>
+                    <h3>Crescimento</h3>
+                    <span class="kpi-trend-compact {{ 'up' if dados.comparacao.crescimento_receita >= 0 else 'down' }}">
+                        {{ "📈" if dados.comparacao.crescimento_receita >= 0 else "📉" }}
+                    </span>
+                </div>
+                <div class="kpi-main-value {{ 'positive' if dados.comparacao.crescimento_receita >= 0 else 'negative' }}">
+                    {{ "+" if dados.comparacao.crescimento_receita >= 0 else "" }}{{ "{:.1f}".format(dados.comparacao.crescimento_receita) }}%
+                </div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">vs mês anterior</span>
+                    <span class="kpi-percent {{ 'success' if dados.comparacao.crescimento_receita >= 5 else 'warning' if dados.comparacao.crescimento_receita >= 0 else 'danger' }}">
+                        MoM
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -532,12 +545,67 @@
 </div>
 
 <style>
-/* Status Executive Premium */
-.status-executive-premium {
-    margin: 1rem 0 1.6rem 0;
+/* Status Compacto */
+.status-compact {
+    margin: 0 auto 20px auto;
     display: flex;
     justify-content: center;
-    perspective: 1000px;
+    max-width: 1600px;
+    padding: 0 40px;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.success {
+    border-left-color: #4CAF50;
+    background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+}
+
+.status-indicator.warning {
+    border-left-color: #FF9800;
+    background: linear-gradient(135deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.status-indicator.danger {
+    border-left-color: #f44336;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+}
+
+.status-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.status-icon {
+    font-size: 1.5em;
+}
+
+.status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.status-title {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.status-subtitle {
+    font-size: 0.75em;
+    color: #6c757d;
+    font-weight: 500;
 }
 .dashboard-container {
     padding: 0;
@@ -548,8 +616,8 @@
 .dashboard-hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 35px 40px;
-    margin-bottom: 30px;
+    padding: 25px 40px;
+    margin-bottom: 20px;
 }
 .hero-content {
     max-width: 1600px;
@@ -561,221 +629,166 @@
     gap: 20px;
 }
 .hero-text h1 {
-    font-size: 2.2em;
-    margin: 0 0 8px 0;
+    font-size: 1.8em;
+    margin: 0 0 6px 0;
     font-weight: 700;
 }
 .hero-subtitle {
-    font-size: 1.1em;
+    font-size: 0.95em;
     opacity: 0.9;
     margin: 0;
 }
-.hero-filters {
+.hero-filters-compact {
     display: flex;
-    gap: 20px;
-    align-items: end;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 16px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
 }
-.filter-group {
+.filter-inline {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    align-items: center;
+    gap: 8px;
 }
-.filter-group label {
-    font-size: 0.9em;
-    opacity: 0.9;
-}
-.premium-select {
-    padding: 12px 16px;
+.select-compact {
+    background: rgba(255,255,255,0.9);
     border: none;
-    border-radius: 8px;
-    background: white;
-    font-size: 14px;
-    min-width: 120px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.btn-atualizar {
-    background: #ff6b35;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 15px;
+    padding: 6px 12px;
+    font-size: 13px;
     font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    color: #2c3e50;
+    min-width: 60px;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
-.btn-atualizar:hover {
-    background: #e55a2b;
-    transform: translateY(-2px);
-}
-.kpi-section {
-    max-width: 1600px;
-    margin: 0 auto 40px auto;
-    padding: 0 40px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 25px;
-}
-.kpi-card {
+.select-compact:hover {
     background: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border-left: 5px solid;
+    transform: scale(1.05);
+}
+.filter-separator {
+    color: rgba(255,255,255,0.8);
+    font-size: 16px;
+    font-weight: 600;
+}
+.btn-update-compact {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+.btn-update-compact:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+}
+/* KPIs Compactos */
+.kpi-section-compact {
+    max-width: 1600px;
+    margin: 0 auto 30px auto;
+    padding: 0 40px;
+}
+
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    transition: transform 0.3s ease;
-    min-height: 125px;
 }
-.kpi-card:hover {
-    transform: translateY(-5px);
+
+.kpi-card-compact {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+    min-height: 90px;
 }
-.kpi-card.receita { border-left-color: #4CAF50; }
-.kpi-card.produtividade { border-left-color: #2196F3; }
-.kpi-card.margem { border-left-color: #FF9800; }
-.kpi-card.clientes { border-left-color: #9C27B0; }
-.kpi-icon {
-    font-size: 2.2em;
-    opacity: 0.8;
-    margin-top: 3px;
+
+.kpi-card-compact:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
 }
-.kpi-content {
+
+.kpi-card-compact.receita { border-left-color: #4CAF50; }
+.kpi-card-compact.produtividade { border-left-color: #2196F3; }
+.kpi-card-compact.margem { border-left-color: #FF9800; }
+.kpi-card-compact.clientes { border-left-color: #9C27B0; }
+.kpi-card-compact.extra { border-left-color: #673AB7; }
+.kpi-card-compact.growth { border-left-color: #E91E63; }
+
+.kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.kpi-icon-small {
+    font-size: 1.3em;
+}
+
+.kpi-header h3 {
+    margin: 0;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #555;
     flex: 1;
 }
-.kpi-content h3 {
-    margin: 0 0 6px 0;
-    color: #555;
-    font-size: 0.95em;
+
+.kpi-trend-compact {
+    font-size: 1em;
 }
-.kpi-value {
-    font-size: 1.4em;
+
+.kpi-main-value {
+    font-size: 1.2em;
     font-weight: 700;
     color: #333;
-    line-height: 1.2;
-    margin: 8px 0;
+    margin: 6px 0;
+    line-height: 1.1;
 }
+
+.kpi-main-value.positive {
+    color: #4CAF50;
+}
+
+.kpi-main-value.negative {
+    color: #f44336;
+}
+
+.kpi-sub-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75em;
+}
+
 .kpi-meta {
-    font-size: 0.85em;
     color: #777;
-    margin: 5px 0;
+    font-weight: 500;
 }
+
 .kpi-percent {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8em;
+    padding: 3px 8px;
+    border-radius: 12px;
     font-weight: 600;
-    display: inline-block;
+    font-size: 0.85em;
 }
+
 .kpi-percent.success { background: #e8f5e8; color: #4CAF50; }
 .kpi-percent.warning { background: #fff3e0; color: #FF9800; }
 .kpi-percent.danger { background: #ffebee; color: #f44336; }
-.kpi-trend {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
-    margin-top: 5px;
-}
-.trend-indicator {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85em;
-    font-weight: 600;
-    text-align: center;
-    white-space: nowrap;
-}
-.trend-indicator.up { background: #e8f5e8; color: #4CAF50; }
-.trend-indicator.down { background: #ffebee; color: #f44336; }
-.trend-indicator.stable { background: #f0f0f0; color: #666; }
 
-.executive-indicator {
-    position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    padding: 1.2rem 1.6rem;
-    box-shadow: 
-        0 12px 30px rgba(102, 126, 234, 0.24),
-        0 6px 12px rgba(102, 126, 234, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    overflow: hidden;
-    min-width: 360px;
-    animation: statusPulse 3s ease-in-out infinite;
-    transform: translateZ(0);
-}
 
-.executive-indicator.warning {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    box-shadow: 
-        0 20px 40px rgba(240, 147, 251, 0.3),
-        0 8px 16px rgba(240, 147, 251, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.executive-indicator.danger {
-    background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
-    box-shadow: 
-        0 20px 40px rgba(252, 70, 107, 0.3),
-        0 8px 16px rgba(252, 70, 107, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.executive-glow {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    animation: glowRotate 8s linear infinite;
-}
-
-.executive-content {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    z-index: 2;
-}
-
-.executive-icon {
-    font-size: 2.4rem;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-    animation: iconFloat 2s ease-in-out infinite alternate;
-}
-
-.executive-info {
-    flex: 1;
-}
-
-.executive-title {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    letter-spacing: -0.5px;
-}
-
-.executive-subtitle {
-    margin: 0.5rem 0 0 0;
-    color: rgba(255,255,255,0.9);
-    font-size: 1rem;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-}
-
-.executive-pattern {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 100%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
-    opacity: 0.6;
-}
 
 /* Ações Executivas Premium */
 .executive-actions-premium {
@@ -990,9 +1003,9 @@
 
 .comparison-section {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 40px;
-    margin-bottom: 40px;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
     color: white;
     position: relative;
     overflow: hidden;
@@ -1011,37 +1024,37 @@
 
 .comparison-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     position: relative;
     z-index: 2;
 }
 
 .comparison-header h3 {
-    font-size: 2rem;
-    margin: 0 0 10px 0;
+    font-size: 1.5rem;
+    margin: 0 0 6px 0;
     font-weight: 700;
 }
 
 .comparison-header p {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     opacity: 0.9;
     margin: 0;
 }
 
 .comparison-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
     position: relative;
     z-index: 2;
 }
 
 .comparison-card {
     background: rgba(255,255,255,0.95);
-    border-radius: 16px;
-    padding: 25px;
+    border-radius: 12px;
+    padding: 18px;
     color: #2c3e50;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.2);
 }
@@ -1266,17 +1279,17 @@
 
 .analytics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
     max-width: 1600px;
     margin: 0 auto;
 }
 
 .analytics-card {
     background: white;
-    border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border: 1px solid rgba(0,0,0,0.05);
 }
 
@@ -1548,9 +1561,9 @@
 /* Centro de Comando Executivo */
 .command-center {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    border-radius: 20px;
-    padding: 40px;
-    margin: 40px auto;
+    border-radius: 16px;
+    padding: 25px;
+    margin: 25px auto;
     max-width: 1600px;
     color: white;
     position: relative;
@@ -1589,16 +1602,16 @@
 
 .command-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
     position: relative;
     z-index: 2;
 }
 
 .command-section {
     background: rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 25px;
+    border-radius: 12px;
+    padding: 18px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.2);
 }
@@ -1795,22 +1808,81 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
+    .dashboard-hero {
+        padding: 20px;
+    }
+    
+    .hero-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .hero-text h1 {
+        font-size: 1.5em;
+    }
+    
+    .hero-filters-compact {
+        padding: 6px 12px;
+    }
+    
+    .select-compact {
+        min-width: 50px;
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .status-compact {
+        padding: 0 20px;
+    }
+    
+    .status-indicator {
+        padding: 10px 16px;
+        gap: 10px;
+    }
+    
+    .status-title {
+        font-size: 0.85em;
+    }
+    
     .executive-dashboard {
         padding: 0 20px;
     }
     
+    .kpi-section-compact {
+        padding: 0 20px;
+    }
+    
+    .kpi-row {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+    
+    .kpi-card-compact {
+        padding: 12px;
+        min-height: 75px;
+    }
+    
+    .kpi-main-value {
+        font-size: 1.1em;
+    }
+    
+    .kpi-header h3 {
+        font-size: 0.8em;
+    }
+    
     .comparison-section {
-        padding: 25px 20px;
+        padding: 20px 15px;
     }
     
     .comparison-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 15px;
     }
     
     .analytics-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 15px;
     }
     
     .comparison-values {
@@ -1824,13 +1896,13 @@
     }
     
     .command-center {
-        padding: 25px 20px;
-        margin: 30px auto;
+        padding: 20px 15px;
+        margin: 20px auto;
     }
     
     .command-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 15px;
     }
 }
 </style>
