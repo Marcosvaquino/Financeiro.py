@@ -28,6 +28,88 @@ def format_currency(value):
 # Registra a função no Jinja2
 app.jinja_env.filters['currency'] = format_currency
 
+# Função inteligente para normalizar nomes de clientes
+def normalizar_nome_cliente(nome):
+    """Normaliza nomes removendo acentos, espaços extras e padronizando maiúsculas"""
+    import unicodedata
+    
+    if not nome:
+        return ""
+    
+    # Remove acentos
+    nome = unicodedata.normalize('NFD', nome)
+    nome = ''.join(char for char in nome if unicodedata.category(char) != 'Mn')
+    
+    # Converte para maiúsculo e remove espaços extras
+    nome = nome.upper().strip()
+    
+    # Remove espaços duplos
+    while '  ' in nome:
+        nome = nome.replace('  ', ' ')
+    
+    return nome
+
+# Lista dos 19 clientes principais (normalizados)
+CLIENTES_19_PRINCIPAIS = [
+    'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
+    'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
+    'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
+    'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
+    'PEIXES MEGGS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAI'
+]
+
+def eh_cliente_principal(nome_cliente):
+    """Verifica se um cliente está na lista dos 19 principais usando normalização inteligente"""
+    nome_normalizado = normalizar_nome_cliente(nome_cliente)
+    
+    # Verifica contra cada cliente da lista principal
+    for cliente_principal in CLIENTES_19_PRINCIPAIS:
+        cliente_principal_normalizado = normalizar_nome_cliente(cliente_principal)
+        
+        # Verifica match exato
+        if nome_normalizado == cliente_principal_normalizado:
+            return True
+            
+        # Verifica match parcial para casos como "GTFOODS BARUERI " (com espaço)
+        if cliente_principal_normalizado in nome_normalizado or nome_normalizado in cliente_principal_normalizado:
+            # Só aceita se a diferença for apenas espaços
+            if abs(len(nome_normalizado) - len(cliente_principal_normalizado)) <= 2:
+                return True
+    
+    return False
+
+def filtrar_clientes_principais(cursor, tabela, condicoes_extras=""):
+    """
+    Retorna lista de clientes principais da tabela com suas variações reais do banco
+    """
+    # Busca todos os clientes únicos da tabela
+    query = f"SELECT DISTINCT cliente FROM {tabela} {condicoes_extras}"
+    cursor.execute(query)
+    todos_clientes = [row[0] for row in cursor.fetchall() if row[0]]
+    
+    # Filtra apenas os que são clientes principais
+    clientes_filtrados = []
+    for cliente in todos_clientes:
+        if eh_cliente_principal(cliente):
+            clientes_filtrados.append(cliente)
+    
+    return clientes_filtrados
+
+def criar_condicao_clientes_principais(cursor, tabela, condicoes_extras=""):
+    """
+    Cria condição SQL para filtrar apenas os 19 clientes principais
+    """
+    clientes_reais = filtrar_clientes_principais(cursor, tabela, condicoes_extras)
+    
+    if not clientes_reais:
+        return "1=0", []  # Nenhum cliente encontrado
+    
+    # Cria placeholders
+    placeholders = ','.join(['?' for _ in clientes_reais])
+    condicao = f"cliente IN ({placeholders})"
+    
+    return condicao, clientes_reais
+
 # --- helper: login required decorator ---
 from functools import wraps
 def login_required(f):
@@ -1338,23 +1420,18 @@ def resumo():
     pattern = f"%/{mes:02d}/{ano}%"
     
     # Receita realizada (apenas clientes dos 19 e status RECEBIDO)
-    clientes_19 = [
-        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
-        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
-        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
-        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
-        'PEIXES MEGGS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
-    ]
-    
-    # Criar placeholders para os clientes
-    clientes_placeholders = ','.join(['?' for _ in clientes_19])
+    # Usar sistema inteligente para filtrar clientes principais
+    condicao_clientes, clientes_reais = criar_condicao_clientes_principais(
+        cur, 'contas_receber', 
+        f"WHERE vencimento LIKE '{pattern}' AND UPPER(status) = 'RECEBIDO'"
+    )
     
     cur.execute(f"""
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO' 
-        AND UPPER(cliente) IN ({clientes_placeholders})
-    """, [pattern] + [cliente.upper() for cliente in clientes_19])
+        AND {condicao_clientes}
+    """, [pattern] + clientes_reais)
     receita_realizada = cur.fetchone()[0] or 0.0
     
     # Receita projetada (meta da projeção)
@@ -1365,33 +1442,39 @@ def resumo():
     """, (mes, ano))
     receita_meta = cur.fetchone()[0] or 0.0
     
-    # 2. CONTAS A RECEBER (total e vencidas) - filtrado por mês/ano + 19 clientes
+    # 2. CONTAS A RECEBER (total e vencidas) - filtrado por mês/ano + 19 clientes + Status Pendente
+    # Usar sistema inteligente para filtrar clientes principais
+    condicao_clientes_receber, clientes_reais_receber = criar_condicao_clientes_principais(
+        cur, 'contas_receber', 
+        f"WHERE vencimento LIKE '{pattern}' AND UPPER(status) = 'PENDENTE'"
+    )
+    
     cur.execute(f"""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_receber
-        WHERE status != 'RECEBIDO' AND status != 'Pago'
+        WHERE UPPER(status) = 'PENDENTE'
         AND vencimento LIKE ?
-        AND UPPER(cliente) IN ({clientes_placeholders})
-    """, [pattern] + [cliente.upper() for cliente in clientes_19])
+        AND {condicao_clientes_receber}
+    """, [pattern] + clientes_reais_receber)
     receber_dados = cur.fetchone()
     total_receber = receber_dados[0] or 0.0
     count_receber = receber_dados[1] or 0
     
-    # Contas vencidas (vencimento < hoje) - filtrado por mês/ano + 19 clientes
+    # Contas vencidas (vencimento < hoje) - filtrado por mês/ano + 19 clientes + Status Pendente
     hoje = datetime.now().strftime("%d/%m/%Y")
     cur.execute(f"""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_receber
-        WHERE status != 'RECEBIDO' AND status != 'Pago'
+        WHERE UPPER(status) = 'PENDENTE'
         AND vencimento LIKE ?
-        AND UPPER(cliente) IN ({clientes_placeholders})
+        AND {condicao_clientes_receber}
         AND LENGTH(vencimento) = 10
         AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
-    """, [pattern] + [cliente.upper() for cliente in clientes_19])
+    """, [pattern] + clientes_reais_receber)
     receber_vencidas_dados = cur.fetchone()
     receber_vencidas = receber_vencidas_dados[0] or 0.0
     count_receber_vencidas = receber_vencidas_dados[1] or 0
@@ -1448,12 +1531,17 @@ def resumo():
     pattern_anterior = f"%/{mes_anterior:02d}/{ano_anterior}%"
     
     # Receita do período anterior (também filtrada pelos 19 clientes)
+    condicao_clientes_anterior, clientes_reais_anterior = criar_condicao_clientes_principais(
+        cur, 'contas_receber', 
+        f"WHERE vencimento LIKE '{pattern_anterior}' AND UPPER(status) = 'RECEBIDO'"
+    )
+    
     cur.execute(f"""
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
-        AND UPPER(cliente) IN ({clientes_placeholders})
-    """, [pattern_anterior] + [cliente.upper() for cliente in clientes_19])
+        AND {condicao_clientes_anterior}
+    """, [pattern_anterior] + clientes_reais_anterior)
     receita_anterior = cur.fetchone()[0] or 0.0
     
     # Crescimento percentual
@@ -1476,17 +1564,23 @@ def resumo():
         pattern_proj = f"%/{mes_proj:02d}/{ano_proj}%"
         
         # Estimativa baseada na média dos últimos 3 meses (filtrado pelos 19 clientes)
+        # Para estimativa, usamos todos os clientes principais históricos
+        condicao_clientes_estimativa, clientes_reais_estimativa = criar_condicao_clientes_principais(
+            cur, 'contas_receber', 
+            f"WHERE UPPER(status) = 'RECEBIDO'"
+        )
+        
         cur.execute(f"""
             SELECT COALESCE(AVG(valor_total), 0.0) FROM (
                 SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
                 FROM contas_receber
-                WHERE vencimento LIKE '%/{{:02d}}/%' AND UPPER(status) = 'RECEBIDO'
-                AND UPPER(cliente) IN ({clientes_placeholders})
+                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'RECEBIDO'
+                AND {condicao_clientes_estimativa}
                 GROUP BY SUBSTR(vencimento, 7, 4)
                 ORDER BY SUBSTR(vencimento, 7, 4) DESC
                 LIMIT 3
             )
-        """.format(mes_proj), [cliente.upper() for cliente in clientes_19])
+        """, clientes_reais_estimativa)
         receita_estimada = cur.fetchone()[0] or 0.0
         
         # Estimativa de gastos
@@ -1521,8 +1615,8 @@ def resumo():
     cur.execute(f"""
         SELECT COUNT(*) FROM contas_receber 
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
-        AND UPPER(cliente) IN ({clientes_placeholders})
-    """, [pattern] + [cliente.upper() for cliente in clientes_19])
+        AND {condicao_clientes}
+    """, [pattern] + clientes_reais)
     total_transacoes = cur.fetchone()[0] or 1
     ticket_medio = receita_realizada / total_transacoes if total_transacoes > 0 else 0
     
