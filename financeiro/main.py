@@ -1152,21 +1152,19 @@ def build_dashboard_data(limit_recent=20):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Busca dados de contas a receber
+    # Busca dados de contas a receber (TODOS os status)
     cur.execute("""
         SELECT COUNT(*), COALESCE(SUM(valor_principal), 0) 
         FROM contas_receber 
-        WHERE status != 'Pago'
-        AND conta_contabil != 'LSP Transportes'
+        WHERE conta_contabil != 'LSP Transportes'
     """)
     contas_receber = cur.fetchone()
 
-    # Busca dados de contas a pagar
+    # Busca dados de contas a pagar (TODOS os status)
     cur.execute("""
         SELECT COUNT(*), COALESCE(SUM(valor_principal), 0) 
         FROM contas_pagar 
-        WHERE status != 'Pago'
-        AND fornecedor != 'REIS TRANSPORTES'
+        WHERE fornecedor != 'REIS TRANSPORTES'
     """)
     contas_pagar = cur.fetchone()
 
@@ -1552,8 +1550,20 @@ def resumo():
     pagar_vencidas = pagar_vencidas_dados[0] or 0.0
     count_pagar_vencidas = pagar_vencidas_dados[1] or 0
     
-    # 4. FLUXO DE CAIXA (simplificado: receber - pagar)
-    fluxo_caixa = total_receber - total_pagar
+    # 4. CONTAS A PAGAR TOTAL (para cálculo do fluxo de caixa - TODOS os status)
+    cur.execute("""
+        SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
+        FROM contas_pagar
+        WHERE vencimento LIKE ?
+        AND fornecedor != 'REIS TRANSPORTES'
+    """, (pattern,))
+    pagar_total = cur.fetchone()[0] or 0.0
+    
+    # 4. FLUXO DE CAIXA (receita realizada - contas a pagar total)
+    fluxo_caixa = receita_realizada - pagar_total
+    
+    # 4.1. FLUXO DE CAIXA PROJETADO (meta da projeção - contas a pagar total)
+    fluxo_caixa_projetado = receita_meta - pagar_total
     
     # 5. TOP 5 CLIENTES DO MÊS (19 clientes principais, por valor total - recebido + pendente)
     cur.execute(f"""
@@ -1619,11 +1629,11 @@ def resumo():
         """, (mes_proj, ano_proj))
         receita_projetada = cur.fetchone()[0] or 0.0
         
-        # Buscar contas a pagar para o mês (status = 'PENDENTE')
+        # Buscar contas a pagar para o mês (TODOS os status - igual ao card principal)
         cur.execute("""
             SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
             FROM contas_pagar
-            WHERE vencimento LIKE ? AND UPPER(status) = 'PENDENTE'
+            WHERE vencimento LIKE ?
             AND fornecedor != 'REIS TRANSPORTES'
         """, (f"%/{mes_proj:02d}/{ano_proj}%",))
         contas_a_pagar = cur.fetchone()[0] or 0.0
@@ -1712,6 +1722,10 @@ def resumo():
             'fluxo_caixa': {
                 'valor': fluxo_caixa,
                 'positivo': fluxo_caixa >= 0
+            },
+            'fluxo_caixa_projetado': {
+                'valor': fluxo_caixa_projetado,
+                'positivo': fluxo_caixa_projetado >= 0
             },
             'receber': {
                 'total': total_receber,

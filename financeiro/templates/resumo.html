@@ -69,18 +69,21 @@
             </div>
 
             <!-- Fluxo de Caixa -->
-            <div class="kpi-card-compact {{ 'produtividade' if dados.kpis.fluxo_caixa.positivo else 'margem' }}" onclick="abrirModalFluxoCaixa()" style="cursor: pointer;">
+            <div class="kpi-card-compact" id="fluxoCaixaCard" onclick="abrirModalFluxoCaixa()" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">💧</span>
                     <h3>Fluxo de Caixa</h3>
-                    <span class="kpi-trend-compact {{ 'up' if dados.kpis.fluxo_caixa.positivo else 'down' }}">
-                        {{ '💚' if dados.kpis.fluxo_caixa.positivo else '❤️' }}
-                    </span>
+                    <div class="fluxo-toggle-container" onclick="event.stopPropagation();">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="fluxoToggle" onchange="alternarModoFluxo()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
-                <div class="kpi-main-value">R$ {{ dados.kpis.fluxo_caixa.valor|currency }}</div>
+                <div class="kpi-main-value" id="fluxoValor">R$ {{ dados.kpis.fluxo_caixa.valor|currency }}</div>
                 <div class="kpi-sub-info">
-                    <span class="kpi-meta">Receber - Pagar</span>
-                    <span class="kpi-percent {{ 'success' if dados.kpis.fluxo_caixa.positivo else 'danger' }}">
+                    <span class="kpi-meta" id="fluxoDescricao">Recebido - Pagar</span>
+                    <span class="kpi-percent" id="fluxoStatus">
                         {{ 'Positivo' if dados.kpis.fluxo_caixa.positivo else 'Negativo' }}
                     </span>
                 </div>
@@ -1289,6 +1292,65 @@
 .kpi-card-compact.clientes { border-left-color: #9C27B0; }
 .kpi-card-compact.extra { border-left-color: #673AB7; }
 .kpi-card-compact.growth { border-left-color: #E91E63; }
+
+/* Estilos para o toggle do Fluxo de Caixa */
+.fluxo-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #2196F3;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+}
 
 .kpi-header {
     display: flex;
@@ -3254,6 +3316,47 @@ function fecharModalFluxoCaixa() {
     const modal = document.getElementById('modalFluxoCaixa');
     modal.style.display = 'none';
     document.body.style.overflow = 'auto';
+}
+
+// Função para alternar modo do Fluxo de Caixa
+function alternarModoFluxo() {
+    const toggle = document.getElementById('fluxoToggle');
+    const card = document.getElementById('fluxoCaixaCard');
+    const valor = document.getElementById('fluxoValor');
+    const descricao = document.getElementById('fluxoDescricao');
+    const status = document.getElementById('fluxoStatus');
+    
+    // Dados vindos do backend
+    const dadosFluxo = {
+        real: {
+            valor: {{ dados.kpis.fluxo_caixa.valor }},
+            descricao: 'Recebido - Pagar',
+            positivo: {{ 'true' if dados.kpis.fluxo_caixa.positivo else 'false' }}
+        },
+        projetado: {
+            valor: {{ dados.kpis.fluxo_caixa_projetado.valor if dados.kpis.fluxo_caixa_projetado else 0 }},
+            descricao: 'Projeção - Pagar',
+            positivo: {{ 'true' if dados.kpis.fluxo_caixa_projetado and dados.kpis.fluxo_caixa_projetado.positivo else 'false' }}
+        }
+    };
+    
+    const modoAtual = toggle.checked ? dadosFluxo.projetado : dadosFluxo.real;
+    
+    // Atualizar valor
+    valor.textContent = 'R$ ' + modoAtual.valor.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    // Atualizar descrição
+    descricao.textContent = modoAtual.descricao;
+    
+    // Atualizar status e cor do card
+    status.textContent = modoAtual.positivo ? 'Positivo' : 'Negativo';
+    status.className = 'kpi-percent ' + (modoAtual.positivo ? 'success' : 'danger');
+    
+    // Atualizar cor do card
+    card.className = 'kpi-card-compact ' + (modoAtual.positivo ? 'produtividade' : 'margem');
 }
 
 // Funções do Modal de Contas a Receber
