@@ -334,6 +334,7 @@ def build_dados_frz(mes, ano):
             cur.execute("""
                 SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
                 WHERE UPPER(status) = 'RECEBIDO'
+                AND fornecedor != 'REIS TRANSPORTES'
                 AND (
                     CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -345,7 +346,8 @@ def build_dados_frz(mes, ano):
             # projetado: todos os registros (sem filtro de status)
             cur.execute("""
                 SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
-                WHERE (
+                WHERE fornecedor != 'REIS TRANSPORTES'
+                AND (
                     CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN ? AND ?
@@ -367,6 +369,7 @@ def build_dados_frz(mes, ano):
             cur.execute("""
                 SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
                 WHERE UPPER(status) = 'RECEBIDO'
+                AND fornecedor != 'REIS TRANSPORTES'
                 AND (
                     CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -378,7 +381,8 @@ def build_dados_frz(mes, ano):
             # parte no mês/ano de fim (1..dia fim)
             cur.execute("""
                 SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
-                WHERE (
+                WHERE fornecedor != 'REIS TRANSPORTES'
+                AND (
                     CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 1, 2) AS INTEGER) BETWEEN 1 AND ?
@@ -388,6 +392,7 @@ def build_dados_frz(mes, ano):
             cur.execute("""
                 SELECT COALESCE(SUM(valor_principal), 0.0) FROM contas_pagar
                 WHERE UPPER(status) = 'RECEBIDO'
+                AND fornecedor != 'REIS TRANSPORTES'
                 AND (
                     CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                     CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -984,6 +989,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
         FROM contas_pagar
         WHERE {pago_cond}
         AND vencimento LIKE ?
+        AND fornecedor != 'REIS TRANSPORTES'
     """, (pattern,))
     
     contas_pagar_realizadas = cur.fetchone()
@@ -1032,7 +1038,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
     # nos próximos 7 dias.
     cur.execute("SELECT vencimento FROM contas_receber WHERE status != 'Pago' AND vencimento LIKE ? AND conta_contabil != 'LSP Transportes'", (pattern,))
     vr = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT vencimento FROM contas_pagar WHERE status != 'Pago' AND vencimento LIKE ?", (pattern,))
+    cur.execute("SELECT vencimento FROM contas_pagar WHERE status != 'Pago' AND vencimento LIKE ? AND fornecedor != 'REIS TRANSPORTES'", (pattern,))
     vp = [r[0] for r in cur.fetchall()]
     alertas = 0
     hoje = datetime.now().date()
@@ -1160,6 +1166,7 @@ def build_dashboard_data(limit_recent=20):
         SELECT COUNT(*), COALESCE(SUM(valor_principal), 0) 
         FROM contas_pagar 
         WHERE status != 'Pago'
+        AND fornecedor != 'REIS TRANSPORTES'
     """)
     contas_pagar = cur.fetchone()
 
@@ -1183,6 +1190,7 @@ def build_dashboard_data(limit_recent=20):
             'pagar' as tipo
         FROM contas_pagar 
         WHERE status != 'Pago'
+        AND fornecedor != 'REIS TRANSPORTES'
         ORDER BY vencimento
         LIMIT {limit_recent}
     """)
@@ -1194,7 +1202,7 @@ def build_dashboard_data(limit_recent=20):
         FROM (
             SELECT vencimento FROM contas_receber WHERE status != 'Pago' AND conta_contabil != 'LSP Transportes'
             UNION ALL
-            SELECT vencimento FROM contas_pagar WHERE status != 'Pago'
+            SELECT vencimento FROM contas_pagar WHERE status != 'Pago' AND fornecedor != 'REIS TRANSPORTES'
         ) 
         WHERE date(vencimento) <= date('now', '+7 days')
     """)
@@ -1522,6 +1530,7 @@ def resumo():
         FROM contas_pagar
         WHERE status != 'PAGO' AND status != 'Pago'
         AND vencimento LIKE ?
+        AND fornecedor != 'REIS TRANSPORTES'
     """, (pattern,))
     pagar_dados = cur.fetchone()
     total_pagar = pagar_dados[0] or 0.0
@@ -1537,6 +1546,7 @@ def resumo():
         AND vencimento LIKE ?
         AND LENGTH(vencimento) = 10
         AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
+        AND fornecedor != 'REIS TRANSPORTES'
     """, (pattern,))
     pagar_vencidas_dados = cur.fetchone()
     pagar_vencidas = pagar_vencidas_dados[0] or 0.0
@@ -1614,6 +1624,7 @@ def resumo():
             SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
             FROM contas_pagar
             WHERE vencimento LIKE ? AND UPPER(status) = 'PENDENTE'
+            AND fornecedor != 'REIS TRANSPORTES'
         """, (f"%/{mes_proj:02d}/{ano_proj}%",))
         contas_a_pagar = cur.fetchone()[0] or 0.0
         
