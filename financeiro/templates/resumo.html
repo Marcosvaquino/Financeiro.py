@@ -623,6 +623,25 @@
                     <div class="trend-line">
                         <div class="trend-bar" style="width: {{ dados.comparacao.barra_crescimento }}%"></div>
                     </div>
+                    
+                    <!-- Detalhamento da Receita - Layout Horizontal -->
+                    <div class="receita-detalhes-horizontal">
+                        <div class="receita-coluna">
+                            <div class="receita-titulo">Receita</div>
+                            <div class="receita-valor-horizontal">R$ {{ dados.kpis.receita.realizada|currency }}</div>
+                            <div class="receita-percent-horizontal base">-</div>
+                        </div>
+                        <div class="receita-coluna">
+                            <div class="receita-titulo">A Receber</div>
+                            <div class="receita-valor-horizontal">R$ {{ dados.kpis.receita.total_a_receber|currency }}</div>
+                            <div class="receita-percent-horizontal falta">{{ "{:.0f}".format(dados.kpis.receita.percentual_falta_a_receber) }}% falta</div>
+                        </div>
+                        <div class="receita-coluna">
+                            <div class="receita-titulo">Planejamento</div>
+                            <div class="receita-valor-horizontal">R$ {{ dados.kpis.receita.meta|currency }}</div>
+                            <div class="receita-percent-horizontal falta">{{ "{:.0f}".format(dados.kpis.receita.percentual_falta_planejamento) }}% falta</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Fluxo de Caixa Projetado -->
@@ -1701,6 +1720,58 @@
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     border-radius: 2px;
     transition: width 1s ease;
+}
+
+/* Estilos para detalhamento da receita - Layout Horizontal */
+.receita-detalhes-horizontal {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #e8ecf5;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.receita-coluna {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.receita-titulo {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.receita-valor-horizontal {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+}
+
+.receita-percent-horizontal {
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.receita-percent-horizontal.base {
+    background-color: #e8f5e8;
+    color: #27ae60;
+}
+
+.receita-percent-horizontal.falta {
+    background-color: #fff3cd;
+    color: #856404;
 }
 
 .cashflow-projection {

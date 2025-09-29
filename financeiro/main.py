@@ -1434,6 +1434,20 @@ def resumo():
     """, [pattern] + clientes_reais)
     receita_realizada = cur.fetchone()[0] or 0.0
     
+    # Total A Receber (TODOS os status + 19 clientes + mês/ano) para detalhamento da receita
+    condicao_clientes_total, clientes_reais_total = criar_condicao_clientes_principais(
+        cur, 'contas_receber', 
+        f"WHERE vencimento LIKE '{pattern}'"
+    )
+    
+    cur.execute(f"""
+        SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
+        FROM contas_receber
+        WHERE vencimento LIKE ? 
+        AND {condicao_clientes_total}
+    """, [pattern] + clientes_reais_total)
+    receita_total_a_receber = cur.fetchone()[0] or 0.0
+    
     # Receita projetada (meta da projeção)
     cur.execute("""
         SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0)
@@ -1670,7 +1684,10 @@ def resumo():
             'receita': {
                 'realizada': receita_realizada,
                 'meta': receita_meta,
-                'percentual': percentual_meta
+                'percentual': percentual_meta,
+                'total_a_receber': receita_total_a_receber,
+                'percentual_falta_a_receber': ((receita_total_a_receber - receita_realizada) / receita_total_a_receber * 100) if receita_total_a_receber > 0 else 0,
+                'percentual_falta_planejamento': ((receita_meta - receita_realizada) / receita_meta * 100) if receita_meta > 0 else 0
             },
             'fluxo_caixa': {
                 'valor': fluxo_caixa,
