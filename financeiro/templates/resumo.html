@@ -47,17 +47,6 @@
     <input type="hidden" id="dados-mes" value="{{ dados.mes }}">
     <input type="hidden" id="dados-ano" value="{{ dados.ano }}">
 
-    <!-- Status Geral Compacto -->
-    <div class="status-compact">
-        <div class="status-indicator {{ dados.status_geral.cor }}">
-            <span class="status-icon">{{ dados.status_geral.emoji }}</span>
-            <div class="status-text">
-                <span class="status-title">{{ dados.status_geral.texto }}</span>
-                <span class="status-subtitle">Status Financeiro</span>
-            </div>
-        </div>
-    </div>
-
     <!-- KPIs Principais Compactos -->
     <div class="kpi-section-compact">
         <div class="kpi-row">
@@ -744,14 +733,14 @@
                         <span class="period-label">{{ dados.mes }}/{{ dados.ano }}</span>
                     </div>
                     <div class="clients-ranking">
-                        {% for cliente, valor in dados.top_clientes %}
+                        {% for cliente, total, recebido, pendente in dados.top_clientes %}
                         <div class="client-item-premium">
                             <div class="client-rank">#{{ loop.index }}</div>
                             <div class="client-info">
                                 <div class="client-name">{{ cliente[:30] }}{{ "..." if cliente|length > 30 else "" }}</div>
                                 <div class="client-details">
-                                    <span class="client-value">R$ {{ valor|currency }}</span>
-                                    <span class="client-participation">{{ "{:.1f}".format((valor / dados.kpis.receita.realizada * 100) if dados.kpis.receita.realizada > 0 else 0) }}% do total</span>
+                                    <span class="client-value">R$ {{ total|currency }}</span>
+                                    <span class="client-participation">{{ "{:.1f}".format((total / (dados.kpis.receita.realizada + dados.kpis.receber.total) * 100) if (dados.kpis.receita.realizada + dados.kpis.receber.total) > 0 else 0) }}% do total</span>
                                 </div>
                             </div>
                             <div class="client-trend">
@@ -1853,8 +1842,8 @@
     flex: 1;
     margin-left: 20px;
     background: #e9ecef;
-    height: 8px;
-    border-radius: 4px;
+    height: 18px;
+    border-radius: 6px;
     position: relative;
     overflow: hidden;
 }
@@ -1862,7 +1851,7 @@
 .progress-bar {
     height: 100%;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    border-radius: 4px;
+    border-radius: 6px;
     min-width: 0;
     transition: width 1s ease;
     position: absolute;
@@ -2033,19 +2022,28 @@
 }
 
 /* Clientes Premium */
-.clients-ranking {
+.clients-premium {
+    height: 480px !important;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+}
+
+.clients-premium .clients-ranking {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .client-item-premium {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 15px;
+    gap: 12px;
+    padding: 12px;
     background: #f8f9fa;
-    border-radius: 12px;
+    border-radius: 10px;
     transition: all 0.3s ease;
 }
 

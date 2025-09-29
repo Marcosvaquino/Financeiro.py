@@ -1524,17 +1524,20 @@ def resumo():
     # 4. FLUXO DE CAIXA (simplificado: receber - pagar)
     fluxo_caixa = total_receber - total_pagar
     
-    # 5. TOP 3 CLIENTES DO MÊS (por valor realizado)
-    cur.execute("""
+    # 5. TOP 5 CLIENTES DO MÊS (19 clientes principais, por valor total - recebido + pendente)
+    cur.execute(f"""
         SELECT 
             cliente,
-            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0) as total
+            COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0) as total,
+            COALESCE(SUM(CASE WHEN UPPER(status) = 'RECEBIDO' THEN CAST(valor_principal AS REAL) ELSE 0 END), 0.0) as recebido,
+            COALESCE(SUM(CASE WHEN UPPER(status) = 'PENDENTE' THEN CAST(valor_principal AS REAL) ELSE 0 END), 0.0) as pendente
         FROM contas_receber
-        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+        WHERE vencimento LIKE ?
+        AND {condicao_clientes}
         GROUP BY cliente
         ORDER BY total DESC
-        LIMIT 3
-    """, (pattern,))
+        LIMIT 5
+    """, [pattern] + clientes_reais)
     top_clientes = cur.fetchall()
     
     # ===== DADOS COMPARATIVOS E PROJEÇÕES =====
