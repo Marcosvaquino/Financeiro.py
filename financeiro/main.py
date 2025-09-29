@@ -1365,55 +1365,61 @@ def resumo():
     """, (mes, ano))
     receita_meta = cur.fetchone()[0] or 0.0
     
-    # 2. CONTAS A RECEBER (total e vencidas)
-    cur.execute("""
+    # 2. CONTAS A RECEBER (total e vencidas) - filtrado por mês/ano + 19 clientes
+    cur.execute(f"""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_receber
         WHERE status != 'RECEBIDO' AND status != 'Pago'
-    """, ())
+        AND vencimento LIKE ?
+        AND UPPER(cliente) IN ({clientes_placeholders})
+    """, [pattern] + [cliente.upper() for cliente in clientes_19])
     receber_dados = cur.fetchone()
     total_receber = receber_dados[0] or 0.0
     count_receber = receber_dados[1] or 0
     
-    # Contas vencidas (vencimento < hoje)
+    # Contas vencidas (vencimento < hoje) - filtrado por mês/ano + 19 clientes
     hoje = datetime.now().strftime("%d/%m/%Y")
-    cur.execute("""
+    cur.execute(f"""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_receber
         WHERE status != 'RECEBIDO' AND status != 'Pago'
+        AND vencimento LIKE ?
+        AND UPPER(cliente) IN ({clientes_placeholders})
         AND LENGTH(vencimento) = 10
         AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
-    """, ())
+    """, [pattern] + [cliente.upper() for cliente in clientes_19])
     receber_vencidas_dados = cur.fetchone()
     receber_vencidas = receber_vencidas_dados[0] or 0.0
     count_receber_vencidas = receber_vencidas_dados[1] or 0
     
-    # 3. CONTAS A PAGAR (total e vencidas)
+    # 3. CONTAS A PAGAR (total e vencidas) - filtrado por mês/ano
     cur.execute("""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_pagar
         WHERE status != 'PAGO' AND status != 'Pago'
-    """, ())
+        AND vencimento LIKE ?
+    """, (pattern,))
     pagar_dados = cur.fetchone()
     total_pagar = pagar_dados[0] or 0.0
     count_pagar = pagar_dados[1] or 0
     
-    # Contas vencidas (vencimento < hoje)
+    # Contas vencidas (vencimento < hoje) - filtrado por mês/ano
     cur.execute("""
         SELECT 
             COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0),
             COUNT(*)
         FROM contas_pagar
         WHERE status != 'PAGO' AND status != 'Pago'
+        AND vencimento LIKE ?
         AND LENGTH(vencimento) = 10
         AND DATE(SUBSTR(vencimento, 7, 4) || '-' || SUBSTR(vencimento, 4, 2) || '-' || SUBSTR(vencimento, 1, 2)) < DATE('now')
-    """, ())
+    """, (pattern,))
     pagar_vencidas_dados = cur.fetchone()
     pagar_vencidas = pagar_vencidas_dados[0] or 0.0
     count_pagar_vencidas = pagar_vencidas_dados[1] or 0
