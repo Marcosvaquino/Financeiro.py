@@ -1564,7 +1564,7 @@ def resumo():
     # Calcular largura da barra de crescimento (entre 10% e 100%)
     barra_crescimento = max(10, min(100, 50 + crescimento_receita))
     
-    # Projeção de fluxo de caixa para próximos 3 meses
+    # Projeção de fluxo de caixa para próximos 3 meses: Projeção - A Pagar
     projecao_fluxo = []
     meses_nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
@@ -1575,42 +1575,24 @@ def resumo():
             mes_proj -= 12
             ano_proj += 1
         
-        pattern_proj = f"%/{mes_proj:02d}/{ano_proj}%"
-        
-        # Estimativa baseada na média dos últimos 3 meses (filtrado pelos 19 clientes)
-        # Para estimativa, usamos todos os clientes principais históricos
-        condicao_clientes_estimativa, clientes_reais_estimativa = criar_condicao_clientes_principais(
-            cur, 'contas_receber', 
-            f"WHERE UPPER(status) = 'RECEBIDO'"
-        )
-        
-        cur.execute(f"""
-            SELECT COALESCE(AVG(valor_total), 0.0) FROM (
-                SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
-                FROM contas_receber
-                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'RECEBIDO'
-                AND {condicao_clientes_estimativa}
-                GROUP BY SUBSTR(vencimento, 7, 4)
-                ORDER BY SUBSTR(vencimento, 7, 4) DESC
-                LIMIT 3
-            )
-        """, clientes_reais_estimativa)
-        receita_estimada = cur.fetchone()[0] or 0.0
-        
-        # Estimativa de gastos
+        # Buscar dados da projeção (todos os clientes da tabela projecao)
         cur.execute("""
-            SELECT COALESCE(AVG(valor_total), 0.0) FROM (
-                SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
-                FROM contas_pagar
-                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'PAGO'
-                GROUP BY SUBSTR(vencimento, 7, 4)
-                ORDER BY SUBSTR(vencimento, 7, 4) DESC
-                LIMIT 3
-            )
-        """)
-        gastos_estimados = cur.fetchone()[0] or 0.0
+            SELECT COALESCE(SUM(CAST(valor AS REAL)), 0.0) 
+            FROM projecao
+            WHERE mes = ? AND ano = ?
+        """, (mes_proj, ano_proj))
+        receita_projetada = cur.fetchone()[0] or 0.0
         
-        fluxo_projetado = receita_estimada - gastos_estimados
+        # Buscar contas a pagar para o mês (status = 'PENDENTE')
+        cur.execute("""
+            SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
+            FROM contas_pagar
+            WHERE vencimento LIKE ? AND UPPER(status) = 'PENDENTE'
+        """, (f"%/{mes_proj:02d}/{ano_proj}%",))
+        contas_a_pagar = cur.fetchone()[0] or 0.0
+        
+        # Fluxo = Projeção - A Pagar
+        fluxo_projetado = receita_projetada - contas_a_pagar
         
         projecao_fluxo.append({
             'nome': meses_nomes[mes_proj - 1],
