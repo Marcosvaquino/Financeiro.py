@@ -49,6 +49,16 @@ def normalizar_nome_cliente(nome):
     
     return nome
 
+# Filtro global para excluir LSP Transportes
+def adicionar_filtro_lsp(query, where_exists=False):
+    """Adiciona o filtro global para excluir conta_contabil = 'LSP Transportes' nas consultas"""
+    filtro = "conta_contabil != 'LSP Transportes'"
+    
+    if where_exists:
+        return f"{query} AND {filtro}"
+    else:
+        return f"{query} WHERE {filtro}"
+
 # Lista dos 19 clientes principais (normalizados)
 CLIENTES_19_PRINCIPAIS = [
     'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
@@ -641,6 +651,7 @@ def buscar_valor_realizado(cur, cliente, semana, mes, ano):
         cur.execute("""
             SELECT SUM(valor_principal) FROM contas_receber 
             WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND conta_contabil != 'LSP Transportes'
             AND (
                 CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                 CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -660,6 +671,7 @@ def buscar_valor_realizado(cur, cliente, semana, mes, ano):
         cur.execute("""
             SELECT SUM(valor_principal) FROM contas_receber 
             WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND conta_contabil != 'LSP Transportes'
             AND (
                 CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                 CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -677,6 +689,7 @@ def buscar_valor_realizado(cur, cliente, semana, mes, ano):
         cur.execute("""
             SELECT SUM(valor_principal) FROM contas_receber 
             WHERE cliente = ? AND UPPER(status) = 'RECEBIDO'
+            AND conta_contabil != 'LSP Transportes'
             AND (
                 CAST(SUBSTR(vencimento, 7, 4) AS INTEGER) = ? AND
                 CAST(SUBSTR(vencimento, 4, 2) AS INTEGER) = ? AND
@@ -831,6 +844,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
         SELECT cliente, valor_principal
         FROM contas_receber
         WHERE vencimento LIKE ?
+        AND conta_contabil != 'LSP Transportes'
     """, (pattern,))
     
     todos_registros = cur.fetchall()
@@ -944,6 +958,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
         FROM contas_receber
         WHERE {recebido_cond}
         AND vencimento LIKE ?
+        AND conta_contabil != 'LSP Transportes'
     """, (pattern,))
     
     registros_recebidos = cur.fetchall()
@@ -983,6 +998,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
             'receber' as tipo
         FROM contas_receber 
         WHERE vencimento LIKE ?
+        AND conta_contabil != 'LSP Transportes'
         UNION ALL
         SELECT 
             fornecedor as nome,
@@ -1014,7 +1030,7 @@ def build_dashboard_data_with_filters(mes, ano, limit_recent=20):
     # Não confiamos em date()/strftime sobre strings no formato dd/mm/YYYY,
     # então buscamos os vencimentos no mês/ano e contamos em Python os que caem
     # nos próximos 7 dias.
-    cur.execute("SELECT vencimento FROM contas_receber WHERE status != 'Pago' AND vencimento LIKE ?", (pattern,))
+    cur.execute("SELECT vencimento FROM contas_receber WHERE status != 'Pago' AND vencimento LIKE ? AND conta_contabil != 'LSP Transportes'", (pattern,))
     vr = [r[0] for r in cur.fetchall()]
     cur.execute("SELECT vencimento FROM contas_pagar WHERE status != 'Pago' AND vencimento LIKE ?", (pattern,))
     vp = [r[0] for r in cur.fetchall()]
@@ -1135,6 +1151,7 @@ def build_dashboard_data(limit_recent=20):
         SELECT COUNT(*), COALESCE(SUM(valor_principal), 0) 
         FROM contas_receber 
         WHERE status != 'Pago'
+        AND conta_contabil != 'LSP Transportes'
     """)
     contas_receber = cur.fetchone()
 
@@ -1156,6 +1173,7 @@ def build_dashboard_data(limit_recent=20):
             'receber' as tipo
         FROM contas_receber 
         WHERE status != 'Pago'
+        AND conta_contabil != 'LSP Transportes'
         UNION ALL
         SELECT 
             fornecedor as nome,
@@ -1174,7 +1192,7 @@ def build_dashboard_data(limit_recent=20):
     cur.execute("""
         SELECT COUNT(*) 
         FROM (
-            SELECT vencimento FROM contas_receber WHERE status != 'Pago'
+            SELECT vencimento FROM contas_receber WHERE status != 'Pago' AND conta_contabil != 'LSP Transportes'
             UNION ALL
             SELECT vencimento FROM contas_pagar WHERE status != 'Pago'
         ) 
@@ -1430,6 +1448,7 @@ def resumo():
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO' 
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes}
     """, [pattern] + clientes_reais)
     receita_realizada = cur.fetchone()[0] or 0.0
@@ -1444,6 +1463,7 @@ def resumo():
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? 
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes_total}
     """, [pattern] + clientes_reais_total)
     receita_total_a_receber = cur.fetchone()[0] or 0.0
@@ -1470,6 +1490,7 @@ def resumo():
         FROM contas_receber
         WHERE UPPER(status) = 'PENDENTE'
         AND vencimento LIKE ?
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes_receber}
     """, [pattern] + clientes_reais_receber)
     receber_dados = cur.fetchone()
@@ -1533,6 +1554,7 @@ def resumo():
             COALESCE(SUM(CASE WHEN UPPER(status) = 'PENDENTE' THEN CAST(valor_principal AS REAL) ELSE 0 END), 0.0) as pendente
         FROM contas_receber
         WHERE vencimento LIKE ?
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes}
         GROUP BY cliente
         ORDER BY total DESC
@@ -1557,6 +1579,7 @@ def resumo():
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes_anterior}
     """, [pattern_anterior] + clientes_reais_anterior)
     receita_anterior = cur.fetchone()[0] or 0.0
@@ -1614,6 +1637,7 @@ def resumo():
     cur.execute(f"""
         SELECT COUNT(*) FROM contas_receber 
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
+        AND conta_contabil != 'LSP Transportes'
         AND {condicao_clientes}
     """, [pattern] + clientes_reais)
     total_transacoes = cur.fetchone()[0] or 1
