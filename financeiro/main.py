@@ -1346,11 +1346,15 @@ def resumo():
         'PEIXES MEGGS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
     ]
     
-    cur.execute("""
+    # Criar placeholders para os clientes
+    clientes_placeholders = ','.join(['?' for _ in clientes_19])
+    
+    cur.execute(f"""
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
-        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
-    """, (pattern,))
+        WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO' 
+        AND UPPER(cliente) IN ({clientes_placeholders})
+    """, [pattern] + [cliente.upper() for cliente in clientes_19])
     receita_realizada = cur.fetchone()[0] or 0.0
     
     # Receita projetada (meta da projeção)
@@ -1437,12 +1441,13 @@ def resumo():
     ano_anterior = ano if mes > 1 else ano - 1
     pattern_anterior = f"%/{mes_anterior:02d}/{ano_anterior}%"
     
-    # Receita do período anterior
-    cur.execute("""
+    # Receita do período anterior (também filtrada pelos 19 clientes)
+    cur.execute(f"""
         SELECT COALESCE(SUM(CAST(valor_principal AS REAL)), 0.0)
         FROM contas_receber
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
-    """, (pattern_anterior,))
+        AND UPPER(cliente) IN ({clientes_placeholders})
+    """, [pattern_anterior] + [cliente.upper() for cliente in clientes_19])
     receita_anterior = cur.fetchone()[0] or 0.0
     
     # Crescimento percentual
@@ -1464,17 +1469,18 @@ def resumo():
         
         pattern_proj = f"%/{mes_proj:02d}/{ano_proj}%"
         
-        # Estimativa baseada na média dos últimos 3 meses
-        cur.execute("""
+        # Estimativa baseada na média dos últimos 3 meses (filtrado pelos 19 clientes)
+        cur.execute(f"""
             SELECT COALESCE(AVG(valor_total), 0.0) FROM (
                 SELECT SUM(CAST(valor_principal AS REAL)) as valor_total
                 FROM contas_receber
-                WHERE vencimento LIKE '%/{mes_proj:02d}/%' AND UPPER(status) = 'RECEBIDO'
+                WHERE vencimento LIKE '%/{{:02d}}/%' AND UPPER(status) = 'RECEBIDO'
+                AND UPPER(cliente) IN ({clientes_placeholders})
                 GROUP BY SUBSTR(vencimento, 7, 4)
                 ORDER BY SUBSTR(vencimento, 7, 4) DESC
                 LIMIT 3
             )
-        """)
+        """.format(mes_proj), [cliente.upper() for cliente in clientes_19])
         receita_estimada = cur.fetchone()[0] or 0.0
         
         # Estimativa de gastos
@@ -1505,11 +1511,12 @@ def resumo():
     títulos_vencidos = count_receber_vencidas + count_pagar_vencidas
     percentual_inadimplencia = (títulos_vencidos / total_títulos * 100) if total_títulos > 0 else 0
     
-    # Ticket médio
-    cur.execute("""
+    # Ticket médio (baseado nos 19 clientes)
+    cur.execute(f"""
         SELECT COUNT(*) FROM contas_receber 
         WHERE vencimento LIKE ? AND UPPER(status) = 'RECEBIDO'
-    """, (pattern,))
+        AND UPPER(cliente) IN ({clientes_placeholders})
+    """, [pattern] + [cliente.upper() for cliente in clientes_19])
     total_transacoes = cur.fetchone()[0] or 1
     ticket_medio = receita_realizada / total_transacoes if total_transacoes > 0 else 0
     
