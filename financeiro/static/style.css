@@ -1741,6 +1741,75 @@ body {
     font-weight: 500;
 }
 
+/* Gráficos Previsto vs Realizado */
+.frz-grafico-container {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.frz-grafico-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.frz-bar-background {
+    width: 50px;
+    height: 100px;
+    background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.frz-bar-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #059669, #047857);
+    border-radius: 0 0 6px 6px;
+    transition: height 0.8s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
+.frz-bar-fill[style*="height: 0%"] {
+    min-height: 0 !important;
+    display: none;
+}
+
+.frz-bar-percent-base {
+    color: #1a202c;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+
+
+/* Cores diferentes para performance */
+.frz-semana-card.status-positivo .frz-bar-fill {
+    background: linear-gradient(180deg, #059669, #047857);
+}
+
+.frz-semana-card.status-negativo .frz-bar-fill {
+    background: linear-gradient(180deg, #dc2626, #b91c1c);
+}
+
+.frz-semana-card.status-zero .frz-bar-fill {
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+}
+
 /* Seção Complementar */
 .frz-secao-complementar {
     margin-top: 30px;

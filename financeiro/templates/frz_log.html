@@ -162,6 +162,19 @@
                             <span class="frz-resultado-meta">/ {{ resultado.projetado|currency_no_decimal }}</span>
                         </div>
                     </div>
+                    
+                    <!-- Gráfico Previsto vs Realizado -->
+                    <div class="frz-grafico-container">
+                        <div class="frz-grafico-bar">
+                            <div class="frz-bar-background">
+                                {% set percentual = ((receita.realizado / receita.projetado * 100) if receita.projetado > 0 and receita.realizado > 0 else 0)|round|int %}
+                                <div class="frz-bar-fill" 
+                                     style="height: {{ percentual }}%">
+                                </div>
+                            </div>
+                            <div class="frz-bar-percent-base">{{ percentual }}%</div>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
