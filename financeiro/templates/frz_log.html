@@ -420,48 +420,45 @@
 <div id="modalResultado" class="frz-modal" style="display: none;">
     <div class="frz-modal-content-wide">
         <div class="frz-modal-header">
-            <h3>💰 Resultado - Análise Comparativa</h3>
+            <h3>💰 Análise de Performance Financeira</h3>
             <span class="frz-modal-close" onclick="fecharModal('modalResultado')">&times;</span>
         </div>
         
         <div class="frz-modal-body">
-            <div class="frz-planejamento-header">
-                <div class="frz-plan-resumo">
-                    <div class="frz-plan-card resultado-{{ 'positivo' if dados.dados_criticos.totais_mes.resultado_realizado > 0 else 'negativo' }}">
-                        <div class="frz-plan-titulo">💰 RESULTADO ATUAL</div>
-                        <div class="frz-plan-valor">
-                            {% if dados.dados_criticos.totais_mes.resultado_realizado < 0 %}-{% endif %}
-                            R$ {{ dados.dados_criticos.totais_mes.resultado_realizado|abs|currency_no_decimal }}
-                        </div>
-                    </div>
-                    <div class="frz-plan-card">
-                        <div class="frz-plan-titulo">📊 MARGEM</div>
-                        <div class="frz-plan-valor">
-                            {% set margem = (dados.dados_criticos.totais_mes.resultado_realizado / dados.dados_criticos.totais_mes.receita_realizada * 100) if dados.dados_criticos.totais_mes.receita_realizada > 0 else 0 %}
-                            {{ "%.1f"|format(margem) }}%
-                        </div>
-                    </div>
-                    <div class="frz-plan-card">
-                        <div class="frz-plan-titulo">🎯 STATUS</div>
-                        <div class="frz-plan-valor">
-                            {% if dados.dados_criticos.totais_mes.resultado_realizado > 0 %}✅ POSITIVO
-                            {% else %}❌ NEGATIVO{% endif %}
-                        </div>
-                    </div>
+            <!-- Resumo Visual Compacto -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; margin-bottom: 3px;">💰</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 3px;">RESULTADO ATUAL</div>
+                    <div id="resultado-valor-principal" style="font-size: 1.1rem; font-weight: bold;">Carregando...</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; margin-bottom: 3px;">📈</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 3px;">MARGEM</div>
+                    <div id="resultado-margem-principal" style="font-size: 1.1rem; font-weight: bold;">Carregando...</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #6f42c1, #6610f2); color: white; padding: 12px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; margin-bottom: 3px;">🎯</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-bottom: 3px;">TENDÊNCIA</div>
+                    <div id="resultado-tendencia-principal" style="font-size: 1.1rem; font-weight: bold;">Carregando...</div>
                 </div>
             </div>
-            
-            <div class="frz-planejamento-table">
-                <div class="frz-table-header">
-                    <div class="frz-table-cell header">Período</div>
-                    <div class="frz-table-cell header">Receitas</div>
-                    <div class="frz-table-cell header">Despesas</div>
-                    <div class="frz-table-cell header">Resultado</div>
-                    <div class="frz-table-cell header">Variação</div>
-                </div>
-                
-                <div id="resultado-comparativo-loading" class="frz-loading">Carregando dados...</div>
+
+            <!-- Detalhamento por Mês -->
+            <div style="background: white; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden;">
+                <div style="background: #6c757d; color: white; padding: 15px;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span>📅</span> Detalhamento Mensal
+                    </h4>
+                </>
+                <div id="resultado-comparativo-loading" class="frz-loading" style="margin: 20px;">Carregando dados detalhados...</div>
                 <div id="resultado-comparativo-data" style="display: none;"></div>
+            </div>
+
+            <!-- Insights Automáticos -->
+            <div id="resultado-insights" style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-radius: 12px; border-left: 5px solid #ffc107;">
+                <h5 style="color: #856404; margin-bottom: 10px;">💡 Insights Automáticos</h5>
+                <div id="resultado-insights-content" style="color: #856404;">Carregando análise...</div>
             </div>
         </div>
     </div>
@@ -629,26 +626,102 @@ function preencherModalResultado(data) {
     const loading = document.getElementById('resultado-comparativo-loading');
     const dataDiv = document.getElementById('resultado-comparativo-data');
     
-    let html = '';
-    data.periodos.forEach(periodo => {
+    // Dados do mês atual (primeiro período)
+    const mesAtual = data.periodos[0];
+    const margem = mesAtual.receitas > 0 ? (mesAtual.resultado / mesAtual.receitas * 100) : 0;
+    
+    // Atualizar cards principais
+    const valorPrincipal = document.getElementById('resultado-valor-principal');
+    const margemPrincipal = document.getElementById('resultado-margem-principal');
+    const tendenciaPrincipal = document.getElementById('resultado-tendencia-principal');
+    
+    // Valor com formatação bonita
+    const valorFormatado = mesAtual.resultado >= 0 ? 
+        `+R$ ${mesAtual.resultado.toLocaleString('pt-BR')}` : 
+        `-R$ ${Math.abs(mesAtual.resultado).toLocaleString('pt-BR')}`;
+    
+    valorPrincipal.textContent = valorFormatado;
+    valorPrincipal.parentElement.style.background = mesAtual.resultado >= 0 ?
+        'linear-gradient(135deg, #28a745, #20c997)' :
+        'linear-gradient(135deg, #dc3545, #c82333)';
+    
+    margemPrincipal.textContent = `${margem.toFixed(1)}%`;
+    
+    // Tendência baseada na variação
+    const variacao = mesAtual.variacao_percentual;
+    if (variacao > 10) {
+        tendenciaPrincipal.textContent = '🚀 EXCELENTE';
+        tendenciaPrincipal.parentElement.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+    } else if (variacao > 0) {
+        tendenciaPrincipal.textContent = '📈 MELHORA';
+        tendenciaPrincipal.parentElement.style.background = 'linear-gradient(135deg, #17a2b8, #138496)';
+    } else if (variacao > -10) {
+        tendenciaPrincipal.textContent = '⚠️ ESTÁVEL';
+        tendenciaPrincipal.parentElement.style.background = 'linear-gradient(135deg, #ffc107, #e0a800)';
+    } else {
+        tendenciaPrincipal.textContent = '📉 ATENÇÃO';
+        tendenciaPrincipal.parentElement.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+    }
+    
+    // Removido gráfico para layout mais limpo
+    
+    // Reverter ordem para mostrar do mais recente para o mais antigo
+    data.periodos.reverse();
+    
+    // Tabela detalhada
+    let tabelaHtml = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 0; font-size: 0.9rem;">
+            <div style="background: #495057; color: white; padding: 12px; font-weight: bold;">Período</div>
+            <div style="background: #495057; color: white; padding: 12px; font-weight: bold;">Receitas</div>
+            <div style="background: #495057; color: white; padding: 12px; font-weight: bold;">Despesas</div>
+            <div style="background: #495057; color: white; padding: 12px; font-weight: bold;">Resultado</div>
+            <div style="background: #495057; color: white; padding: 12px; font-weight: bold;">Variação</div>
+    `;
+    
+    data.periodos.forEach((periodo, index) => {
         const variacao = periodo.variacao_percentual;
-        const variacaoClass = variacao > 0 ? 'positivo' : variacao < 0 ? 'negativo' : 'neutro';
         const variacaoIcon = variacao > 0 ? '📈' : variacao < 0 ? '📉' : '➖';
+        const resultadoCor = periodo.resultado >= 0 ? '#28a745' : '#dc3545';
+        const bgColor = index % 2 === 0 ? '#f8f9fa' : '#ffffff';
         
-        html += `
-            <div class="frz-table-row">
-                <div class="frz-table-cell cliente">${periodo.periodo}</div>
-                <div class="frz-table-cell projetado">R$ ${periodo.receitas.toLocaleString('pt-BR')}</div>
-                <div class="frz-table-cell realizado">R$ ${periodo.despesas.toLocaleString('pt-BR')}</div>
-                <div class="frz-table-cell realizado resultado-${variacaoClass}">R$ ${periodo.resultado.toLocaleString('pt-BR')}</div>
-                <div class="frz-table-cell status">
-                    <span class="frz-status-badge ${variacaoClass}">${variacaoIcon} ${variacao.toFixed(1)}%</span>
-                </div>
+        tabelaHtml += `
+            <div style="background: ${bgColor}; padding: 12px; border-bottom: 1px solid #dee2e6; color: #333; font-weight: 500;">${periodo.periodo}</div>
+            <div style="background: ${bgColor}; padding: 12px; border-bottom: 1px solid #dee2e6; color: #333;">R$ ${periodo.receitas.toLocaleString('pt-BR')}</div>
+            <div style="background: ${bgColor}; padding: 12px; border-bottom: 1px solid #dee2e6; color: #333;">R$ ${periodo.despesas.toLocaleString('pt-BR')}</div>
+            <div style="background: ${bgColor}; padding: 12px; border-bottom: 1px solid #dee2e6; color: ${resultadoCor}; font-weight: bold;">
+                ${periodo.resultado >= 0 ? '+' : ''}R$ ${periodo.resultado.toLocaleString('pt-BR')}
+            </div>
+            <div style="background: ${bgColor}; padding: 12px; border-bottom: 1px solid #dee2e6; color: #333; font-weight: 500;">
+                ${variacaoIcon} ${Math.abs(variacao).toFixed(1)}%
             </div>
         `;
     });
+    tabelaHtml += '</div>';
     
-    dataDiv.innerHTML = html;
+    // Insights automáticos
+    const insightsContent = document.getElementById('resultado-insights-content');
+    let insights = [];
+    
+    if (mesAtual.resultado < 0) {
+        insights.push(`• Resultado negativo de R$ ${Math.abs(mesAtual.resultado).toLocaleString('pt-BR')} requer atenção`);
+    }
+    if (margem < -50) {
+        insights.push(`• Margem operacional de ${margem.toFixed(1)}% indica despesas muito superiores às receitas`);
+    }
+    if (variacao < -20) {
+        insights.push(`• Queda de ${Math.abs(variacao).toFixed(1)}% em relação ao mês anterior`);
+    }
+    if (mesAtual.receitas < 100000) {
+        insights.push(`• Receitas baixas (R$ ${mesAtual.receitas.toLocaleString('pt-BR')}) podem indicar sazonalidade`);
+    }
+    
+    if (insights.length === 0) {
+        insights.push('• Performance dentro dos parâmetros esperados');
+    }
+    
+    insightsContent.innerHTML = insights.join('<br>');
+    
+    dataDiv.innerHTML = tabelaHtml;
     loading.style.display = 'none';
     dataDiv.style.display = 'block';
 }
