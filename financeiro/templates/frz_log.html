@@ -46,6 +46,13 @@
                 <div class="frz-mini-info">
                     <div class="frz-mini-titulo">Receitas</div>
                     <div class="frz-mini-valor">R$ {{ dados.dados_criticos.totais_mes.receita_realizada|currency_no_decimal }}</div>
+                    <div class="frz-mini-previsto-linha">
+                        <span class="frz-previsto-texto">Previsto: R$ {{ dados.dados_criticos.totais_mes.receita_projetada|currency_no_decimal }}</span>
+                        <span class="frz-mini-percentual">
+                            {% set pct_receita = (dados.dados_criticos.totais_mes.receita_realizada / dados.dados_criticos.totais_mes.receita_projetada * 100) if dados.dados_criticos.totais_mes.receita_projetada > 0 else 0 %}
+                            {{ "%.0f"|format(pct_receita) }}%
+                        </span>
+                    </div>
                 </div>
             </div>
             
@@ -54,6 +61,13 @@
                 <div class="frz-mini-info">
                     <div class="frz-mini-titulo">Despesas</div>
                     <div class="frz-mini-valor">R$ {{ dados.dados_criticos.totais_mes.despesa_realizada|currency_no_decimal }}</div>
+                    <div class="frz-mini-previsto-linha">
+                        <span class="frz-previsto-texto">Previsto: R$ {{ dados.dados_criticos.totais_mes.despesa_projetada|currency_no_decimal }}</span>
+                        <span class="frz-mini-percentual">
+                            {% set pct_despesa = (dados.dados_criticos.totais_mes.despesa_realizada / dados.dados_criticos.totais_mes.despesa_projetada * 100) if dados.dados_criticos.totais_mes.despesa_projetada > 0 else 0 %}
+                            {{ "%.0f"|format(pct_despesa) }}%
+                        </span>
+                    </div>
                 </div>
             </div>
             
