@@ -311,7 +311,7 @@ def frz_log():
 @app.route("/api/dados_executivo")
 @login_required
 def api_dados_executivo():
-    """API para buscar dados detalhados dos cards executivos."""
+    """API para buscar dados detalhados dos cards executivos usando a mesma lógica do dashboard."""
     tipo = request.args.get('tipo')  # 'receita', 'despesa', 'resultado'
     mes = request.args.get('mes', type=int)
     ano = request.args.get('ano', type=int)
@@ -319,13 +319,64 @@ def api_dados_executivo():
     if not all([tipo, mes, ano]):
         return jsonify({"erro": "Parâmetros obrigatórios: tipo, mes, ano"}), 400
     
-    try:
+    try:        
         if tipo == 'receita':
             dados = buscar_receitas_por_cliente(mes, ano)
         elif tipo == 'despesa':
             dados = buscar_despesas_por_cliente(mes, ano)
         elif tipo == 'resultado':
-            dados = buscar_resultado_comparativo(mes, ano)
+            # Para resultado, usar os mesmos dados do dashboard
+            dados_dashboard = build_dados_frz_log(mes, ano)
+            totais_atual = dados_dashboard['dados_criticos']['totais_mes']
+            
+            # Buscar dados dos 2 meses anteriores para comparação
+            periodos_data = []
+            
+            for i in range(3):  # 3 meses: atual + 2 anteriores
+                mes_calc = mes - i
+                ano_calc = ano
+                
+                if mes_calc <= 0:
+                    mes_calc += 12
+                    ano_calc -= 1
+                
+                if i == 0:
+                    # Mês atual - usar dados já calculados
+                    periodo_dados = {
+                        'periodo': f"{mes_calc:02d}/{ano_calc} (Atual)",
+                        'receitas': totais_atual['receita_realizada'],
+                        'despesas': totais_atual['despesa_realizada'], 
+                        'resultado': totais_atual['resultado_realizado'],
+                        'variacao_percentual': 0
+                    }
+                else:
+                    # Meses anteriores - calcular usando a mesma função
+                    dados_anterior = build_dados_frz_log(mes_calc, ano_calc)
+                    totais_anterior = dados_anterior['dados_criticos']['totais_mes']
+                    
+                    periodo_dados = {
+                        'periodo': f"{mes_calc:02d}/{ano_calc}",
+                        'receitas': totais_anterior['receita_realizada'],
+                        'despesas': totais_anterior['despesa_realizada'],
+                        'resultado': totais_anterior['resultado_realizado'],
+                        'variacao_percentual': 0
+                    }
+                
+                periodos_data.append(periodo_dados)
+            
+            # Calcular variações percentuais
+            for i in range(1, len(periodos_data)):
+                resultado_atual = periodos_data[i-1]['resultado']
+                resultado_anterior = periodos_data[i]['resultado']
+                
+                if resultado_anterior != 0:
+                    variacao = ((resultado_atual - resultado_anterior) / abs(resultado_anterior)) * 100
+                else:
+                    variacao = 100 if resultado_atual > 0 else -100
+                    
+                periodos_data[i-1]['variacao_percentual'] = variacao
+            
+            dados = {'periodos': periodos_data}
         else:
             return jsonify({"erro": "Tipo inválido. Use: receita, despesa ou resultado"}), 400
             
@@ -415,21 +466,11 @@ def buscar_despesas_por_cliente(mes, ano):
 
 
 def buscar_resultado_comparativo(mes, ano):
-    """Busca dados comparativos de resultado para análise mensal."""
-    conn = get_connection()
-    
-    # Lista dos 19 clientes FRZ
-    clientes_frz = [
-        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
-        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
-        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
-        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
-        'PEIXES MEGGOS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
-    ]
+    """Busca dados comparativos de resultado para análise mensal usando a mesma lógica do dashboard."""
     
     periodos_data = []
     
-    # Buscar dados dos últimos 3 meses para comparação
+    # Buscar dados dos últimos 3 meses usando a mesma função do dashboard
     for i in range(3):
         mes_atual = mes - i
         ano_atual = ano
@@ -438,32 +479,9 @@ def buscar_resultado_comparativo(mes, ano):
             mes_atual += 12
             ano_atual -= 1
         
-        # Receitas do período
-        query_receitas = """
-        SELECT SUM(valor_principal) as total_receitas
-        FROM contas_receber 
-        WHERE competencia = ?
-          AND status = 'Recebido'
-          AND cliente IN ({})
-        """.format(','.join(['?'] * len(clientes_frz)))
-        
-        params = [f"{mes_atual}/{ano_atual}"] + clientes_frz
-        receitas = conn.execute(query_receitas, params).fetchone()
-        total_receitas = float(receitas['total_receitas'] or 0)
-        
-        # Despesas do período
-        query_despesas = """
-        SELECT SUM(valor_principal) as total_despesas
-        FROM contas_pagar 
-        WHERE competencia = ?
-          AND status = 'Recebido'
-          AND fornecedor IN ({})
-        """.format(','.join(['?'] * len(clientes_frz)))
-        
-        despesas = conn.execute(query_despesas, params).fetchone()
-        total_despesas = float(despesas['total_despesas'] or 0)
-        
-        resultado = total_receitas - total_despesas
+        # Usar a mesma função que gera os dados do dashboard
+        dados_frz_log = build_dados_frz_log(mes_atual, ano_atual)
+        totais = dados_frz_log['dados_criticos']['totais_mes']
         
         periodo_nome = f"{mes_atual:02d}/{ano_atual}"
         if i == 0:
@@ -471,13 +489,11 @@ def buscar_resultado_comparativo(mes, ano):
         
         periodos_data.append({
             'periodo': periodo_nome,
-            'receitas': total_receitas,
-            'despesas': total_despesas,
-            'resultado': resultado,
+            'receitas': totais['receita_realizada'],
+            'despesas': totais['despesa_realizada'],
+            'resultado': totais['resultado_realizado'],
             'variacao_percentual': 0  # Será calculado depois
         })
-    
-    conn.close()
     
     # Calcular variações percentuais
     for i in range(1, len(periodos_data)):
