@@ -192,7 +192,7 @@
 
         <!-- Fluxo Semanal Detalhado -->
         <div class="frz-fluxo-semanal">
-            <h3>📅 Fluxo Semanal - Receitas | Despesas | Resultado</h3>
+            <h3>📅 Fluxo Semanal</h3>
             <div class="frz-semanas-grid">
                 {% for semana in dados.dados_criticos.resultados_semanas %}
                 <div class="frz-semana-card {{ 'positiva' if semana.realizado > 0 else 'negativa' if semana.realizado < 0 else 'neutra' }}">

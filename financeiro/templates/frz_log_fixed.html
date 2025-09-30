@@ -465,19 +465,8 @@ function carregarDadosExecutivo(tipo) {
     const mes = {{ mes }};
     const ano = {{ ano }};
     
-    fetch(`/api/dados_executivo?tipo=${tipo}&mes=${mes}&ano=${ano}`, {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
+    fetch(`/api/dados_executivo?tipo=${tipo}&mes=${mes}&ano=${ano}`)
+        .then(response => response.json())
         .then(data => {
             if (tipo === 'receita') {
                 preencherModalReceita(data);
@@ -490,13 +479,7 @@ function carregarDadosExecutivo(tipo) {
         .catch(error => {
             console.error('Erro ao carregar dados:', error);
             const loadingId = tipo === 'resultado' ? 'resultado-comparativo-loading' : `${tipo}-clientes-loading`;
-            document.getElementById(loadingId).innerHTML = `
-                <div style="text-align: center; color: #ff6600; padding: 20px;">
-                    <strong>⚠️ Erro de conexão</strong><br>
-                    <small>Detalhes: ${error.message}</small><br>
-                    <small>Verifique sua sessão e tente novamente</small>
-                </div>
-            `;
+            document.getElementById(loadingId).innerHTML = 'Erro ao carregar dados.';
         });
 }
 

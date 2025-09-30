@@ -308,6 +308,194 @@ def frz_log():
     return render_template("frz_log.html", dados=dados_log, mes=mes, ano=ano)
 
 
+@app.route("/api/dados_executivo")
+@login_required
+def api_dados_executivo():
+    """API para buscar dados detalhados dos cards executivos."""
+    tipo = request.args.get('tipo')  # 'receita', 'despesa', 'resultado'
+    mes = request.args.get('mes', type=int)
+    ano = request.args.get('ano', type=int)
+    
+    if not all([tipo, mes, ano]):
+        return jsonify({"erro": "Parâmetros obrigatórios: tipo, mes, ano"}), 400
+    
+    try:
+        if tipo == 'receita':
+            dados = buscar_receitas_por_cliente(mes, ano)
+        elif tipo == 'despesa':
+            dados = buscar_despesas_por_cliente(mes, ano)
+        elif tipo == 'resultado':
+            dados = buscar_resultado_comparativo(mes, ano)
+        else:
+            return jsonify({"erro": "Tipo inválido. Use: receita, despesa ou resultado"}), 400
+            
+        return jsonify(dados)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+def buscar_receitas_por_cliente(mes, ano):
+    """Busca receitas detalhadas por cliente no mês/ano especificado."""
+    conn = get_connection()
+    
+    # Lista dos 19 clientes FRZ
+    clientes_frz = [
+        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
+        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
+        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
+        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
+        'PEIXES MEGGOS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
+    ]
+    
+    query = """
+    SELECT cliente, SUM(valor_principal) as total_receita
+    FROM contas_receber 
+    WHERE competencia = ?
+      AND status = 'Recebido'
+      AND cliente IN ({})
+    GROUP BY cliente
+    ORDER BY total_receita DESC
+    """.format(','.join(['?'] * len(clientes_frz)))
+    
+    params = [f"{mes}/{ano}"] + clientes_frz
+    resultado = conn.execute(query, params).fetchall()
+    conn.close()
+    
+    clientes_data = []
+    total_geral = 0
+    
+    for row in resultado:
+        valor = float(row['total_receita'])
+        clientes_data.append({
+            'nome': row['cliente'],
+            'valor': valor
+        })
+        total_geral += valor
+    
+    return {
+        'clientes': clientes_data,
+        'total': total_geral
+    }
+
+
+def buscar_despesas_por_cliente(mes, ano):
+    """Busca despesas detalhadas por fornecedor no mês/ano especificado."""
+    conn = get_connection()
+    
+    # Buscar TODOS os fornecedores, não apenas clientes FRZ
+    query = """
+    SELECT fornecedor as cliente, SUM(valor_principal) as total_despesa
+    FROM contas_pagar 
+    WHERE competencia = ?
+      AND status = 'Recebido'
+    GROUP BY fornecedor
+    ORDER BY total_despesa DESC
+    LIMIT 15
+    """
+    
+    params = [f"{mes}/{ano}"]
+    resultado = conn.execute(query, params).fetchall()
+    conn.close()
+    
+    clientes_data = []
+    total_geral = 0
+    
+    for row in resultado:
+        valor = float(row['total_despesa'])
+        clientes_data.append({
+            'nome': row['cliente'],
+            'valor': valor
+        })
+        total_geral += valor
+    
+    return {
+        'clientes': clientes_data,
+        'total': total_geral
+    }
+
+
+def buscar_resultado_comparativo(mes, ano):
+    """Busca dados comparativos de resultado para análise mensal."""
+    conn = get_connection()
+    
+    # Lista dos 19 clientes FRZ
+    clientes_frz = [
+        'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
+        'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
+        'LATICINIO CARMONA', 'MARFRIG - ITUPEVA CD', 'MARFRIG - PROMISSAO', 
+        'MARFRIG GLOBAL FOODS S A', 'MINERVA S A', 'PAMPLONA JANDIRA', 
+        'PEIXES MEGGOS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
+    ]
+    
+    periodos_data = []
+    
+    # Buscar dados dos últimos 3 meses para comparação
+    for i in range(3):
+        mes_atual = mes - i
+        ano_atual = ano
+        
+        if mes_atual <= 0:
+            mes_atual += 12
+            ano_atual -= 1
+        
+        # Receitas do período
+        query_receitas = """
+        SELECT SUM(valor_principal) as total_receitas
+        FROM contas_receber 
+        WHERE competencia = ?
+          AND status = 'Recebido'
+          AND cliente IN ({})
+        """.format(','.join(['?'] * len(clientes_frz)))
+        
+        params = [f"{mes_atual}/{ano_atual}"] + clientes_frz
+        receitas = conn.execute(query_receitas, params).fetchone()
+        total_receitas = float(receitas['total_receitas'] or 0)
+        
+        # Despesas do período
+        query_despesas = """
+        SELECT SUM(valor_principal) as total_despesas
+        FROM contas_pagar 
+        WHERE competencia = ?
+          AND status = 'Recebido'
+          AND fornecedor IN ({})
+        """.format(','.join(['?'] * len(clientes_frz)))
+        
+        despesas = conn.execute(query_despesas, params).fetchone()
+        total_despesas = float(despesas['total_despesas'] or 0)
+        
+        resultado = total_receitas - total_despesas
+        
+        periodo_nome = f"{mes_atual:02d}/{ano_atual}"
+        if i == 0:
+            periodo_nome += " (Atual)"
+        
+        periodos_data.append({
+            'periodo': periodo_nome,
+            'receitas': total_receitas,
+            'despesas': total_despesas,
+            'resultado': resultado,
+            'variacao_percentual': 0  # Será calculado depois
+        })
+    
+    conn.close()
+    
+    # Calcular variações percentuais
+    for i in range(1, len(periodos_data)):
+        resultado_atual = periodos_data[i-1]['resultado']
+        resultado_anterior = periodos_data[i]['resultado']
+        
+        if resultado_anterior != 0:
+            variacao = ((resultado_atual - resultado_anterior) / abs(resultado_anterior)) * 100
+        else:
+            variacao = 100 if resultado_atual > 0 else -100
+            
+        periodos_data[i-1]['variacao_percentual'] = variacao
+    
+    return {
+        'periodos': periodos_data
+    }
+
+
 def build_dados_frz(mes, ano):
     """Constrói dados do FRZ por semanas (sábado a sexta) para o mês/ano especificado."""
     

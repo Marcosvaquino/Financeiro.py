@@ -10,6 +10,8 @@ def get_connection():
     """Cria conexão com o banco SQLite"""
     # Aumenta timeout para reduzir chances de 'database is locked' em operações concorrentes
     conn = sqlite3.connect(DB_PATH, timeout=30)
+    # Configura row_factory para permitir acesso por nome de coluna
+    conn.row_factory = sqlite3.Row
     try:
         # Ativa WAL (write-ahead logging) para melhorar concorrência entre leitura/escrita
         conn.execute('PRAGMA journal_mode=WAL;')

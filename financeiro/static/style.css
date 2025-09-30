@@ -3199,3 +3199,31 @@ body {
     color: #1e293b;
     line-height: 1.2;
 }
+
+/* ===== Loading Styles ===== */
+.frz-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+    font-size: 14px;
+    font-style: italic;
+    position: relative;
+}
+
+.frz-loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
