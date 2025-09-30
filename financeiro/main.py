@@ -25,8 +25,26 @@ def format_currency(value):
     # Troca separadores: vírgula por X, ponto por vírgula, X por ponto
     return formatted.replace(',', 'X').replace('.', ',').replace('X', '.')
 
-# Registra a função no Jinja2
+# Função para formatação brasileira SEM casas decimais (para FRZ LOG)
+def format_currency_no_decimal(value):
+    """Formata valores para padrão brasileiro SEM casas decimais: 1.234.567"""
+    if value is None or value == '':
+        return "0"
+    
+    # Converte para float e trata erros
+    try:
+        num_value = float(value)
+    except (ValueError, TypeError):
+        return "0"
+    
+    # Formata sem casas decimais e converte para padrão brasileiro
+    formatted = "{:,.0f}".format(num_value)
+    # Troca separadores: vírgula por ponto
+    return formatted.replace(',', '.')
+
+# Registra as funções no Jinja2
 app.jinja_env.filters['currency'] = format_currency
+app.jinja_env.filters['currency_no_decimal'] = format_currency_no_decimal
 
 # Função inteligente para normalizar nomes de clientes
 def normalizar_nome_cliente(nome):
@@ -274,6 +292,21 @@ def planejamento_frz():
     
     return render_template("planejamento_frz.html", dados=dados_frz, mes=mes, ano=ano)
 
+@app.route("/frz_log")
+@login_required
+def frz_log():
+    """Página do FRZ LOG - Dashboard executivo com cards e gráficos."""
+    # Parâmetros de filtro (padrão: mês e ano atual)
+    from datetime import datetime
+    now = datetime.now()
+    mes = request.args.get('mes', now.month, type=int)
+    ano = request.args.get('ano', now.year, type=int)
+    
+    # Buscar dados do FRZ LOG
+    dados_log = build_dados_frz_log(mes, ano)
+    
+    return render_template("frz_log.html", dados=dados_log, mes=mes, ano=ano)
+
 
 def build_dados_frz(mes, ano):
     """Constrói dados do FRZ por semanas (sábado a sexta) para o mês/ano especificado."""
@@ -446,6 +479,258 @@ def build_dados_frz(mes, ano):
     
     conn.close()
     return dados
+
+def build_dados_frz_log(mes, ano):
+    """Constrói análise executiva completa do FRZ com métricas avançadas."""
+    dados_frz = build_dados_frz(mes, ano)
+    
+    # === DADOS CRÍTICOS DO PLANEJAMENTO FRZ (TOPO) ===
+    # Extrair dados reais das receitas, despesas e resultados
+    receitas_semanas = []
+    despesas_semanas = []
+    resultados_semanas = []
+    
+    # Pegar os dados dos totais do FRZ original
+    totais_frz = dados_frz.get('totais', {})
+    
+    for i in range(1, 6):  # 5 semanas
+        semana_key = f'semana_{i}'
+        
+        # Receitas (do que já estava sendo calculado no FRZ)
+        receita_proj = totais_frz.get('semanas', {}).get(semana_key, {}).get('projetado', 0)
+        receita_real = totais_frz.get('semanas', {}).get(semana_key, {}).get('realizado', 0)
+        
+        # Despesas (do que já estava sendo calculado no FRZ)
+        despesa_proj = totais_frz.get('despesas_semanas', {}).get(semana_key, {}).get('projetado', 0)
+        despesa_real = totais_frz.get('despesas_semanas', {}).get(semana_key, {}).get('realizado', 0)
+        
+        # Resultado = Receita - Despesa
+        resultado_proj = receita_proj - despesa_proj
+        resultado_real = receita_real - despesa_real
+        
+        receitas_semanas.append({
+            'semana': i,
+            'label': dados_frz['semanas'][i-1]['label'],
+            'projetado': receita_proj,
+            'realizado': receita_real,
+            'performance': (receita_real / receita_proj * 100) if receita_proj > 0 else 0
+        })
+        
+        despesas_semanas.append({
+            'semana': i,
+            'label': dados_frz['semanas'][i-1]['label'],
+            'projetado': despesa_proj,
+            'realizado': despesa_real,
+            'performance': (despesa_real / despesa_proj * 100) if despesa_proj > 0 else 0
+        })
+        
+        resultados_semanas.append({
+            'semana': i,
+            'label': dados_frz['semanas'][i-1]['label'],
+            'projetado': resultado_proj,
+            'realizado': resultado_real,
+            'status': 'positivo' if resultado_real > 0 else 'negativo' if resultado_real < 0 else 'zero'
+        })
+    
+    # Totais do mês
+    total_receita_proj = sum([r['projetado'] for r in receitas_semanas])
+    total_receita_real = sum([r['realizado'] for r in receitas_semanas])
+    total_despesa_proj = sum([d['projetado'] for d in despesas_semanas])
+    total_despesa_real = sum([d['realizado'] for d in despesas_semanas])
+    total_resultado_proj = total_receita_proj - total_despesa_proj
+    total_resultado_real = total_receita_real - total_despesa_real
+    
+    # Alertas de Fluxo
+    alertas_fluxo = []
+    
+    # Verificar semanas com resultado negativo
+    semanas_negativas = [r for r in resultados_semanas if r['realizado'] < 0]
+    if semanas_negativas:
+        alertas_fluxo.append({
+            'tipo': 'critico',
+            'msg': f'{len(semanas_negativas)} semana(s) com resultado negativo'
+        })
+    
+    # Verificar despesas muito altas
+    despesas_altas = [d for d in despesas_semanas if d['performance'] > 110]
+    if despesas_altas:
+        alertas_fluxo.append({
+            'tipo': 'atencao',
+            'msg': f'{len(despesas_altas)} semana(s) com despesas acima do previsto'
+        })
+    
+    # Verificar receitas baixas
+    receitas_baixas = [r for r in receitas_semanas if r['performance'] < 80]
+    if receitas_baixas:
+        alertas_fluxo.append({
+            'tipo': 'atencao',
+            'msg': f'{len(receitas_baixas)} semana(s) com receitas abaixo do previsto'
+        })
+    
+    # Performance geral do resultado
+    performance_resultado = (total_resultado_real / total_resultado_proj * 100) if total_resultado_proj > 0 else 0
+    
+    # === MÉTRICAS BÁSICAS ===
+    total_projetado_mes = 0
+    total_realizado_mes = 0
+    semanas_resumo = []
+    
+    for i in range(5):
+        semana_num = i + 1
+        total_proj_semana = 0
+        total_real_semana = 0
+        
+        for cliente, dados_cliente in dados_frz['clientes'].items():
+            semana_key = f'semana_{semana_num}'
+            if semana_key in dados_cliente:
+                total_proj_semana += dados_cliente[semana_key]['projetado']
+                total_real_semana += dados_cliente[semana_key]['realizado']
+        
+        perf_semana = (total_real_semana / total_proj_semana * 100) if total_proj_semana > 0 else 0
+        semanas_resumo.append({
+            'semana': semana_num,
+            'label': dados_frz['semanas'][i]['label'],
+            'projetado': total_proj_semana,
+            'realizado': total_real_semana,
+            'percentual': perf_semana,
+            'status': 'critica' if perf_semana < 50 else 'baixa' if perf_semana < 80 else 'boa' if perf_semana < 100 else 'excelente'
+        })
+        
+        total_projetado_mes += total_proj_semana
+        total_realizado_mes += total_real_semana
+    
+    # === ANÁLISE POR CLIENTE ===
+    clientes_detalhado = []
+    clientes_criticos = []
+    clientes_estrelas = []
+    
+    for cliente, dados_cliente in dados_frz['clientes'].items():
+        total_proj_cliente = dados_cliente.get('total_mes', {}).get('projetado', 0)
+        total_real_cliente = dados_cliente.get('total_mes', {}).get('realizado', 0)
+        
+        perf_cliente = (total_real_cliente / total_proj_cliente * 100) if total_proj_cliente > 0 else 0
+        participacao = (total_real_cliente / total_realizado_mes * 100) if total_realizado_mes > 0 else 0
+        
+        # Análise semanal do cliente
+        semanas_ativas = 0
+        melhor_semana = 0
+        pior_semana = 100
+        
+        for i in range(5):
+            semana_key = f'semana_{i+1}'
+            if semana_key in dados_cliente:
+                proj_sem = dados_cliente[semana_key]['projetado']
+                real_sem = dados_cliente[semana_key]['realizado']
+                if proj_sem > 0:
+                    perf_sem = (real_sem / proj_sem * 100)
+                    if real_sem > 0:
+                        semanas_ativas += 1
+                    melhor_semana = max(melhor_semana, perf_sem)
+                    pior_semana = min(pior_semana, perf_sem)
+        
+        cliente_info = {
+            'nome': cliente,
+            'projetado': total_proj_cliente,
+            'realizado': total_real_cliente,
+            'performance': perf_cliente,
+            'participacao': participacao,
+            'semanas_ativas': semanas_ativas,
+            'melhor_semana': melhor_semana,
+            'pior_semana': pior_semana,
+            'consistencia': melhor_semana - pior_semana,  # Menor = mais consistente
+            'status': 'critico' if perf_cliente < 50 else 'atencao' if perf_cliente < 80 else 'bom' if perf_cliente < 120 else 'excelente'
+        }
+        
+        clientes_detalhado.append(cliente_info)
+        
+        if perf_cliente < 60 and total_proj_cliente > 0:
+            clientes_criticos.append(cliente_info)
+        elif perf_cliente > 120:
+            clientes_estrelas.append(cliente_info)
+    
+    # Ordenações
+    clientes_detalhado.sort(key=lambda x: x['realizado'], reverse=True)
+    clientes_criticos.sort(key=lambda x: x['performance'])
+    clientes_estrelas.sort(key=lambda x: x['performance'], reverse=True)
+    
+    # === MÉTRICAS AVANÇADAS ===
+    performance_geral = (total_realizado_mes / total_projetado_mes * 100) if total_projetado_mes > 0 else 0
+    
+    # Concentração (Top 3 representam quanto % do total?)
+    top3_valor = sum([c['realizado'] for c in clientes_detalhado[:3]])
+    concentracao_top3 = (top3_valor / total_realizado_mes * 100) if total_realizado_mes > 0 else 0
+    
+    # Eficiência por semana (tendência)
+    tendencia = []
+    for i in range(len(semanas_resumo)):
+        if i > 0:
+            perf_atual = semanas_resumo[i]['percentual']
+            perf_anterior = semanas_resumo[i-1]['percentual']
+            tendencia.append(perf_atual - perf_anterior)
+        else:
+            tendencia.append(0)
+    
+    # Risk Score (0-100, quanto maior, mais risco)
+    clientes_inativos = len([c for c in clientes_detalhado if c['realizado'] == 0])
+    clientes_baixa_perf = len([c for c in clientes_detalhado if c['performance'] < 70])
+    risk_score = min(100, (clientes_baixa_perf / len(clientes_detalhado) * 50) + 
+                          (clientes_inativos / len(clientes_detalhado) * 30) +
+                          (max(0, 100 - performance_geral) * 0.2))
+    
+    # Alertas inteligentes
+    alertas = []
+    if performance_geral < 70:
+        alertas.append({'tipo': 'critico', 'msg': f'Performance geral baixa: {performance_geral:.1f}%'})
+    if len(clientes_criticos) > 3:
+        alertas.append({'tipo': 'atencao', 'msg': f'{len(clientes_criticos)} clientes críticos'})
+    if concentracao_top3 > 70:
+        alertas.append({'tipo': 'info', 'msg': f'Alta concentração nos top 3: {concentracao_top3:.1f}%'})
+    
+    # Semanas críticas
+    semanas_criticas = [s for s in semanas_resumo if s['status'] in ['critica', 'baixa']]
+    
+    return {
+        'mes': mes,
+        'ano': ano,
+        'metricas_principais': {
+            'total_projetado': total_projetado_mes,
+            'total_realizado': total_realizado_mes,
+            'performance_geral': performance_geral,
+            'gap_realizacao': total_projetado_mes - total_realizado_mes,
+            'concentracao_top3': concentracao_top3,
+            'risk_score': risk_score
+        },
+        'semanas': semanas_resumo,
+        'semanas_criticas': semanas_criticas,
+        'tendencia_semanal': tendencia,
+        'clientes': clientes_detalhado[:10],  # Top 10
+        'clientes_criticos': clientes_criticos[:5],  # Top 5 críticos
+        'clientes_estrelas': clientes_estrelas[:3],  # Top 3 estrelas
+        'alertas': alertas,
+        'indicadores': {
+            'clientes_ativos': len([c for c in clientes_detalhado if c['realizado'] > 0]),
+            'clientes_inativos': len([c for c in clientes_detalhado if c['realizado'] == 0]),
+            'clientes_criticos': len(clientes_criticos),
+            'clientes_estrelas': len(clientes_estrelas),
+            'semanas_boas': len([s for s in semanas_resumo if s['status'] in ['boa', 'excelente']]),
+            'semanas_ruins': len([s for s in semanas_resumo if s['status'] in ['critica', 'baixa']])
+        },
+        'dados_criticos': {
+            'receitas_semanas': receitas_semanas,
+            'despesas_semanas': despesas_semanas,
+            'resultados_semanas': resultados_semanas,
+            'totais_mes': {
+                'receita_projetada': total_receita_proj,
+                'receita_realizada': total_receita_real,
+                'despesa_projetada': total_despesa_proj,
+                'despesa_realizada': total_despesa_real,
+                'resultado_projetado': total_resultado_proj,
+                'resultado_realizado': total_resultado_real,
+                'performance_resultado': performance_resultado
+            },
+            'alertas_fluxo': alertas_fluxo
+        }
+    }
 
 
 def calcular_semanas_sabado_sexta(mes, ano):
