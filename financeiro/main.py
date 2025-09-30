@@ -382,12 +382,13 @@ def buscar_despesas_por_cliente(mes, ano):
     """Busca despesas detalhadas por fornecedor no mês/ano especificado."""
     conn = get_connection()
     
-    # Buscar TODOS os fornecedores, não apenas clientes FRZ
+    # Buscar fornecedores EXCLUINDO REIS TRANSPORTES (filtro global do sistema)
     query = """
     SELECT fornecedor as cliente, SUM(valor_principal) as total_despesa
     FROM contas_pagar 
     WHERE competencia = ?
       AND status = 'Recebido'
+      AND fornecedor != 'REIS TRANSPORTES'
     GROUP BY fornecedor
     ORDER BY total_despesa DESC
     LIMIT 15
