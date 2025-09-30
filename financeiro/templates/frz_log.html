@@ -36,7 +36,7 @@
                     <div class="frz-mini-titulo">Resultado</div>
                     <div class="frz-mini-valor">
                         {% if dados.dados_criticos.totais_mes.resultado_realizado < 0 %}-{% endif %}
-                        R$ {{ (dados.dados_criticos.totais_mes.resultado_realizado / 1000000)|round(1)|abs }}M
+                        R$ {{ dados.dados_criticos.totais_mes.resultado_realizado|abs|currency_no_decimal }}
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <div class="frz-mini-icon">📈</div>
                 <div class="frz-mini-info">
                     <div class="frz-mini-titulo">Receitas</div>
-                    <div class="frz-mini-valor">R$ {{ (dados.dados_criticos.totais_mes.receita_realizada / 1000000)|round(1) }}M</div>
+                    <div class="frz-mini-valor">R$ {{ dados.dados_criticos.totais_mes.receita_realizada|currency_no_decimal }}</div>
                 </div>
             </div>
             
@@ -53,7 +53,7 @@
                 <div class="frz-mini-icon">�</div>
                 <div class="frz-mini-info">
                     <div class="frz-mini-titulo">Despesas</div>
-                    <div class="frz-mini-valor">R$ {{ (dados.dados_criticos.totais_mes.despesa_realizada / 1000000)|round(1) }}M</div>
+                    <div class="frz-mini-valor">R$ {{ dados.dados_criticos.totais_mes.despesa_realizada|currency_no_decimal }}</div>
                 </div>
             </div>
             
@@ -135,8 +135,8 @@
                     <div class="frz-linha-dados">
                         <span class="frz-tipo">💰 Receitas</span>
                         <div class="frz-valores">
-                            <span class="frz-realizado">{{ (receita.realizado / 1000)|round|int }}k</span>
-                            <span class="frz-previsto">/ {{ (receita.projetado / 1000)|round|int }}k</span>
+                            <span class="frz-realizado">{{ receita.realizado|currency_no_decimal }}</span>
+                            <span class="frz-previsto">/ {{ receita.projetado|currency_no_decimal }}</span>
                             <span class="frz-perf perf-{{ (receita.performance / 20)|round|int }}">{{ "%.0f"|format(receita.performance) }}%</span>
                         </div>
                     </div>
@@ -145,8 +145,8 @@
                     <div class="frz-linha-dados">
                         <span class="frz-tipo">💸 Despesas</span>
                         <div class="frz-valores">
-                            <span class="frz-realizado">{{ (despesa.realizado / 1000)|round|int }}k</span>
-                            <span class="frz-previsto">/ {{ (despesa.projetado / 1000)|round|int }}k</span>
+                            <span class="frz-realizado">{{ despesa.realizado|currency_no_decimal }}</span>
+                            <span class="frz-previsto">/ {{ despesa.projetado|currency_no_decimal }}</span>
                             <span class="frz-perf perf-{{ (despesa.performance / 20)|round|int }}">{{ "%.0f"|format(despesa.performance) }}%</span>
                         </div>
                     </div>
@@ -156,9 +156,9 @@
                         <span class="frz-tipo">📊 Resultado</span>
                         <div class="frz-valores">
                             <span class="frz-resultado-valor resultado-{{ resultado.status }}">
-                                {{ (resultado.realizado / 1000)|round|int }}k
+                                {{ resultado.realizado|currency_no_decimal }}
                             </span>
-                            <span class="frz-resultado-meta">/ {{ (resultado.projetado / 1000)|round|int }}k</span>
+                            <span class="frz-resultado-meta">/ {{ resultado.projetado|currency_no_decimal }}</span>
                         </div>
                     </div>
                 </div>
@@ -191,12 +191,12 @@
         </div>
         <div class="frz-card-mini">
             <span class="frz-label">Realizado</span>
-            <span class="frz-value">{{ (dados.metricas_principais.total_realizado / 1000000)|round(1) }}M</span>
+            <span class="frz-value">{{ dados.metricas_principais.total_realizado|currency_no_decimal }}</span>
         </div>
         <div class="frz-card-mini">
             <span class="frz-label">Gap</span>
             <span class="frz-value {% if dados.metricas_principais.gap_realizacao <= 0 %}positive{% else %}negative{% endif %}">
-                {{ (dados.metricas_principais.gap_realizacao / 1000000)|round(1)|abs }}M
+                {{ dados.metricas_principais.gap_realizacao|abs|currency_no_decimal }}
             </span>
         </div>
         <div class="frz-card-mini">
@@ -235,7 +235,7 @@
                         <div class="frz-semana-progress" style="width: {{ semana.percentual|round|int }}%"></div>
                     </div>
                     <div class="frz-semana-values">
-                        <span>{{ (semana.realizado / 1000)|round|int }}k / {{ (semana.projetado / 1000)|round|int }}k</span>
+                        <span>{{ semana.realizado|currency_no_decimal }} / {{ semana.projetado|currency_no_decimal }}</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -253,7 +253,7 @@
                         <span class="frz-cliente-perf">{{ "%.0f"|format(cliente.performance) }}%</span>
                     </div>
                     <div class="frz-cliente-values">
-                        <span class="frz-cliente-real">{{ (cliente.realizado / 1000)|round|int }}k</span>
+                        <span class="frz-cliente-real">{{ cliente.realizado|currency_no_decimal }}</span>
                         <span class="frz-cliente-part">({{ "%.1f"|format(cliente.participacao) }}%)</span>
                     </div>
                 </div>

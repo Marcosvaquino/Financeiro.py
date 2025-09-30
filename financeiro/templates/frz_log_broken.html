@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}FRZ LOG{% endblock %}
+
+{% block content %}
+<div class="frz-log-compact">
+    <!-- Header Compacto -->
+    <div class="frz-header-compact">
+        <div class="frz-titulo">
+            <h1>📊 FRZ LOG Executivo</h1>
+            <p>{{ "%.2d"|format(mes) }}/{{ ano }}</p>
+        </div>
+        
+        <div class="frz-controles">
+            <select id="mes" onchange="atualizarFrzLog()">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {{ 'selected' if m == mes else '' }}>{{ m }}</option>
+                {% endfor %}
+            </select>
+            
+            <select id="ano" onchange="atualizarFrzLog()">
+                {% for a in range(2024, 2027) %}
+                <option value="{{ a }}" {{ 'selected' if a == ano else '' }}>{{ a }}</option>
+                {% endfor %}
+            </select>
+            
+            <button onclick="atualizarFrzLog()">🔄</button>
+        </div>
+    </div>
+
+    <!-- SEÇÃO CRÍTICA - INFORMAÇÕES EXECUTIVAS -->
+    <div class="frz-secao-critica">
+        <h2>🔥 Informações Críticas</h2>
+        
+        <!-- Grid de Cards Executivos Compactos -->
+        <div class="frz-cards-grid-executivo">
+            <!-- Linha 1 -->
+            {% set resultado_total = dados.get('dados_criticos', {}).get('totais_mes', {}).get('resultado_realizado', 0) %}
+            {% set performance_resultado = dados.get('dados_criticos', {}).get('totais_mes', {}).get('performance_resultado', 0) %}
+            <div class="frz-card-mini resultado-{{ 'positivo' if resultado_total > 0 else 'negativo' }}">
+                <div class="frz-mini-icon">💰</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Resultado</div>
+                    <div class="frz-mini-valor">
+                        {% if resultado_total < 0 %}-{% endif %}
+                        R$ {{ (resultado_total / 1000000)|round(1)|abs }}M
+                    </div>
+                    <div class="frz-mini-indicador">
+                        {% if resultado_total > 0 %}
+                            <span class="frz-seta-up">↗</span> {{ "%.0f"|format(performance_resultado) }}% atingido
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> Déficit
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% set receita_realizada = dados.get('dados_criticos', {}).get('totais_mes', {}).get('receita_realizada', 0) %}
+            {% set receita_projetada = dados.get('dados_criticos', {}).get('totais_mes', {}).get('receita_projetada', 1) %}
+            {% set perf_receita = (receita_realizada / receita_projetada * 100) if receita_projetada > 0 else 0 %}
+            <div class="frz-card-mini performance-{{ 'boa' if perf_receita >= 80 else 'media' if perf_receita >= 60 else 'ruim' }}">
+                <div class="frz-mini-icon">📈</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Receitas</div>
+                    <div class="frz-mini-valor">R$ {{ (receita_realizada / 1000000)|round(1) }}M</div>
+                    <div class="frz-mini-indicador">
+                        {% if perf_receita >= 100 %}
+                            <span class="frz-seta-up">↗</span> +{{ "%.0f"|format(perf_receita - 100) }}% acima
+                        {% elif perf_receita >= 80 %}
+                            <span class="frz-seta-up">↗</span> {{ "%.0f"|format(perf_receita) }}% atingido
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> {{ "%.0f"|format(perf_receita) }}% atingido
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="frz-card-mini controle-{{ 'bom' if (dados.dados_criticos.totais_mes.despesa_realizada / dados.dados_criticos.totais_mes.despesa_projetada * 100) <= 100 else 'ruim' }}">
+                <div class="frz-mini-icon">📉</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Despesas</div>
+                    <div class="frz-mini-valor">R$ {{ (dados.dados_criticos.totais_mes.despesa_realizada / 1000000)|round(1) }}M</div>
+                    <div class="frz-mini-indicador">
+                        {% set perf_despesa = (dados.dados_criticos.totais_mes.despesa_realizada / dados.dados_criticos.totais_mes.despesa_projetada * 100) if dados.dados_criticos.totais_mes.despesa_projetada > 0 else 0 %}
+                        {% if perf_despesa <= 100 %}
+                            <span class="frz-seta-up">↗</span> {{ "%.0f"|format(perf_despesa) }}% do orçado
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> +{{ "%.0f"|format(perf_despesa - 100) }}% acima
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="frz-card-mini margem-{{ 'positiva' if dados.dados_criticos.totais_mes.resultado_realizado > 0 else 'negativa' }}">
+                <div class="frz-mini-icon">📊</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Margem</div>
+                    <div class="frz-mini-valor">
+                        {% set margem = (dados.dados_criticos.totais_mes.resultado_realizado / dados.dados_criticos.totais_mes.receita_realizada * 100) if dados.dados_criticos.totais_mes.receita_realizada > 0 else 0 %}
+                        {{ "%.1f"|format(margem) }}%
+                    </div>
+                    <div class="frz-mini-indicador">
+                        {% if margem > 0 %}
+                            <span class="frz-seta-up">↗</span> Margem positiva
+                        {% elif margem == 0 %}
+                            <span class="frz-seta-neutral">→</span> Break-even
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> Margem negativa
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Linha 2 -->
+            <div class="frz-card-mini performance-boa">
+                <div class="frz-mini-icon">🏆</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Melhor Semana</div>
+                    <div class="frz-mini-valor">
+                        {% set melhor = dados.dados_criticos.resultados_semanas|sort(attribute='realizado', reverse=true)|first %}
+                        Semana {{ "%02d"|format(dados.dados_criticos.resultados_semanas.index(melhor) + 1) }}
+                    </div>
+                    <div class="frz-mini-indicador">
+                        <span class="frz-seta-up">↗</span> R$ {{ (melhor.realizado / 1000)|round(0)|int }}k lucro
+                    </div>
+                </div>
+            </div>
+            
+            <div class="frz-card-mini performance-ruim">
+                <div class="frz-mini-icon">⚠️</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Pior Semana</div>
+                    <div class="frz-mini-valor">
+                        {% set pior = dados.dados_criticos.resultados_semanas|sort(attribute='realizado')|first %}
+                        Semana {{ "%02d"|format(dados.dados_criticos.resultados_semanas.index(pior) + 1) }}
+                    </div>
+                    <div class="frz-mini-indicador">
+                        {% if pior.realizado < 0 %}
+                            <span class="frz-seta-down">↘</span> R$ {{ (pior.realizado / 1000)|round(0)|int|abs }}k prejuízo
+                        {% else %}
+                            <span class="frz-seta-up">↗</span> R$ {{ (pior.realizado / 1000)|round(0)|int }}k lucro
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% set eficiencia = (dados.dados_criticos.totais_mes.receita_realizada / dados.dados_criticos.totais_mes.receita_projetada * 100) if dados.dados_criticos.totais_mes.receita_projetada > 0 else 0 %}
+            <div class="frz-card-mini eficiencia-{{ 'alta' if eficiencia >= 90 else 'media' if eficiencia >= 70 else 'baixa' }}">
+                <div class="frz-mini-icon">🎯</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Eficiência</div>
+                    <div class="frz-mini-valor">
+                        {{ "%.0f"|format(eficiencia) }}%
+                    </div>
+                    <div class="frz-mini-indicador">
+                        {% if eficiencia >= 100 %}
+                            <span class="frz-seta-up">↗</span> Acima da meta
+                        {% elif eficiencia >= 80 %}
+                            <span class="frz-seta-up">↗</span> Boa performance
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> Abaixo da meta
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="frz-card-mini status-{{ 'bom' if dados.dados_criticos.totais_mes.performance_resultado >= 80 else 'medio' if dados.dados_criticos.totais_mes.performance_resultado >= 50 else 'ruim' }}">
+                <div class="frz-mini-icon">🚦</div>
+                <div class="frz-mini-info">
+                    <div class="frz-mini-titulo">Status Geral</div>
+                    <div class="frz-mini-valor">
+                        {% if dados.dados_criticos.totais_mes.performance_resultado >= 80 %}
+                            Ótimo
+                        {% elif dados.dados_criticos.totais_mes.performance_resultado >= 50 %}
+                            Regular
+                        {% else %}
+                            Crítico
+                        {% endif %}
+                    </div>
+                    <div class="frz-mini-indicador">
+                        {% if dados.dados_criticos.totais_mes.performance_resultado >= 80 %}
+                            <span class="frz-seta-up">↗</span> {{ "%.0f"|format(dados.dados_criticos.totais_mes.performance_resultado) }}% performance
+                        {% elif dados.dados_criticos.totais_mes.performance_resultado >= 50 %}
+                            <span class="frz-seta-neutral">→</span> {{ "%.0f"|format(dados.dados_criticos.totais_mes.performance_resultado) }}% performance
+                        {% else %}
+                            <span class="frz-seta-down">↘</span> {{ "%.0f"|format(dados.dados_criticos.totais_mes.performance_resultado) }}% performance
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fluxo Semanal Detalhado -->
+        <div class="frz-fluxo-semanal">
+            <h3>📅 Fluxo Semanal - Receitas | Despesas | Resultado</h3>
+            <div class="frz-semanas-grid">
+                {% for semana in dados.dados_criticos.resultados_semanas %}
+                <div class="frz-semana-card {{ 'positiva' if semana.realizado > 0 else 'negativa' if semana.realizado < 0 else 'neutra' }}">
+                    <div class="frz-semana-titulo">{{ semana.label }}</div>
+                    
+                    <!-- Receitas -->
+                    <div class="frz-linha-dados">
+                        <span class="frz-tipo">📈 Receitas</span>
+                        <div class="frz-valores">
+                            <span class="frz-realizado">{{ (semana.receita_realizada / 1000)|round|int }}k</span>
+                            <span class="frz-previsto">/ {{ (semana.receita_projetada / 1000)|round|int }}k</span>
+                            <span class="frz-perf perf-{{ 'alta' if (semana.receita_realizada / semana.receita_projetada * 100) >= 100 else 'media' if (semana.receita_realizada / semana.receita_projetada * 100) >= 80 else 'baixa' }}">{{ "%.0f"|format((semana.receita_realizada / semana.receita_projetada * 100) if semana.receita_projetada > 0 else 0) }}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Despesas -->
+                    <div class="frz-linha-dados">
+                        <span class="frz-tipo">📉 Despesas</span>
+                        <div class="frz-valores">
+                            <span class="frz-realizado">{{ (semana.despesa_realizada / 1000)|round|int }}k</span>
+                            <span class="frz-previsto">/ {{ (semana.despesa_projetada / 1000)|round|int }}k</span>
+                            <span class="frz-perf perf-{{ 'alta' if (semana.despesa_realizada / semana.despesa_projetada * 100) <= 100 else 'baixa' }}">{{ "%.0f"|format((semana.despesa_realizada / semana.despesa_projetada * 100) if semana.despesa_projetada > 0 else 0) }}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Resultado -->
+                    <div class="frz-linha-resultado">
+                        <span class="frz-tipo">📊 Resultado</span>
+                        <div class="frz-resultado-valor {{ 'positivo' if semana.realizado > 0 else 'negativo' if semana.realizado < 0 else 'zero' }}">
+                            {{ (semana.realizado / 1000)|round|int }}k
+                            <span class="frz-resultado-meta">/ {{ (semana.projetado / 1000)|round|int }}k</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Alertas de Fluxo -->
+        <div class="frz-alertas">
+            <h3>⚠️ Alertas de Fluxo</h3>
+            <div class="frz-alertas-grid">
+                {% set semanas_negativas = dados.dados_criticos.resultados_semanas | selectattr('realizado', 'lt', 0) | list %}
+                {% set semanas_acima_receita = dados.dados_criticos.resultados_semanas | selectattr('receita_performance', 'gt', 100) | list %}
+                
+                {% if semanas_negativas %}
+                <div class="frz-alerta alerta-critico">
+                    {{ semanas_negativas|length }} semana(s) com resultado negativo
+                </div>
+                {% endif %}
+                
+                {% if semanas_acima_receita %}
+                <div class="frz-alerta alerta-positivo">
+                    {{ semanas_acima_receita|length }} semana(s) com receitas acima do previsto
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO COMPLEMENTAR - ANÁLISES DETALHADAS -->
+    <div class="frz-secao-complementar">
+        <h2>📋 Análises Complementares</h2>
+        
+        <!-- Resumo dos Totais -->
+        <div class="frz-resumo-totais">
+            {% for item in dados.resumo_executivo %}
+            <div class="frz-total-card">
+                <div class="frz-total-icon">{{ item.icon }}</div>
+                <div class="frz-total-info">
+                    <div class="frz-total-titulo">{{ item.titulo }}</div>
+                    <div class="frz-total-valor">{{ item.valor_formatado }}</div>
+                    <div class="frz-total-meta">{{ item.descricao }}</div>
+                    {% if item.performance %}
+                    <div class="frz-total-performance">{{ item.performance }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Gráfico de Tendências -->
+        <div class="frz-graficos">
+            <h3>📈 Tendências do Mês</h3>
+            <div class="frz-grafico-container">
+                <div class="frz-grafico">
+                    {% for valor in dados.graficos.valores_receitas %}
+                    <div class="frz-barra frz-barra-receita" 
+                         style="height: {{ (valor|abs / 50)|round|int * 5 + 20 }}px;">
+                        <span class="frz-barra-valor">{{ (valor / 1000)|round|int }}k</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="frz-grafico-legenda">
+                    <span class="frz-legenda-item">
+                        <span class="frz-cor frz-cor-receita"></span> Receitas
+                    </span>
+                    <span class="frz-legenda-item">
+                        <span class="frz-cor frz-cor-despesa"></span> Despesas
+                    </span>
+                    <span class="frz-legenda-item">
+                        <span class="frz-cor frz-cor-resultado"></span> Resultado
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function atualizarFrzLog() {
+    const mes = document.getElementById('mes').value;
+    const ano = document.getElementById('ano').value;
+    window.location.href = `/frz_log?mes=${mes}&ano=${ano}`;
+}
+</script>
+{% endblock %}
