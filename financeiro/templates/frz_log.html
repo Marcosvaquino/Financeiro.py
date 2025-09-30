@@ -75,7 +75,8 @@
                     <div class="frz-mini-titulo">Melhor Semana</div>
                     <div class="frz-mini-valor">
                         {% set melhor = dados.dados_criticos.resultados_semanas|sort(attribute='realizado', reverse=true)|first %}
-                        {{ melhor.label.split(' ')[1:3]|join(' ') }}
+                        {% set melhor_index = dados.dados_criticos.resultados_semanas.index(melhor) + 1 %}
+                        Semana {{ "%02d"|format(melhor_index) }}
                     </div>
                 </div>
             </div>
@@ -86,7 +87,8 @@
                     <div class="frz-mini-titulo">Pior Semana</div>
                     <div class="frz-mini-valor">
                         {% set pior = dados.dados_criticos.resultados_semanas|sort(attribute='realizado')|first %}
-                        {{ pior.label.split(' ')[1:3]|join(' ') }}
+                        {% set pior_index = dados.dados_criticos.resultados_semanas.index(pior) + 1 %}
+                        Semana {{ "%02d"|format(pior_index) }}
                     </div>
                 </div>
             </div>

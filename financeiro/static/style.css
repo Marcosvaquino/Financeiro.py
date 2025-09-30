@@ -1859,8 +1859,9 @@ body {
 }
 
 .frz-modal-header {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    color: #1e293b;
+    border: 2px solid #cbd5e1;
     padding: 20px 25px;
     border-radius: 12px 12px 0 0;
     display: flex;
@@ -1882,8 +1883,12 @@ body {
     transition: color 0.2s;
 }
 
+.frz-modal-close {
+    color: #64748b;
+}
+
 .frz-modal-close:hover {
-    color: #fbbf24;
+    color: #dc2626;
 }
 
 .frz-modal-body {
@@ -2049,22 +2054,27 @@ body {
 }
 
 .frz-plan-card {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
+    background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+    color: #0277bd;
+    border: 2px solid #4fc3f7;
     border-radius: 8px;
     padding: 15px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 6px rgba(3, 169, 244, 0.15);
 }
 
 .frz-plan-card.status-positivo {
-    background: linear-gradient(135deg, #059669, #047857);
-    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    color: #2e7d32;
+    border: 2px solid #66bb6a;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.15);
 }
 
 .frz-plan-card.status-negativo {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    color: #c62828;
+    border: 2px solid #ef5350;
+    box-shadow: 0 2px 6px rgba(244, 67, 54, 0.15);
 }
 
 .frz-plan-titulo {
@@ -2090,7 +2100,7 @@ body {
 }
 
 .frz-table-header {
-    background: linear-gradient(135deg, #374151, #1f2937);
+    background: linear-gradient(135deg, #64748b, #475569);
     color: white;
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 0.8fr;
@@ -2112,22 +2122,25 @@ body {
 }
 
 .frz-table-row.total {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    color: white;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
     font-weight: 700;
+    border-left: 4px solid #ffc107;
 }
 
 .frz-table-row.despesas {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
+    background: linear-gradient(135deg, #f8d7da, #f1c2c7);
+    color: #721c24;
     font-weight: 700;
+    border-left: 4px solid #dc3545;
 }
 
 .frz-table-row.resultado-final {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
+    background: linear-gradient(135deg, #d1e7dd, #badbcc);
+    color: #0f5132;
     font-weight: 700;
     font-size: 14px;
+    border-left: 4px solid #198754;
 }
 
 .frz-table-cell {
