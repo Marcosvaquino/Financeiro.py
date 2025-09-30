@@ -1810,6 +1810,446 @@ body {
     background: linear-gradient(180deg, #f59e0b, #d97706);
 }
 
+/* Modais das Semanas */
+.frz-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+}
+
+.frz-modal-content {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalAppear 0.3s ease-out;
+}
+
+.frz-modal-content-wide {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    width: 95%;
+    max-width: 1100px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+.frz-modal-header {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.frz-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.frz-modal-close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.frz-modal-close:hover {
+    color: #fbbf24;
+}
+
+.frz-modal-body {
+    padding: 25px;
+}
+
+.frz-modal-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.frz-modal-card {
+    background: linear-gradient(135deg, #fff, #f8fafc);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.frz-modal-titulo {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.frz-modal-valor {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.frz-modal-meta {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.frz-modal-perf {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    color: white;
+}
+
+.frz-modal-section {
+    margin-bottom: 25px;
+}
+
+.frz-modal-section h4 {
+    font-size: 14px;
+    color: #1e293b;
+    margin-bottom: 15px;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.frz-modal-clientes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.frz-modal-cliente {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.frz-cliente-nome {
+    font-size: 12px;
+    color: #1e293b;
+    font-weight: 600;
+    flex: 1;
+}
+
+.frz-cliente-valores {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.frz-cliente-real {
+    font-size: 11px;
+    color: #059669;
+    font-weight: 700;
+}
+
+.frz-cliente-perf {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.frz-modal-analise {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.frz-analise-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #3b82f6;
+}
+
+.frz-analise-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.frz-analise-valor {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.frz-analise-valor.status-positivo {
+    color: #059669;
+}
+
+.frz-analise-valor.status-negativo {
+    color: #dc2626;
+}
+
+.frz-analise-valor.status-zero {
+    color: #f59e0b;
+}
+
+.frz-sem-dados {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Tabela de Planejamento FRZ */
+.frz-planejamento-header {
+    margin-bottom: 25px;
+}
+
+.frz-plan-resumo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.frz-plan-card {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.frz-plan-card.status-positivo {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+.frz-plan-card.status-negativo {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.frz-plan-titulo {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+}
+
+.frz-plan-valor {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.frz-planejamento-table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.frz-table-header {
+    background: linear-gradient(135deg, #374151, #1f2937);
+    color: white;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 0.8fr;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.frz-table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 0.8fr;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s;
+}
+
+.frz-table-row:hover {
+    background-color: #f8fafc;
+}
+
+.frz-table-row.total {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+    font-weight: 700;
+}
+
+.frz-table-row.despesas {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    font-weight: 700;
+}
+
+.frz-table-row.resultado-final {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.frz-table-cell {
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+}
+
+.frz-table-cell.header {
+    padding: 15px;
+    justify-content: center;
+}
+
+.frz-table-cell.cliente {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.frz-table-cell.projetado {
+    justify-content: center;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.frz-table-cell.realizado {
+    justify-content: center;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.frz-table-cell.realizado.resultado-positivo {
+    color: #059669;
+}
+
+.frz-table-cell.realizado.resultado-negativo {
+    color: #dc2626;
+}
+
+.frz-table-cell.status {
+    justify-content: center;
+}
+
+.frz-status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.frz-status-badge.sucesso {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.frz-status-badge.medio {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.frz-status-badge.baixo {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.frz-status-badge.status-positivo {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.frz-status-badge.status-negativo {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.frz-status-badge.status-zero {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Responsividade do Modal */
+@media (max-width: 768px) {
+    .frz-modal-resumo {
+        grid-template-columns: 1fr;
+    }
+    
+    .frz-modal-clientes {
+        grid-template-columns: 1fr;
+    }
+    
+    .frz-modal-analise {
+        grid-template-columns: 1fr;
+    }
+    
+    .frz-plan-resumo {
+        grid-template-columns: 1fr;
+    }
+    
+    .frz-table-header,
+    .frz-table-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .frz-table-cell {
+        justify-content: flex-start;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .frz-table-cell.header {
+        display: none;
+    }
+    
+    .frz-table-cell:before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 10px;
+        min-width: 100px;
+    }
+}
+
 /* Seção Complementar */
 .frz-secao-complementar {
     margin-top: 30px;
