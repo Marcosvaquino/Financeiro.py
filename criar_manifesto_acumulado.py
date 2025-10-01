@@ -67,6 +67,8 @@ def integrar_dados_manifesto(ws_out):
     col_cliente_real = header_map.get('Cliente_Real')
     col_frete_final = header_map.get('Frete Final')
     col_custo_frota_fixa = header_map.get('Custo Frota Fixa')
+    col_despesas_gerais = header_map.get('Despesas Gerais')
+    col_vale_frete = header_map.get('Vale frete', 11)
     
     # Se as colunas não existem, não podemos preencher
     if not all([col_status_veiculo, col_tipologia, col_cliente_real]):
@@ -150,6 +152,23 @@ def integrar_dados_manifesto(ws_out):
                 # SPOT ou dados inválidos = vazio
                 ws_out.cell(row, col_custo_frota_fixa, '')
         
+        # === NOVA FUNCIONALIDADE: Calcular Despesas Gerais ===
+        # Despesas Gerais = Vale frete (Col 11) + Custo Frota Fixa (Col 28/29)
+        if col_despesas_gerais:
+            try:
+                vale_frete = ws_out.cell(row, col_vale_frete).value or 0
+                custo_frota_fixa = ws_out.cell(row, col_custo_frota_fixa).value or 0
+                
+                # Converter para float se necessário
+                vale_frete_num = float(vale_frete) if vale_frete != '' else 0
+                custo_frota_fixa_num = float(custo_frota_fixa) if custo_frota_fixa != '' else 0
+                
+                despesas_total = vale_frete_num + custo_frota_fixa_num
+                ws_out.cell(row, col_despesas_gerais, despesas_total)
+                
+            except (ValueError, TypeError):
+                ws_out.cell(row, col_despesas_gerais, 0)
+        
         linhas_processadas += 1
         
         # Progress feedback
@@ -176,7 +195,7 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
         'Manifesto', 'Filial', 'Data', 'Veículo', 'Destino', 'Serviços', 'NFs', 'Kg Real', 'Kg Taxado', 'M3',
         'Vale frete', 'Valor NF', 'Valor Fretes', 'valor final', 'Capacidade Veículo', '% Aprov. Veículo',
         'Km saída', 'Km chegada', 'Km final', 'Valor Frete', 'Classificação', 'Observaçoes operacionais',
-        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real', 'Custo Frota Fixa'
+        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real', 'Custo Frota Fixa', 'Despesas Gerais'
     ]
 
     # Usaremos FIXED_HEADERS como full_headers de saída (mantendo a normalização interna)
