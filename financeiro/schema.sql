@@ -40,6 +40,19 @@ CREATE TABLE IF NOT EXISTS veiculos_suporte (
     ativo BOOLEAN DEFAULT TRUE
 );
 
+-- Tabela para custos da frota (baseada na imagem fornecida)
+CREATE TABLE IF NOT EXISTS custo_frota (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo_veiculo TEXT NOT NULL,
+    custo_fixo REAL NOT NULL,
+    custo_variavel REAL NOT NULL,
+    km INTEGER NOT NULL,
+    dias INTEGER NOT NULL,
+    custo_mensal REAL NOT NULL,
+    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
 CREATE TABLE IF NOT EXISTS contas_pagar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cnpj_filial TEXT,

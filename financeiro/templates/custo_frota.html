@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}Custo Frota - Frete{% endblock %}
+
+{% block content %}
+<style>
+/* Estilos específicos para a página de custo frota */
+.custo-form-input {
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.custo-form-input:focus {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+    outline: none;
+}
+
+.custo-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.custo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+}
+
+.custo-btn-primary {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.custo-btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.status-ativo {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.status-inativo {
+    background: #94a3b8;
+}
+
+/* Estilos para tabela */
+.uploads-table-wrapper {
+    overflow-x: auto;
+    background: white;
+}
+
+.uploads-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.uploads-table th {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 13px;
+}
+
+.uploads-table td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.uploads-table tr:hover {
+    background: #fffbeb;
+}
+
+.valor-cell {
+    text-align: right;
+    font-weight: 600;
+    color: #059669;
+}
+
+.tipo-veiculo-cell {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .uploads-table {
+        font-size: 11px;
+    }
+    
+    .uploads-table th, .uploads-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
+</style>
+
+<div class="import-cards">
+    <!-- Cabeçalho com título e breadcrumb -->
+    <div class="card">
+        <div class="card-header">
+            <h2 style="margin:0; color:#1e293b;">🚛 Custo da Frota</h2>
+        </div>
+        <div style="padding: 0 30px 20px 30px;">
+            <nav aria-label="breadcrumb">
+                <ol style="margin:0; padding:0; list-style:none; display:flex; gap:8px; font-size:14px; color:#64748b;">
+                    <li><a href="{{ url_for('suporte.index') }}" style="color:#f59e0b; text-decoration:none;">Frete</a></li>
+                    <li>›</li>
+                    <li style="color:#64748b;">Custo Frota</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Formulário de Adição -->
+    <div class="card card-primary">
+        <h3 style="margin-top:0; color:#1e293b;">➕ Adicionar Novo Custo</h3>
+        <form method="POST" action="{{ url_for('custo_frota.add_custo') }}">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Tipo Veículo *</label>
+                    <input type="text" class="custo-form-input" name="tipo_veiculo" required 
+                           placeholder="Ex: VUC, TOCO, TRUCK" style="text-transform:uppercase;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Fixo *</label>
+                    <input type="text" class="custo-form-input" name="custo_fixo" required 
+                           placeholder="0,00" pattern="[0-9]+([,\.][0-9]+)?">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Variável *</label>
+                    <input type="text" class="custo-form-input" name="custo_variavel" required 
+                           placeholder="0,00" pattern="[0-9]+([,\.][0-9]+)?">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">KM *</label>
+                    <input type="number" class="custo-form-input" name="km" required 
+                           placeholder="4000" min="0">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Dias *</label>
+                    <input type="number" class="custo-form-input" name="dias" required 
+                           placeholder="30" min="1" max="31">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Mensal *</label>
+                    <input type="text" class="custo-form-input" name="custo_mensal" required 
+                           placeholder="0,00" pattern="[0-9]+([,\.][0-9]+)?">
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <button type="submit" class="custo-btn custo-btn-primary">
+                    💾 Adicionar Custo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Custos -->
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin:0; color:#1e293b;">📋 Custos Cadastrados</h3>
+        </div>
+        
+        {% if custos and custos|length > 0 %}
+        <div class="uploads-table-wrapper">
+            <table class="uploads-table">
+                <thead>
+                    <tr>
+                        <th style="width:120px;">Tipo Veículo</th>
+                        <th style="width:100px;">Custo Fixo</th>
+                        <th style="width:100px;">Custo Variável</th>
+                        <th style="width:80px;">KM</th>
+                        <th style="width:60px;">Dias</th>
+                        <th style="width:120px;">Custo Mensal</th>
+                        <th style="width:80px;">Status</th>
+                        <th style="width:120px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for custo in custos %}
+                    <tr>
+                        <td class="tipo-veiculo-cell">{{ custo.tipo_veiculo }}</td>
+                        <td class="valor-cell">R$ {{ "%.2f"|format(custo.custo_fixo)|replace('.', ',') }}</td>
+                        <td class="valor-cell">R$ {{ "%.2f"|format(custo.custo_variavel)|replace('.', ',') }}</td>
+                        <td style="text-align:center; font-weight:500;">{{ custo.km }}</td>
+                        <td style="text-align:center; font-weight:500;">{{ custo.dias }}</td>
+                        <td class="valor-cell">R$ {{ "%.2f"|format(custo.custo_mensal)|replace('.', ',') }}</td>
+                        <td style="text-align:center;">
+                            {% if custo.ativo %}
+                            <span class="status-badge status-ativo">✅ Ativo</span>
+                            {% else %}
+                            <span class="status-badge status-inativo">❌ Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align:center;">
+                            <button type="button" onclick="openEditModal({{ custo.id }})" 
+                                    class="custo-btn custo-btn-primary custo-btn-small" style="margin-right:4px;">
+                                ✏️ Editar
+                            </button>
+                            <button type="button" onclick="confirmDelete({{ custo.id }}, '{{ custo.tipo_veiculo }}')" 
+                                    class="custo-btn custo-btn-small" style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white;">
+                                🗑️ Excluir
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% else %}
+        <div style="text-align:center; padding:40px; color:#94a3b8;">
+            <div style="font-size:48px; margin-bottom:16px;">🚛</div>
+            <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Nenhum custo cadastrado</div>
+            <div style="font-size:14px;">Adicione o primeiro custo usando o formulário acima</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Modal de Edição -->
+    <div style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;" id="editModal">
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:white; border-radius:16px; padding:30px; width:600px; max-width:90vw; box-shadow:0 25px 50px rgba(0,0,0,0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h3 style="margin:0; color:#1e293b;">✏️ Editar Custo</h3>
+                <button onclick="closeEditModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8;">&times;</button>
+            </div>
+            
+            <form method="POST" id="editForm">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Tipo Veículo</label>
+                        <input type="text" id="edit_tipo_veiculo" name="tipo_veiculo" required class="custo-form-input" style="text-transform:uppercase;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Fixo</label>
+                        <input type="text" id="edit_custo_fixo" name="custo_fixo" required class="custo-form-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Variável</label>
+                        <input type="text" id="edit_custo_variavel" name="custo_variavel" required class="custo-form-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">KM</label>
+                        <input type="number" id="edit_km" name="km" required class="custo-form-input" min="0">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Dias</label>
+                        <input type="number" id="edit_dias" name="dias" required class="custo-form-input" min="1" max="31">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Custo Mensal</label>
+                        <input type="text" id="edit_custo_mensal" name="custo_mensal" required class="custo-form-input">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:24px;">
+                    <label style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="edit_ativo" name="ativo" style="margin-right:8px; width:16px; height:16px;">
+                        <span style="font-weight:600; color:#374151;">Custo Ativo</span>
+                    </label>
+                </div>
+                
+                <div style="display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" onclick="closeEditModal()" class="custo-btn" style="border:2px solid #e5e7eb; background:white; color:#374151;">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="custo-btn custo-btn-primary">
+                        💾 Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funções para o modal de edição
+function openEditModal(custoId) {
+    fetch(`{{ url_for('custo_frota.get_custo', custo_id=0) }}`.replace('0', custoId))
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Erro ao carregar dados: ' + data.error);
+                return;
+            }
+            
+            // Preencher o formulário
+            document.getElementById('edit_tipo_veiculo').value = data.tipo_veiculo;
+            document.getElementById('edit_custo_fixo').value = data.custo_fixo.toString().replace('.', ',');
+            document.getElementById('edit_custo_variavel').value = data.custo_variavel.toString().replace('.', ',');
+            document.getElementById('edit_km').value = data.km;
+            document.getElementById('edit_dias').value = data.dias;
+            document.getElementById('edit_custo_mensal').value = data.custo_mensal.toString().replace('.', ',');
+            document.getElementById('edit_ativo').checked = data.ativo;
+            
+            // Configurar action do form
+            document.getElementById('editForm').action = `{{ url_for('custo_frota.edit_custo', custo_id=0) }}`.replace('0', custoId);
+            
+            // Mostrar modal
+            document.getElementById('editModal').style.display = 'block';
+        })
+        .catch(error => {
+            alert('Erro ao carregar dados: ' + error);
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function confirmDelete(custoId, tipoVeiculo) {
+    if (confirm(`Tem certeza que deseja excluir o custo para ${tipoVeiculo}?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `{{ url_for('custo_frota.delete_custo', custo_id=0) }}`.replace('0', custoId);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Fechar modal clicando fora dele
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+// Formatação automática de valores monetários
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[name="custo_fixo"], input[name="custo_variavel"], input[name="custo_mensal"]');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Permitir apenas números, vírgula e ponto
+            this.value = this.value.replace(/[^0-9,\.]/g, '');
+        });
+    });
+    
+    // Converter para maiúsculo nos campos de tipo veículo
+    const tipoInputs = document.querySelectorAll('input[name="tipo_veiculo"]');
+    tipoInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    });
+});
+</script>
+{% endblock %}
