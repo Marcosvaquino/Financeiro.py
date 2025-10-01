@@ -177,3 +177,65 @@ def get_custo(custo_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+# === HELPER FUNCTIONS PARA INTEGRAÇÃO ===
+
+class CustoFrotaHelper:
+    """Helper para buscar custos de frota por tipologia"""
+    
+    @staticmethod
+    def buscar_custo_por_tipologia(tipologia):
+        """
+        Busca custo fixo e variável por tipologia
+        Retorna: {'custo_fixo': float, 'custo_variavel': float, 'encontrado': bool}
+        """
+        if not tipologia or tipologia.strip() == '':
+            return {'custo_fixo': 0.0, 'custo_variavel': 0.0, 'encontrado': False}
+        
+        tipologia_norm = str(tipologia).upper().strip()
+        
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT custo_fixo, custo_variavel 
+                FROM custo_frota 
+                WHERE UPPER(tipo_veiculo) = ? AND ativo = 1
+                LIMIT 1
+            ''', (tipologia_norm,))
+            
+            resultado = cursor.fetchone()
+            if resultado:
+                return {
+                    'custo_fixo': float(resultado['custo_fixo']),
+                    'custo_variavel': float(resultado['custo_variavel']),
+                    'encontrado': True
+                }
+            else:
+                return {'custo_fixo': 0.0, 'custo_variavel': 0.0, 'encontrado': False}
+        except Exception as e:
+            print(f"Erro ao buscar custo por tipologia {tipologia}: {e}")
+            return {'custo_fixo': 0.0, 'custo_variavel': 0.0, 'encontrado': False}
+        finally:
+            conn.close()
+    
+    @staticmethod
+    def calcular_custo_frota_fixa(tipologia, km):
+        """
+        Calcula custo frota fixa: custo_fixo + (km * custo_variavel)
+        Retorna: float
+        """
+        if not tipologia or not km:
+            return 0.0
+        
+        try:
+            km_float = float(km)
+        except (ValueError, TypeError):
+            return 0.0
+        
+        custos = CustoFrotaHelper.buscar_custo_por_tipologia(tipologia)
+        if not custos['encontrado']:
+            return 0.0
+        
+        custo_total = custos['custo_fixo'] + (km_float * custos['custo_variavel'])
+        return round(custo_total, 2)

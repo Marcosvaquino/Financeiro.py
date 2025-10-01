@@ -5,6 +5,7 @@ sys.path.insert(0, root)
 import openpyxl
 from financeiro.veiculo_helper import VeiculoHelper
 from financeiro.cliente_helper import ClienteHelper
+from financeiro.custo_frota import CustoFrotaHelper
 
 arquivo = os.path.join(root, 'financeiro', 'uploads', 'manifestos', 'Manifesto_Frete_09-25.xlsx')
 print('🚛 INTEGRAÇÃO CORRETA - Usando Coluna D (Veículo) e Coluna S (Classificação)')
@@ -78,6 +79,32 @@ for row in range(2, ws.max_row + 1):
     else:
         ws.cell(row, 25, '0')
     
+    # NOVA COLUNA: Custo Frota Fixa (Col 26) - só para veículos FIXOS
+    status_veiculo = ws.cell(row, 23).value  # Status já calculado acima
+    if status_veiculo == 'FIXO':
+        tipologia = ws.cell(row, 24).value  # Tipologia já calculada acima
+        km_saida = ws.cell(row, 6).value  # Coluna F = Km saida
+        km_chegada = ws.cell(row, 7).value  # Coluna G = Km chegada
+        
+        # Calcular KM da viagem
+        km_viagem = 0
+        try:
+            if km_saida and km_chegada:
+                km_viagem = abs(float(km_chegada) - float(km_saida))
+        except (ValueError, TypeError):
+            # Se não conseguir calcular KM, usar 0
+            km_viagem = 0
+        
+        # Calcular custo frota fixa
+        if tipologia and tipologia != '0':
+            custo_calculado = CustoFrotaHelper.calcular_custo_frota_fixa(tipologia, km_viagem)
+            ws.cell(row, 26, custo_calculado)  # Custo Frota Fixa
+        else:
+            ws.cell(row, 26, 0)
+    else:
+        # Não é FIXO, deixar vazio
+        ws.cell(row, 26, '')
+    
     linhas_processadas += 1
     
     if linhas_processadas % 200 == 0:
@@ -93,4 +120,5 @@ print(f'📊 {linhas_processadas} linhas integradas')
 print(f'🚚 Status_Veiculo (Col 23): baseado na Coluna D (Veículo)')
 print(f'🔧 Tipologia (Col 24): baseado na Coluna D (Veículo)')
 print(f'👥 Cliente_Real (Col 25): baseado na Coluna S (Classificação)')
+print(f'💰 Custo Frota Fixa (Col 26): calculado para veículos FIXOS usando Tipologia e KM')
 print(f'✅ {len(dados_veiculos)} placas processadas, {len(dados_clientes)} clientes processados')

@@ -14,6 +14,7 @@ from collections import Counter
 try:
     from .veiculo_helper import VeiculoHelper
     from .cliente_helper import ClienteHelper
+    from .custo_frota import CustoFrotaHelper
 except ImportError:
     # Fallback para quando executar standalone
     import sys
@@ -21,10 +22,12 @@ except ImportError:
     try:
         from financeiro.veiculo_helper import VeiculoHelper
         from financeiro.cliente_helper import ClienteHelper
+        from financeiro.custo_frota import CustoFrotaHelper
     except ImportError:
         print("⚠️ Módulos de integração não encontrados. Modo básico ativado.")
         VeiculoHelper = None
         ClienteHelper = None
+        CustoFrotaHelper = None
 
 def tentar_converter_numero_brasileiro(texto):
     """
@@ -548,6 +551,33 @@ def integrar_manifesto_completo(dados_excel):
                 'cliente_nome_real': None,
                 'cliente_encontrado': False
             })
+        
+        # NOVA FUNCIONALIDADE: Custo Frota Fixa (só para veículos FIXOS)
+        custo_frota_fixa = 0.0
+        if (item_enriquecido.get('veiculo_status') == 'FIXO' and 
+            item_enriquecido.get('veiculo_tipologia') and 
+            CustoFrotaHelper):
+            
+            # Buscar KM da viagem
+            km_viagem = 0
+            for col_km in ['km', 'km_saida', 'km_chegada', 'distancia']:
+                if col_km in item and item[col_km]:
+                    try:
+                        km_viagem = float(item[col_km])
+                        break
+                    except (ValueError, TypeError):
+                        continue
+            
+            # Calcular custo se tiver tipologia e KM
+            if km_viagem > 0:
+                custo_frota_fixa = CustoFrotaHelper.calcular_custo_frota_fixa(
+                    item_enriquecido.get('veiculo_tipologia'), 
+                    km_viagem
+                )
+        
+        item_enriquecido.update({
+            'custo_frota_fixa': custo_frota_fixa
+        })
         
         dados_enriquecidos.append(item_enriquecido)
     
