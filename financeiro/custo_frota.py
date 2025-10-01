@@ -24,15 +24,37 @@ def index():
     conn.close()
     return render_template('custo_frota.html', custos=custos)
 
+def converter_moeda_br_para_float(valor_str):
+    """Converte string em formato brasileiro (1.234,56) para float"""
+    if not valor_str:
+        return 0.0
+    # Remove pontos de milhares e troca vírgula por ponto
+    valor_limpo = valor_str.replace('.', '').replace(',', '.')
+    try:
+        return float(valor_limpo)
+    except ValueError:
+        return 0.0
+
+def converter_numero_br_para_int(valor_str):
+    """Converte string em formato brasileiro (1.234) para int"""
+    if not valor_str:
+        return 0
+    # Remove pontos de milhares
+    valor_limpo = valor_str.replace('.', '')
+    try:
+        return int(valor_limpo)
+    except ValueError:
+        return 0
+
 @bp.route('/add', methods=['POST'])
 def add_custo():
     """Adiciona um novo custo de frota"""
     tipo_veiculo = request.form.get('tipo_veiculo', '').strip().upper()
-    custo_fixo = request.form.get('custo_fixo', '').replace(',', '.')
-    custo_variavel = request.form.get('custo_variavel', '').replace(',', '.')
-    km = request.form.get('km', '')
-    dias = request.form.get('dias', '')
-    custo_mensal = request.form.get('custo_mensal', '').replace(',', '.')
+    custo_fixo_str = request.form.get('custo_fixo', '').strip()
+    custo_variavel_str = request.form.get('custo_variavel', '').strip()
+    km_str = request.form.get('km', '').strip()
+    dias_str = request.form.get('dias', '').strip()
+    custo_mensal_str = request.form.get('custo_mensal', '').strip()
     
     # Validações básicas
     if not tipo_veiculo:
@@ -40,11 +62,11 @@ def add_custo():
         return redirect(url_for('custo_frota.index'))
     
     try:
-        custo_fixo = float(custo_fixo) if custo_fixo else 0.0
-        custo_variavel = float(custo_variavel) if custo_variavel else 0.0
-        km = int(km) if km else 0
-        dias = int(dias) if dias else 0
-        custo_mensal = float(custo_mensal) if custo_mensal else 0.0
+        custo_fixo = converter_moeda_br_para_float(custo_fixo_str)
+        custo_variavel = converter_moeda_br_para_float(custo_variavel_str)
+        km = converter_numero_br_para_int(km_str)
+        dias = int(dias_str) if dias_str else 0
+        custo_mensal = converter_moeda_br_para_float(custo_mensal_str)
     except ValueError:
         flash('Valores numéricos inválidos', 'error')
         return redirect(url_for('custo_frota.index'))
@@ -70,11 +92,11 @@ def add_custo():
 def edit_custo(custo_id):
     """Edita um custo existente"""
     tipo_veiculo = request.form.get('tipo_veiculo', '').strip().upper()
-    custo_fixo = request.form.get('custo_fixo', '').replace(',', '.')
-    custo_variavel = request.form.get('custo_variavel', '').replace(',', '.')
-    km = request.form.get('km', '')
-    dias = request.form.get('dias', '')
-    custo_mensal = request.form.get('custo_mensal', '').replace(',', '.')
+    custo_fixo_str = request.form.get('custo_fixo', '').strip()
+    custo_variavel_str = request.form.get('custo_variavel', '').strip()
+    km_str = request.form.get('km', '').strip()
+    dias_str = request.form.get('dias', '').strip()
+    custo_mensal_str = request.form.get('custo_mensal', '').strip()
     ativo = request.form.get('ativo') == 'on'
     
     if not tipo_veiculo:
@@ -82,11 +104,11 @@ def edit_custo(custo_id):
         return redirect(url_for('custo_frota.index'))
     
     try:
-        custo_fixo = float(custo_fixo) if custo_fixo else 0.0
-        custo_variavel = float(custo_variavel) if custo_variavel else 0.0
-        km = int(km) if km else 0
-        dias = int(dias) if dias else 0
-        custo_mensal = float(custo_mensal) if custo_mensal else 0.0
+        custo_fixo = converter_moeda_br_para_float(custo_fixo_str)
+        custo_variavel = converter_moeda_br_para_float(custo_variavel_str)
+        km = converter_numero_br_para_int(km_str)
+        dias = int(dias_str) if dias_str else 0
+        custo_mensal = converter_moeda_br_para_float(custo_mensal_str)
     except ValueError:
         flash('Valores numéricos inválidos', 'error')
         return redirect(url_for('custo_frota.index'))
