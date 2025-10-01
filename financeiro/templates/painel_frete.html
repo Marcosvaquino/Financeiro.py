@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Frete - Dashboard{% endblock %}
+
+{% block content %}
+<style>
+/* Reset e configuração para viewport sem scroll */
+* {
+    box-sizing: border-box;
+}
+
+.dashboard-container {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #2d3436;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Barra de filtros no topo */
+.filtros-container {
+    height: 60px;
+    background: #636e72;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+    border-bottom: 1px solid #74b9ff;
+    flex-shrink: 0;
+}
+
+.filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.filtro-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ddd;
+    text-transform: uppercase;
+}
+
+.filtro-select {
+    background: #2d3436;
+    color: white;
+    border: 1px solid #74b9ff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    min-width: 80px;
+}
+
+.filtro-select option {
+    background: #2d3436;
+    color: white;
+}
+
+/* Container principal dos gráficos */
+.dashboard-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    padding: 10px;
+    min-height: 0;
+}
+
+/* Gráfico de frete diário (superior esquerda) */
+.grafico-diario {
+    background: #636e72;
+    border-radius: 8px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.grafico-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.chart-container {
+    height: calc(100% - 40px);
+    position: relative;
+}
+
+/* Métricas e gráfico de clientes (superior direita) */
+.metricas-clientes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.metricas-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    height: 120px;
+}
+
+.metrica-card {
+    background: #2d3436;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #74b9ff;
+}
+
+.metrica-card.receber {
+    border-color: #ff7675;
+    background: linear-gradient(135deg, #ff7675 0%, #fd79a8 100%);
+}
+
+.metrica-card.pagar {
+    border-color: #74b9ff;
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.metrica-card.diferenca {
+    border-color: #00b894;
+    background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+}
+
+.metrica-card.produtividade {
+    border-color: #fdcb6e;
+    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+}
+
+.metrica-label {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    opacity: 0.9;
+}
+
+.metrica-valor {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.clientes-chart {
+    background: #636e72;
+    border-radius: 8px;
+    padding: 15px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Gráfico mensal (inferior, span de 2 colunas) */
+.grafico-mensal {
+    background: #636e72;
+    border-radius: 8px;
+    padding: 15px;
+    grid-column: 1 / -1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 1200px) {
+    .dashboard-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .grafico-mensal {
+        grid-column: 1;
+    }
+    
+    .metricas-cards {
+        grid-template-columns: repeat(4, 1fr);
+        height: 80px;
+    }
+    
+    .metrica-valor {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .filtros-container {
+        height: auto;
+        padding: 10px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .metricas-cards {
+        grid-template-columns: 1fr 1fr;
+        height: 120px;
+    }
+    
+    .filtro-select {
+        min-width: 60px;
+        font-size: 10px;
+    }
+}
+
+/* Loader placeholder para gráficos */
+.chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #ddd;
+    font-size: 14px;
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+</style>
+
+<div class="dashboard-container">
+    <!-- Barra de Filtros -->
+    <div class="filtros-container">
+        <div class="filtro-grupo">
+            <div class="filtro-label">Perfil</div>
+            <select class="filtro-select" id="filtro-perfil">
+                <option value="agregado" selected>AGREGADO</option>
+                <option value="fixo">FIXO</option>
+                <option value="frz_log">FRZ Log</option>
+            </select>
+        </div>
+        
+        <div class="filtro-grupo">
+            <div class="filtro-label">Clientes</div>
+            <select class="filtro-select" id="filtro-clientes" multiple style="min-width: 120px;">
+                <option value="adoro" selected>ADORO</option>
+                <option value="gold_pao" selected>GOLD PAO</option>
+                <option value="marfrig" selected>Marfrig (BRF)</option>
+                <option value="meggs" selected>MEGGS</option>
+                <option value="friboi">Friboi</option>
+                <option value="minerva">MINERVA</option>
+            </select>
+        </div>
+        
+        <div class="filtro-grupo">
+            <div class="filtro-label">Veículo</div>
+            <select class="filtro-select" id="filtro-veiculo" multiple style="min-width: 150px;">
+                <option value="AMX0E01" selected>AMX0E01</option>
+                <option value="ARS5C20" selected>ARS5C20</option>
+                <option value="ASN5A61" selected>ASN5A61</option>
+                <option value="AXY1B96">AXY1B96</option>
+                <option value="AXY1E60">AXY1E60</option>
+                <option value="AZF5J28">AZF5J28</option>
+            </select>
+        </div>
+        
+        <div class="filtro-grupo">
+            <div class="filtro-label">Mês</div>
+            <select class="filtro-select" id="filtro-mes">
+                <option value="jan">JAN</option>
+                <option value="fev">FEV</option>
+                <option value="mar">MAR</option>
+                <option value="abr" selected>ABR</option>
+                <option value="mai">MAI</option>
+                <option value="jun">JUN</option>
+                <option value="jul">JUL</option>
+                <option value="ago">AGO</option>
+                <option value="set">SET</option>
+            </select>
+        </div>
+        
+        <div class="filtro-grupo">
+            <div class="filtro-label">Ano</div>
+            <select class="filtro-select" id="filtro-ano">
+                <option value="2024" selected>2024</option>
+                <option value="2025">2025</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div class="dashboard-main">
+        <!-- Gráfico Frete Diário -->
+        <div class="grafico-diario">
+            <div class="grafico-title">Frete Diário</div>
+            <div class="chart-container">
+                <div class="chart-placeholder loading">
+                    📊 Carregando gráfico diário...
+                </div>
+                <canvas id="chartFreteDialio" style="display: none;"></canvas>
+            </div>
+        </div>
+
+        <!-- Métricas + Clientes -->
+        <div class="metricas-clientes">
+            <!-- Cards de Métricas -->
+            <div class="metricas-cards">
+                <div class="metrica-card receber">
+                    <div class="metrica-label">Frete Receber</div>
+                    <div class="metrica-valor">R$ {{ dados.metricas.frete_receber|currency }}</div>
+                </div>
+                <div class="metrica-card pagar">
+                    <div class="metrica-label">Frete Pagar</div>
+                    <div class="metrica-valor">R$ {{ dados.metricas.frete_pagar|currency }}</div>
+                </div>
+                <div class="metrica-card diferenca">
+                    <div class="metrica-label">Diferença</div>
+                    <div class="metrica-valor">R$ {{ dados.metricas.diferenca|currency }}</div>
+                </div>
+                <div class="metrica-card produtividade">
+                    <div class="metrica-label">Produtividade</div>
+                    <div class="metrica-valor">{{ "%.2f"|format(dados.metricas.produtividade) }}%</div>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Clientes -->
+            <div class="clientes-chart">
+                <div class="grafico-title">Participação por Cliente</div>
+                <div class="chart-container">
+                    <div class="chart-placeholder loading">
+                        📊 Carregando participação...
+                    </div>
+                    <canvas id="chartClientes" style="display: none;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico Frete Mensal -->
+        <div class="grafico-mensal">
+            <div class="grafico-title">Frete Mensal</div>
+            <div class="chart-container">
+                <div class="chart-placeholder loading">
+                    📊 Carregando gráfico mensal...
+                </div>
+                <canvas id="chartFreteMensal" style="display: none;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Dados do dashboard passados do backend
+const dashboardData = JSON.parse('{{ dados|tojson|safe }}');
+console.log('Dashboard Data:', dashboardData);
+
+// Configuração global do Chart.js
+Chart.defaults.color = '#ffffff';
+Chart.defaults.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+Chart.defaults.borderColor = 'rgba(116, 185, 255, 0.5)';
+
+// Função para criar gráfico de linha (Frete Diário)
+function criarGraficoDialio() {
+    const ctx = document.getElementById('chartFreteDialio').getContext('2d');
+    
+    const labels = dashboardData.frete_diario.map(d => d.dia);
+    const valores = dashboardData.frete_diario.map(d => d.frete_receber);
+    
+    chartDialio = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Frete Diário',
+                data: valores,
+                borderColor: '#74b9ff',
+                backgroundColor: 'rgba(116, 185, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Frete: R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + (value / 1000).toFixed(0) + 'k';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Função para criar gráfico de barras horizontais (Clientes) 
+function criarGraficoClientes() {
+    const ctx = document.getElementById('chartClientes').getContext('2d');
+    
+    const labels = dashboardData.clientes_participacao.map(d => d.nome);
+    const valores = dashboardData.clientes_participacao.map(d => d.percentual);
+    const cores = dashboardData.clientes_participacao.map(d => d.cor);
+    
+    chartClientes = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Participação %',
+                data: valores,
+                backgroundColor: cores,
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.x.toFixed(2) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 40,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Função para criar gráfico de barras (Frete Mensal)
+function criarGraficoMensal() {
+    const ctx = document.getElementById('chartFreteMensal').getContext('2d');
+    
+    const labels = dashboardData.frete_mensal.map(d => d.mes);
+    const valores = dashboardData.frete_mensal.map(d => d.frete_receber);
+    
+    chartMensal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Frete Mensal',
+                data: valores,
+                backgroundColor: 'rgba(116, 185, 255, 0.8)',
+                borderColor: '#74b9ff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Frete: R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Inicializar gráficos quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    // Ocultar placeholders e mostrar canvas
+    setTimeout(() => {
+        document.querySelectorAll('.chart-placeholder').forEach(placeholder => {
+            placeholder.style.display = 'none';
+        });
+        
+        document.querySelectorAll('canvas').forEach(canvas => {
+            canvas.style.display = 'block';
+        });
+        
+        // Criar gráficos
+        criarGraficoDialio();
+        criarGraficoClientes();
+        criarGraficoMensal();
+    }, 500);
+});
+
+// Event listeners para os filtros
+document.getElementById('filtro-perfil').addEventListener('change', function() {
+    console.log('Perfil alterado:', this.value);
+    atualizarDashboard();
+});
+
+document.getElementById('filtro-mes').addEventListener('change', function() {
+    console.log('Mês alterado:', this.value);
+    atualizarDashboard();
+});
+
+document.getElementById('filtro-ano').addEventListener('change', function() {
+    console.log('Ano alterado:', this.value);
+    atualizarDashboard();
+});
+
+// Variáveis globais para os gráficos
+let chartDialio, chartClientes, chartMensal;
+
+// Função para atualizar dashboard via AJAX
+function atualizarDashboard() {
+    const filtros = {
+        perfil: document.getElementById('filtro-perfil').value,
+        mes: document.getElementById('filtro-mes').value,
+        ano: document.getElementById('filtro-ano').value,
+        clientes: Array.from(document.getElementById('filtro-clientes').selectedOptions).map(opt => opt.value),
+        veiculos: Array.from(document.getElementById('filtro-veiculo').selectedOptions).map(opt => opt.value)
+    };
+    
+    console.log('Atualizando dashboard com filtros:', filtros);
+    
+    // Mostrar indicador de carregamento
+    document.querySelectorAll('.chart-container').forEach(container => {
+        container.style.opacity = '0.5';
+    });
+    
+    fetch('/painel_frete/api/dados', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filtros)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Dados atualizados recebidos:', data);
+        
+        // Atualizar métricas
+        atualizarMetricas(data.metricas);
+        
+        // Atualizar gráficos
+        atualizarGraficos(data);
+        
+        // Remover indicador de carregamento
+        document.querySelectorAll('.chart-container').forEach(container => {
+            container.style.opacity = '1';
+        });
+    })
+    .catch(error => {
+        console.error('Erro ao atualizar dashboard:', error);
+        document.querySelectorAll('.chart-container').forEach(container => {
+            container.style.opacity = '1';
+        });
+    });
+}
+
+// Função para atualizar métricas
+function atualizarMetricas(metricas) {
+    document.querySelector('.metrica-card.receber .metrica-valor').textContent = 
+        'R$ ' + metricas.frete_receber.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.querySelector('.metrica-card.pagar .metrica-valor').textContent = 
+        'R$ ' + metricas.frete_pagar.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.querySelector('.metrica-card.diferenca .metrica-valor').textContent = 
+        'R$ ' + metricas.diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.querySelector('.metrica-card.produtividade .metrica-valor').textContent = 
+        metricas.produtividade.toFixed(2) + '%';
+}
+
+// Função para atualizar gráficos
+function atualizarGraficos(data) {
+    // Atualizar gráfico diário
+    if (chartDialio) {
+        const labels = data.frete_diario.map(d => d.dia);
+        const valores = data.frete_diario.map(d => d.frete_receber);
+        
+        chartDialio.data.labels = labels;
+        chartDialio.data.datasets[0].data = valores;
+        chartDialio.update();
+    }
+    
+    // Atualizar gráfico de clientes
+    if (chartClientes) {
+        const labels = data.clientes_participacao.map(d => d.nome);
+        const valores = data.clientes_participacao.map(d => d.percentual);
+        const cores = data.clientes_participacao.map(d => d.cor);
+        
+        chartClientes.data.labels = labels;
+        chartClientes.data.datasets[0].data = valores;
+        chartClientes.data.datasets[0].backgroundColor = cores;
+        chartClientes.update();
+    }
+    
+    // Atualizar gráfico mensal
+    if (chartMensal) {
+        const labels = data.frete_mensal.map(d => d.mes);
+        const valores = data.frete_mensal.map(d => d.frete_receber);
+        
+        chartMensal.data.labels = labels;
+        chartMensal.data.datasets[0].data = valores;
+        chartMensal.update();
+    }
+}
+</script>
+{% endblock %}
