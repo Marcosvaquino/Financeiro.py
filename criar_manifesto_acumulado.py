@@ -176,7 +176,7 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
         'Manifesto', 'Filial', 'Data', 'Veículo', 'Destino', 'Serviços', 'NFs', 'Kg Real', 'Kg Taxado', 'M3',
         'Vale frete', 'Valor NF', 'Valor Fretes', 'valor final', 'Capacidade Veículo', '% Aprov. Veículo',
         'Km saída', 'Km chegada', 'Km final', 'Valor Frete', 'Classificação', 'Observaçoes operacionais',
-        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real', 'Frete Final', 'Custo Frota Fixa'
+        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real', 'Custo Frota Fixa'
     ]
 
     # Usaremos FIXED_HEADERS como full_headers de saída (mantendo a normalização interna)
