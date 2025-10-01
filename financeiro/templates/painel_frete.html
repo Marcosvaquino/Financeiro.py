@@ -79,6 +79,60 @@
     overflow: hidden;
 }
 
+.grafico-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.totais-mensais {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.total-card {
+    background: rgba(45, 52, 54, 0.8);
+    border-radius: 6px;
+    padding: 8px 12px;
+    text-align: center;
+    border: 1px solid;
+    min-width: 120px;
+}
+
+.total-card.frete-correto {
+    border-color: #00b894;
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.2), rgba(0, 160, 133, 0.2));
+}
+
+.total-card.despesas-gerais {
+    border-color: #e17055;
+    background: linear-gradient(135deg, rgba(225, 112, 85, 0.2), rgba(230, 126, 34, 0.2));
+}
+
+.total-card.diferenca-total {
+    border-color: #74b9ff;
+    background: linear-gradient(135deg, rgba(116, 185, 255, 0.2), rgba(9, 132, 227, 0.2));
+}
+
+.total-label {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.9;
+    color: white;
+}
+
+.total-valor {
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
 .grafico-title {
     font-size: 14px;
     font-weight: bold;
@@ -187,6 +241,22 @@
     .metrica-valor {
         font-size: 14px;
     }
+    
+    .grafico-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .totais-mensais {
+        justify-content: flex-start;
+        width: 100%;
+    }
+    
+    .total-card {
+        min-width: 100px;
+        font-size: 11px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -293,7 +363,24 @@
     <div class="dashboard-main">
         <!-- Gráfico Frete Diário -->
         <div class="grafico-diario">
-            <div class="grafico-title">Frete Diário</div>
+            <div class="grafico-header">
+                <div class="grafico-title">Frete Correto vs Despesas Gerais</div>
+                <!-- Totais Mensais -->
+                <div class="totais-mensais">
+                    <div class="total-card frete-correto">
+                        <div class="total-label">Frete Correto</div>
+                        <div class="total-valor" id="totalFreteCorreto">R$ 0,00</div>
+                    </div>
+                    <div class="total-card despesas-gerais">
+                        <div class="total-label">Despesas Gerais</div>
+                        <div class="total-valor" id="totalDespesasGerais">R$ 0,00</div>
+                    </div>
+                    <div class="total-card diferenca-total">
+                        <div class="total-label">Diferença</div>
+                        <div class="total-valor" id="totalDiferenca">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
             <div class="chart-container">
                 <div class="chart-placeholder loading">
                     📊 Carregando gráfico diário...
@@ -362,24 +449,40 @@ Chart.defaults.color = '#ffffff';
 Chart.defaults.backgroundColor = 'rgba(255, 255, 255, 0.1)';
 Chart.defaults.borderColor = 'rgba(116, 185, 255, 0.5)';
 
-// Função para criar gráfico de linha (Frete Diário)
+// Função para criar gráfico de linha (Frete Correto vs Despesas Gerais)
 function criarGraficoDialio() {
     const ctx = document.getElementById('chartFreteDialio').getContext('2d');
     
-    const labels = dashboardData.frete_diario.map(d => d.dia);
-    const valores = dashboardData.frete_diario.map(d => d.frete_receber);
+    // Verificar se dados_diarios existe no objeto
+    const dadosDiarios = dashboardData.frete_diario.dados_diarios || dashboardData.frete_diario;
+    const totaisMensais = dashboardData.frete_diario.totais_mensais || {};
+    
+    const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
+    const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
+    const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
+    
+    // Atualizar totais mensais na interface
+    atualizarTotaisMensais(totaisMensais);
     
     chartDialio = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Frete Diário',
-                data: valores,
-                borderColor: '#74b9ff',
-                backgroundColor: 'rgba(116, 185, 255, 0.1)',
+                label: 'Frete Correto',
+                data: freteCorreto,
+                borderColor: '#00b894',
+                backgroundColor: 'rgba(0, 184, 148, 0.1)',
                 borderWidth: 2,
-                fill: true,
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Despesas Gerais',
+                data: despesasGerais,
+                borderColor: '#e17055',
+                backgroundColor: 'rgba(225, 112, 85, 0.1)',
+                borderWidth: 2,
+                fill: false,
                 tension: 0.4
             }]
         },
@@ -388,12 +491,21 @@ function criarGraficoDialio() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#ffffff',
+                        font: {
+                            size: 12
+                        },
+                        usePointStyle: true,
+                        padding: 20
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return 'Frete: R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                            return context.dataset.label + ': R$ ' + context.parsed.y.toLocaleString('pt-BR', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
                             });
@@ -407,13 +519,17 @@ function criarGraficoDialio() {
                     ticks: {
                         callback: function(value) {
                             return 'R$ ' + (value / 1000).toFixed(0) + 'k';
-                        }
+                        },
+                        color: '#ffffff'
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
                     }
                 },
                 x: {
+                    ticks: {
+                        color: '#ffffff'
+                    },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
                     }
@@ -421,6 +537,22 @@ function criarGraficoDialio() {
             }
         }
     });
+}
+
+// Função para atualizar totais mensais
+function atualizarTotaisMensais(totais) {
+    const totalFreteCorreto = totais.frete_correto || 0;
+    const totalDespesasGerais = totais.despesas_gerais || 0;
+    const diferenca = totalFreteCorreto - totalDespesasGerais;
+    
+    document.getElementById('totalFreteCorreto').textContent = 
+        'R$ ' + totalFreteCorreto.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.getElementById('totalDespesasGerais').textContent = 
+        'R$ ' + totalDespesasGerais.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.getElementById('totalDiferenca').textContent = 
+        'R$ ' + diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
 // Função para criar gráfico de barras horizontais (Clientes) 
@@ -643,14 +775,22 @@ function atualizarMetricas(metricas) {
 
 // Função para atualizar gráficos
 function atualizarGraficos(data) {
-    // Atualizar gráfico diário
+    // Atualizar gráfico diário (Frete Correto vs Despesas Gerais)
     if (chartDialio) {
-        const labels = data.frete_diario.map(d => d.dia);
-        const valores = data.frete_diario.map(d => d.frete_receber);
+        const dadosDiarios = data.frete_diario.dados_diarios || data.frete_diario;
+        const totaisMensais = data.frete_diario.totais_mensais || {};
+        
+        const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
+        const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
+        const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
         
         chartDialio.data.labels = labels;
-        chartDialio.data.datasets[0].data = valores;
+        chartDialio.data.datasets[0].data = freteCorreto;
+        chartDialio.data.datasets[1].data = despesasGerais;
         chartDialio.update();
+        
+        // Atualizar totais mensais
+        atualizarTotaisMensais(totaisMensais);
     }
     
     // Atualizar gráfico de clientes

@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, request, jsonify
 import sqlite3
+import openpyxl
+import os
 from datetime import datetime, timedelta
+from collections import defaultdict
+from decimal import Decimal
 from .database import get_connection
 
 bp = Blueprint('painel_frete', __name__, url_prefix='/frete/painel')
@@ -10,6 +14,98 @@ def get_db_connection():
     conn = get_connection()
     conn.row_factory = sqlite3.Row
     return conn
+
+def extrair_dados_manifesto_real():
+    """Extrai dados reais do manifesto para gráfico Frete Correto vs Despesas Gerais"""
+    arquivo_manifesto = os.path.join('financeiro', 'uploads', 'Manifesto_Acumulado.xlsx')
+    
+    if not os.path.exists(arquivo_manifesto):
+        print(f"Arquivo não encontrado: {arquivo_manifesto}")
+        return None
+        
+    try:
+        wb = openpyxl.load_workbook(arquivo_manifesto, read_only=True)
+        ws = wb.active
+        
+        # Headers esperados
+        # Col 30: Frete Correto, Col 29: Despesas Gerais, Col 3: Data
+        dados_por_dia = defaultdict(lambda: {'frete_correto': 0, 'despesas_gerais': 0})
+        totais_mensais = {'frete_correto': 0, 'despesas_gerais': 0}
+        
+        linha_inicial = 2  # Pula header
+        for row in ws.iter_rows(min_row=linha_inicial, values_only=True):
+            if not row or len(row) < 30:
+                continue
+                
+            try:
+                # Extrair data (Col 3) - formato datetime ou string
+                data_obj = row[2] if row[2] else None
+                if not data_obj:
+                    continue
+                    
+                # Parse da data
+                if hasattr(data_obj, 'day'):  # É datetime
+                    dia = data_obj.day
+                    mes = data_obj.month
+                elif "/" in str(data_obj):  # String formato dd/mm/yyyy
+                    partes = str(data_obj).split("/")
+                    if len(partes) >= 2:
+                        dia = int(partes[0])
+                        mes = int(partes[1])
+                    else:
+                        continue
+                elif "-" in str(data_obj):  # String formato yyyy-mm-dd
+                    partes = str(data_obj).split("-")
+                    if len(partes) >= 3:
+                        dia = int(partes[2].split()[0])  # Remove time se houver
+                        mes = int(partes[1])
+                    else:
+                        continue
+                else:
+                    continue
+                
+                # Extrair valores - Col 30: Frete Correto, Col 29: Despesas Gerais
+                def safe_float(valor):
+                    if valor is None or valor == '':
+                        return 0.0
+                    try:
+                        return float(valor)
+                    except (ValueError, TypeError):
+                        return 0.0
+                
+                frete_correto = safe_float(row[29])  # Col 30 (index 29)
+                despesas_gerais = safe_float(row[28])  # Col 29 (index 28)
+                
+                # Agrupar por dia
+                dados_por_dia[dia]['frete_correto'] += frete_correto
+                dados_por_dia[dia]['despesas_gerais'] += despesas_gerais
+                
+                # Totais mensais
+                totais_mensais['frete_correto'] += frete_correto
+                totais_mensais['despesas_gerais'] += despesas_gerais
+                
+            except (ValueError, IndexError, TypeError) as e:
+                continue
+                
+        wb.close()
+        
+        # Organizar dados por dia (1-31)
+        dados_finais = []
+        for dia in range(1, 32):
+            dados_finais.append({
+                'dia': dia,
+                'frete_correto': dados_por_dia[dia]['frete_correto'],
+                'despesas_gerais': dados_por_dia[dia]['despesas_gerais']
+            })
+        
+        return {
+            'dados_diarios': dados_finais,
+            'totais_mensais': totais_mensais
+        }
+        
+    except Exception as e:
+        print(f"Erro ao ler manifesto: {e}")
+        return None
 
 @bp.route('/')
 def index():
@@ -37,25 +133,40 @@ def index():
     return render_template('painel_frete.html', dados=dados_dashboard)
 
 def gerar_dados_frete_diario():
-    """Gera dados simulados para o gráfico de frete diário"""
-    dados = []
-    base_receber = 2000000
-    base_pagar = 1350000
+    """Gera dados reais para o gráfico Frete Correto vs Despesas Gerais"""
+    dados_manifesto = extrair_dados_manifesto_real()
     
-    for dia in range(1, 32):
-        # Simula variação diária
-        variacao = (dia * 0.02) + 0.8
-        receber = base_receber * variacao
-        pagar = base_pagar * variacao
+    if dados_manifesto:
+        # Usar dados reais do manifesto
+        return {
+            'dados_diarios': dados_manifesto['dados_diarios'],
+            'totais_mensais': dados_manifesto['totais_mensais']
+        }
+    else:
+        # Fallback para dados simulados se não conseguir ler o manifesto
+        print("Usando dados simulados - manifesto não disponível")
+        dados = []
+        totais = {'frete_correto': 0, 'despesas_gerais': 0}
         
-        dados.append({
-            'dia': dia,
-            'frete_receber': receber,
-            'frete_pagar': pagar,
-            'diferenca': receber - pagar
-        })
-    
-    return dados
+        for dia in range(1, 32):
+            # Simula variação diária
+            variacao = (dia * 0.02) + 0.8
+            frete_correto = 65000 * variacao
+            despesas_gerais = 45000 * variacao
+            
+            dados.append({
+                'dia': dia,
+                'frete_correto': frete_correto,
+                'despesas_gerais': despesas_gerais
+            })
+            
+            totais['frete_correto'] += frete_correto
+            totais['despesas_gerais'] += despesas_gerais
+        
+        return {
+            'dados_diarios': dados,
+            'totais_mensais': totais
+        }
 
 def gerar_dados_frete_mensal():
     """Gera dados simulados para o gráfico mensal"""
