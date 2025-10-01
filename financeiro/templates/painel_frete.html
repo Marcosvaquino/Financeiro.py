@@ -578,6 +578,83 @@ Chart.defaults.borderColor = 'rgba(116, 185, 255, 0.5)';
 // Registrar plugin datalabels
 Chart.register(ChartDataLabels);
 
+// Função para calcular projeção futura baseada nos dados reais
+function calcularProjecaoFutura(dados, labels) {
+    // Encontrar onde os dados param de mudar (valores repetidos)
+    let ultimoIndiceComDadosReais = -1;
+    
+    // Procurar o último dia onde houve mudança significativa
+    for (let i = 1; i < dados.length; i++) {
+        if (dados[i] && dados[i] > 0 && dados[i-1] && dados[i-1] > 0) {
+            // Se a diferença entre dias consecutivos for maior que 1% ou 1000 reais
+            const diferenca = Math.abs(dados[i] - dados[i-1]);
+            const percentualMudanca = diferenca / dados[i-1];
+            
+            if (diferenca > 1000 || percentualMudanca > 0.01) {
+                ultimoIndiceComDadosReais = i;
+            }
+        }
+    }
+    
+    // Se não encontrou mudanças, usar apenas os primeiros dias com dados
+    if (ultimoIndiceComDadosReais < 1) {
+        for (let i = 0; i < dados.length; i++) {
+            if (dados[i] && dados[i] > 0) {
+                ultimoIndiceComDadosReais = Math.min(i + 5, dados.length - 1); // Usar pelo menos 5 dias
+                break;
+            }
+        }
+    }
+    
+    if (ultimoIndiceComDadosReais < 1) {
+        return dados.map(() => null);
+    }
+    
+    console.log(`📊 Último dia com dados reais detectado: ${ultimoIndiceComDadosReais + 1}`);
+    
+    // Pegar apenas os dados válidos até o ponto onde param de mudar
+    const dadosValidos = [];
+    const indicesValidos = [];
+    
+    for (let i = 0; i <= ultimoIndiceComDadosReais; i++) {
+        if (dados[i] && dados[i] > 0) {
+            dadosValidos.push(dados[i]);
+            indicesValidos.push(i);
+        }
+    }
+    
+    if (dadosValidos.length < 2) {
+        return dados.map(() => null);
+    }
+    
+    // Calcular regressão linear dos dados válidos
+    const n = dadosValidos.length;
+    const somaX = indicesValidos.reduce((a, b) => a + b, 0);
+    const somaY = dadosValidos.reduce((a, b) => a + b, 0);
+    const somaXY = indicesValidos.reduce((acc, x, i) => acc + x * dadosValidos[i], 0);
+    const somaX2 = indicesValidos.reduce((acc, x) => acc + x * x, 0);
+    
+    const inclinacao = (n * somaXY - somaX * somaY) / (n * somaX2 - somaX * somaX);
+    const intercepto = (somaY - inclinacao * somaX) / n;
+    
+    console.log(`📈 Regressão: y = ${inclinacao.toFixed(2)}x + ${intercepto.toFixed(2)}`);
+    
+    // Criar array de projeção
+    const projecao = dados.map((_, index) => {
+        // Até o último dia com dados reais: usar os dados reais
+        if (index <= ultimoIndiceComDadosReais) {
+            return dados[index] && dados[index] > 0 ? dados[index] : null;
+        }
+        // Após o último dia com dados reais: projetar usando a tendência
+        else {
+            const valorProjetado = inclinacao * index + intercepto;
+            return valorProjetado > 0 ? valorProjetado : null;
+        }
+    });
+    
+    return projecao;
+}
+
 // Função para criar gráfico de linha (Frete Correto vs Despesas Gerais)
 function criarGraficoDialio() {
     const ctx = document.getElementById('chartFreteDialio').getContext('2d');
@@ -589,6 +666,9 @@ function criarGraficoDialio() {
     const labels = dadosDiarios.map(d => d.dia.toString());
     const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
     const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
+    
+    // Calcular projeção futura para Frete Correto
+    const projecaoFrete = calcularProjecaoFutura(freteCorreto, labels);
     
     // Atualizar totais mensais na interface
     atualizarTotaisMensais(totaisMensais);
@@ -613,6 +693,16 @@ function criarGraficoDialio() {
                 borderWidth: 2,
                 fill: false,
                 tension: 0.4
+            }, {
+                label: 'Projeção Frete',
+                data: projecaoFrete,
+                borderColor: '#fdcb6e',
+                backgroundColor: 'rgba(253, 203, 110, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.1,
+                pointRadius: 0
             }]
         },
         options: {
@@ -1096,6 +1186,9 @@ function atualizarGraficos(data) {
             const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
             const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
             
+            // Recalcular projeção futura
+            const projecaoFrete = calcularProjecaoFutura(freteCorreto, labels);
+            
             console.log('📊 Atualizando gráfico com novos dados:');
             console.log('   Labels:', labels.length);
             console.log('   FC max:', Math.max(...freteCorreto));
@@ -1104,6 +1197,9 @@ function atualizarGraficos(data) {
             chartDialio.data.labels = labels;
             chartDialio.data.datasets[0].data = freteCorreto;
             chartDialio.data.datasets[1].data = despesasGerais;
+            if (chartDialio.data.datasets[2]) {
+                chartDialio.data.datasets[2].data = projecaoFrete;
+            }
             chartDialio.update('active');
             
             console.log('✅ Gráfico atualizado!');
