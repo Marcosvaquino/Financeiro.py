@@ -16,8 +16,147 @@ Uso: execute o script na raiz do projeto (ele assume paths relativos ao workspac
 """
 import os
 import glob
+import sys
 from openpyxl import load_workbook, Workbook
 from datetime import datetime
+
+# Adicionar o diretório financeiro ao path para imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+financeiro_dir = os.path.join(current_dir, 'financeiro')
+if financeiro_dir not in sys.path:
+    sys.path.insert(0, financeiro_dir)
+
+# Imports para integração com veículos, clientes e custos
+try:
+    from financeiro.veiculo_helper import VeiculoHelper
+    from financeiro.cliente_helper import ClienteHelper
+    from financeiro.custo_frota import CustoFrotaHelper
+    INTEGRACAO_DISPONIVEL = True
+except ImportError as e:
+    print(f"⚠️ Integração não disponível: {e}")
+    VeiculoHelper = None
+    ClienteHelper = None
+    CustoFrotaHelper = None
+    INTEGRACAO_DISPONIVEL = False
+
+
+def integrar_dados_manifesto(ws_out):
+    """
+    Integra dados de veículos, clientes e custos no manifesto acumulado.
+    Preenche as colunas: Status_Veiculo, Tipologia, Cliente_Real, Frete Final, Custo Frota Fixa
+    """
+    if not INTEGRACAO_DISPONIVEL:
+        return
+
+    # Buscar índices das colunas
+    headers = [ws_out.cell(1, col).value for col in range(1, ws_out.max_column + 1)]
+    
+    # Mapear headers para índices (1-based)
+    header_map = {}
+    for i, header in enumerate(headers, 1):
+        if header:
+            header_map[header.strip()] = i
+    
+    # Índices das colunas importantes
+    col_veiculo = header_map.get('Veículo', 4)  # Coluna D por padrão
+    col_classificacao = header_map.get('Classificação', 21)  # Coluna U por padrão
+    col_km_saida = header_map.get('Km saída', 17)
+    col_km_chegada = header_map.get('Km chegada', 18)
+    col_status_veiculo = header_map.get('Status_Veiculo')
+    col_tipologia = header_map.get('Tipologia')
+    col_cliente_real = header_map.get('Cliente_Real')
+    col_frete_final = header_map.get('Frete Final')
+    col_custo_frota_fixa = header_map.get('Custo Frota Fixa')
+    
+    # Se as colunas não existem, não podemos preencher
+    if not all([col_status_veiculo, col_tipologia, col_cliente_real]):
+        print("⚠️ Colunas de integração não encontradas no manifesto")
+        return
+    
+    # Coletar todas as placas do manifesto
+    placas_manifesto = set()
+    clientes_manifesto = set()
+    
+    for row in range(2, ws_out.max_row + 1):
+        # Coletar placas
+        placa = ws_out.cell(row, col_veiculo).value
+        if placa and str(placa).strip():
+            placas_manifesto.add(str(placa).upper().strip())
+        
+        # Coletar clientes
+        cliente = ws_out.cell(row, col_classificacao).value
+        if cliente and str(cliente).strip():
+            clientes_manifesto.add(str(cliente).upper().strip())
+    
+    # Buscar dados dos veículos e clientes
+    print(f"🚚 Buscando dados de {len(placas_manifesto)} veículos...")
+    dados_veiculos = VeiculoHelper.buscar_multiplas_placas(list(placas_manifesto))
+    
+    print(f"👥 Buscando dados de {len(clientes_manifesto)} clientes...")
+    dados_clientes = ClienteHelper.buscar_multiplos_nomes_ajustados(list(clientes_manifesto))
+    
+    # Processar cada linha do manifesto
+    linhas_processadas = 0
+    for row in range(2, ws_out.max_row + 1):
+        # === 1. DADOS DO VEÍCULO ===
+        placa = ws_out.cell(row, col_veiculo).value
+        if placa and str(placa).strip():
+            placa_norm = str(placa).upper().strip()
+            veiculo = dados_veiculos.get(placa_norm, {})
+            
+            # Status_Veiculo
+            ws_out.cell(row, col_status_veiculo, veiculo.get('status', '0'))
+            
+            # Tipologia  
+            ws_out.cell(row, col_tipologia, veiculo.get('tipologia', '0'))
+        else:
+            ws_out.cell(row, col_status_veiculo, '0')
+            ws_out.cell(row, col_tipologia, '0')
+        
+        # === 2. DADOS DO CLIENTE ===
+        cliente = ws_out.cell(row, col_classificacao).value
+        if cliente and str(cliente).strip():
+            cliente_norm = str(cliente).upper().strip()
+            cliente_dados = dados_clientes.get(cliente_norm, {})
+            ws_out.cell(row, col_cliente_real, cliente_dados.get('nome_real', '0'))
+        else:
+            ws_out.cell(row, col_cliente_real, '0')
+        
+        # === 3. CUSTO FROTA FIXA (apenas para veículos FIXOS) ===
+        if col_custo_frota_fixa:
+            status_veiculo = ws_out.cell(row, col_status_veiculo).value
+            tipologia = ws_out.cell(row, col_tipologia).value
+            
+            if (status_veiculo == 'FIXO' and tipologia and tipologia != '0' and 
+                col_km_saida and col_km_chegada):
+                
+                # Calcular KM da viagem
+                km_saida = ws_out.cell(row, col_km_saida).value
+                km_chegada = ws_out.cell(row, col_km_chegada).value
+                
+                try:
+                    km_saida_num = float(km_saida) if km_saida else 0
+                    km_chegada_num = float(km_chegada) if km_chegada else 0
+                    km_viagem = abs(km_chegada_num - km_saida_num)
+                    
+                    if km_viagem > 0:
+                        custo_frota = CustoFrotaHelper.calcular_custo_frota_fixa(tipologia, km_viagem)
+                        ws_out.cell(row, col_custo_frota_fixa, custo_frota)
+                    else:
+                        ws_out.cell(row, col_custo_frota_fixa, 0)
+                except (ValueError, TypeError):
+                    ws_out.cell(row, col_custo_frota_fixa, 0)
+            else:
+                # SPOT ou dados inválidos = vazio
+                ws_out.cell(row, col_custo_frota_fixa, '')
+        
+        linhas_processadas += 1
+        
+        # Progress feedback
+        if linhas_processadas % 500 == 0:
+            print(f"  Integradas {linhas_processadas} linhas...")
+    
+    print(f"✅ Integração concluída: {linhas_processadas} linhas processadas")
 
 
 def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.xlsx'):
@@ -37,7 +176,7 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
         'Manifesto', 'Filial', 'Data', 'Veículo', 'Destino', 'Serviços', 'NFs', 'Kg Real', 'Kg Taxado', 'M3',
         'Vale frete', 'Valor NF', 'Valor Fretes', 'valor final', 'Capacidade Veículo', '% Aprov. Veículo',
         'Km saída', 'Km chegada', 'Km final', 'Valor Frete', 'Classificação', 'Observaçoes operacionais',
-        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real'
+        'Status', 'Usuário', 'Status_Veiculo', 'Tipologia', 'Cliente_Real', 'Frete Final', 'Custo Frota Fixa'
     ]
 
     # Usaremos FIXED_HEADERS como full_headers de saída (mantendo a normalização interna)
@@ -598,6 +737,14 @@ def criar_manifesto_acumulado(upload_dir=None, output_name='Manifesto_Acumulado.
                 except Exception:
                     # não bloquear a execução apenas por falha no backup
                     pass
+
+        # === NOVA FUNCIONALIDADE: INTEGRAÇÃO COM DADOS DE VEÍCULOS, CLIENTES E CUSTOS ===
+        if INTEGRACAO_DISPONIVEL:
+            try:
+                integrar_dados_manifesto(ws_out)
+                print("✅ Integração com dados de veículos, clientes e custos aplicada")
+            except Exception as e:
+                print(f"⚠️ Erro na integração: {e}")
 
         wb_out.save(output_path)
     except PermissionError:
