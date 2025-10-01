@@ -15,8 +15,17 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-def extrair_dados_manifesto_real():
-    """Extrai dados reais do manifesto para gráfico Frete Correto vs Despesas Gerais"""
+def extrair_dados_manifesto_real(filtros=None):
+    """Extrai dados reais do manifesto para gráfico Frete Correto vs Despesas Gerais
+    
+    Args:
+        filtros (dict): Dicionário com filtros opcionais:
+            - perfil: Status_Veiculo (Col 25)
+            - clientes: Cliente_Real (Col 27) 
+            - veiculos: Veículo (Col 4)
+            - mes: Data - mês (Col 3)
+            - ano: Data - ano (Col 3)
+    """
     arquivo_manifesto = os.path.join('financeiro', 'uploads', 'Manifesto_Acumulado.xlsx')
     
     if not os.path.exists(arquivo_manifesto):
@@ -38,6 +47,11 @@ def extrair_dados_manifesto_real():
                 continue
                 
             try:
+                # Extrair dados para filtragem
+                status_veiculo = str(row[24]).upper() if row[24] else ""  # Col 25 (Status_Veiculo)
+                cliente_real = str(row[26]).upper() if row[26] else ""    # Col 27 (Cliente_Real)
+                veiculo = str(row[3]).upper() if row[3] else ""           # Col 4 (Veículo)
+                
                 # Extrair data (Col 3) - formato datetime ou string
                 data_obj = row[2] if row[2] else None
                 if not data_obj:
@@ -47,22 +61,63 @@ def extrair_dados_manifesto_real():
                 if hasattr(data_obj, 'day'):  # É datetime
                     dia = data_obj.day
                     mes = data_obj.month
+                    ano = data_obj.year
                 elif "/" in str(data_obj):  # String formato dd/mm/yyyy
                     partes = str(data_obj).split("/")
-                    if len(partes) >= 2:
+                    if len(partes) >= 3:
                         dia = int(partes[0])
                         mes = int(partes[1])
+                        ano = int(partes[2])
                     else:
                         continue
                 elif "-" in str(data_obj):  # String formato yyyy-mm-dd
                     partes = str(data_obj).split("-")
                     if len(partes) >= 3:
-                        dia = int(partes[2].split()[0])  # Remove time se houver
+                        ano = int(partes[0])
                         mes = int(partes[1])
+                        dia = int(partes[2].split()[0])  # Remove time se houver
                     else:
                         continue
                 else:
                     continue
+                
+                # Aplicar filtros se fornecidos
+                if filtros:
+                    # Filtro por perfil (Status_Veiculo)
+                    if filtros.get('perfil') and filtros['perfil'].upper() not in ['TODOS', 'AGREGADO']:
+                        if status_veiculo != filtros['perfil'].upper():
+                            continue
+                    
+                    # Filtro por clientes (Cliente_Real)
+                    if filtros.get('clientes') and len(filtros['clientes']) > 0 and filtros['clientes'][0] != '':
+                        clientes_filtro = [c.upper() for c in filtros['clientes'] if c]
+                        if clientes_filtro and cliente_real not in clientes_filtro:
+                            continue
+                    
+                    # Filtro por veículos
+                    if filtros.get('veiculos') and len(filtros['veiculos']) > 0 and filtros['veiculos'][0] != '':
+                        veiculos_filtro = [v.upper() for v in filtros['veiculos'] if v]
+                        if veiculos_filtro and veiculo not in veiculos_filtro:
+                            continue
+                    
+                    # Filtro por mês
+                    if filtros.get('mes') and filtros['mes']:
+                        mes_nomes = {
+                            'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6,
+                            'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
+                        }
+                        mes_filtro = mes_nomes.get(filtros['mes'].upper())
+                        if mes_filtro and mes != mes_filtro:
+                            continue
+                    
+                    # Filtro por ano
+                    if filtros.get('ano') and filtros['ano']:
+                        try:
+                            ano_filtro = int(filtros['ano'])
+                            if ano != ano_filtro:
+                                continue
+                        except (ValueError, TypeError):
+                            continue
                 
                 # Extrair valores - Col 30: Frete Correto, Col 29: Despesas Gerais
                 def safe_float(valor):
@@ -107,10 +162,87 @@ def extrair_dados_manifesto_real():
         print(f"Erro ao ler manifesto: {e}")
         return None
 
+def obter_opcoes_filtros():
+    """Obtém as opções disponíveis para os filtros baseado nos dados do manifesto"""
+    arquivo_manifesto = os.path.join('financeiro', 'uploads', 'Manifesto_Acumulado.xlsx')
+    
+    if not os.path.exists(arquivo_manifesto):
+        # Retorna opções padrão se não conseguir ler o arquivo
+        return {
+            'perfis': ['AGREGADO', 'FIXO', 'SPOT'],
+            'clientes': ['ADORO', 'GOLD PAO', 'Marfrig', 'MEGGS', 'FRZ Log'],
+            'veiculos': ['AMX0E01', 'ARS5C20', 'ASN5A61'],
+            'anos': [2024, 2025]
+        }
+    
+    try:
+        wb = openpyxl.load_workbook(arquivo_manifesto, read_only=True)
+        ws = wb.active
+        
+        perfis = set()
+        clientes = set() 
+        veiculos = set()
+        anos = set()
+        
+        linha_inicial = 2  # Pula header
+        for row in ws.iter_rows(min_row=linha_inicial, values_only=True):
+            if not row or len(row) < 30:
+                continue
+                
+            try:
+                # Status_Veiculo (Col 25)
+                if row[24]:
+                    perfis.add(str(row[24]).strip())
+                
+                # Cliente_Real (Col 27)
+                if row[26]:
+                    clientes.add(str(row[26]).strip())
+                
+                # Veículo (Col 4)
+                if row[3]:
+                    veiculos.add(str(row[3]).strip())
+                
+                # Ano da Data (Col 3)
+                data_obj = row[2]
+                if data_obj:
+                    if hasattr(data_obj, 'year'):
+                        anos.add(data_obj.year)
+                    elif "/" in str(data_obj):
+                        partes = str(data_obj).split("/")
+                        if len(partes) >= 3:
+                            anos.add(int(partes[2]))
+                    elif "-" in str(data_obj):
+                        partes = str(data_obj).split("-")
+                        if len(partes) >= 3:
+                            anos.add(int(partes[0]))
+                            
+            except (ValueError, IndexError, TypeError):
+                continue
+        
+        wb.close()
+        
+        return {
+            'perfis': ['TODOS'] + sorted([p for p in perfis if p and p != '0']),  # Remove valores vazios/zero
+            'clientes': sorted([c for c in clientes if c and c != '0']),
+            'veiculos': sorted([v for v in veiculos if v and v != '0']),
+            'anos': sorted(list(anos), reverse=True)
+        }
+        
+    except Exception as e:
+        print(f"Erro ao obter opções de filtros: {e}")
+        return {
+            'perfis': ['AGREGADO', 'FIXO', 'SPOT'],
+            'clientes': ['ADORO', 'GOLD PAO', 'Marfrig', 'MEGGS'],
+            'veiculos': ['AMX0E01', 'ARS5C20', 'ASN5A61'],
+            'anos': [2024, 2025]
+        }
+
 @bp.route('/')
 def index():
     """Página principal do painel de frete - dashboard completo"""
-    # Por enquanto dados simulados baseados no print
+    # Obter opções dinâmicas dos filtros
+    opcoes_filtros = obter_opcoes_filtros()
+    
     dados_dashboard = {
         'metricas': {
             'frete_receber': 2007716.00,
@@ -119,11 +251,13 @@ def index():
             'produtividade': 92.36
         },
         'filtros': {
-            'mes_atual': 'ABR',
-            'ano_atual': 2024,
-            'perfil_selecionado': 'AGREGADO',
-            'clientes_selecionados': ['ADORO', 'GOLD PAO', 'Marfrig', 'MEGGS'],
-            'veiculos_selecionados': ['AMX0E01', 'ARS5C20', 'ASN5A61']
+            'mes_atual': 'AGO',  # Mês atual do manifesto
+            'ano_atual': max(opcoes_filtros['anos']) if opcoes_filtros['anos'] else 2025,
+            'perfil_selecionado': 'TODOS',
+            'opcoes_perfis': opcoes_filtros['perfis'],
+            'opcoes_clientes': opcoes_filtros['clientes'],
+            'opcoes_veiculos': opcoes_filtros['veiculos'],
+            'opcoes_anos': opcoes_filtros['anos']
         },
         'frete_diario': gerar_dados_frete_diario(),
         'frete_mensal': gerar_dados_frete_mensal(),
@@ -132,9 +266,9 @@ def index():
     
     return render_template('painel_frete.html', dados=dados_dashboard)
 
-def gerar_dados_frete_diario():
+def gerar_dados_frete_diario(filtros=None):
     """Gera dados reais para o gráfico Frete Correto vs Despesas Gerais"""
-    dados_manifesto = extrair_dados_manifesto_real()
+    dados_manifesto = extrair_dados_manifesto_real(filtros)
     
     if dados_manifesto:
         # Usar dados reais do manifesto
@@ -229,10 +363,11 @@ def gerar_metricas():
 def api_dados_post():
     """API endpoint para atualização dinâmica dos dados"""
     filtros = request.get_json()
+    print(f"Filtros recebidos: {filtros}")  # Debug
     
-    # Gerar dados baseados nos filtros (implementar lógica real depois)
+    # Gerar dados baseados nos filtros reais
     dados = {
-        'frete_diario': gerar_dados_frete_diario(),
+        'frete_diario': gerar_dados_frete_diario(filtros),
         'frete_mensal': gerar_dados_frete_mensal(), 
         'clientes_participacao': gerar_dados_clientes(),
         'metricas': gerar_metricas()
