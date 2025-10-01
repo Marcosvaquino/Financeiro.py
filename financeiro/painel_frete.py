@@ -362,18 +362,33 @@ def gerar_metricas():
 @bp.route('/api/dados', methods=['POST'])
 def api_dados_post():
     """API endpoint para atualização dinâmica dos dados"""
-    filtros = request.get_json()
-    print(f"Filtros recebidos: {filtros}")  # Debug
-    
-    # Gerar dados baseados nos filtros reais
-    dados = {
-        'frete_diario': gerar_dados_frete_diario(filtros),
-        'frete_mensal': gerar_dados_frete_mensal(), 
-        'clientes_participacao': gerar_dados_clientes(),
-        'metricas': gerar_metricas()
-    }
-    
-    return jsonify(dados)
+    try:
+        filtros = request.get_json()
+        print(f"🔍 Filtros recebidos: {filtros}")  # Debug
+        
+        # Gerar dados baseados nos filtros reais
+        dados_filtrados = gerar_dados_frete_diario(filtros)
+        print(f"📊 Dados filtrados gerados: {bool(dados_filtrados)}")
+        
+        if dados_filtrados and 'totais_mensais' in dados_filtrados:
+            totais = dados_filtrados['totais_mensais']
+            print(f"💰 Totais: FC=R${totais['frete_correto']:,.2f}, DG=R${totais['despesas_gerais']:,.2f}")
+        
+        dados = {
+            'frete_diario': dados_filtrados,
+            'frete_mensal': gerar_dados_frete_mensal(), 
+            'clientes_participacao': gerar_dados_clientes(),
+            'metricas': gerar_metricas()
+        }
+        
+        print(f"✅ Enviando resposta da API")
+        return jsonify(dados)
+        
+    except Exception as e:
+        print(f"❌ Erro na API: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/api/dados/<tipo>')
 def api_dados(tipo):

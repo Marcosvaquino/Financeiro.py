@@ -665,18 +665,38 @@ function criarGraficoDialio() {
 
 // Função para atualizar totais mensais
 function atualizarTotaisMensais(totais) {
+    console.log('💰 Atualizando totais mensais:', totais);
+    
     const totalFreteCorreto = totais.frete_correto || 0;
     const totalDespesasGerais = totais.despesas_gerais || 0;
     const diferenca = totalFreteCorreto - totalDespesasGerais;
     
-    document.getElementById('totalFreteCorreto').textContent = 
-        'R$ ' + totalFreteCorreto.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    console.log(`📊 FC: R$ ${totalFreteCorreto.toFixed(2)} | DG: R$ ${totalDespesasGerais.toFixed(2)} | Diff: R$ ${diferenca.toFixed(2)}`);
     
-    document.getElementById('totalDespesasGerais').textContent = 
-        'R$ ' + totalDespesasGerais.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const elementoFC = document.getElementById('totalFreteCorreto');
+    const elementoDG = document.getElementById('totalDespesasGerais');
+    const elementoDiff = document.getElementById('totalDiferenca');
     
-    document.getElementById('totalDiferenca').textContent = 
-        'R$ ' + diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (elementoFC) {
+        elementoFC.textContent = 'R$ ' + totalFreteCorreto.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        console.log('✅ Total FC atualizado');
+    } else {
+        console.log('❌ Elemento totalFreteCorreto não encontrado');
+    }
+    
+    if (elementoDG) {
+        elementoDG.textContent = 'R$ ' + totalDespesasGerais.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        console.log('✅ Total DG atualizado');
+    } else {
+        console.log('❌ Elemento totalDespesasGerais não encontrado');
+    }
+    
+    if (elementoDiff) {
+        elementoDiff.textContent = 'R$ ' + diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        console.log('✅ Total Diferença atualizado');
+    } else {
+        console.log('❌ Elemento totalDiferenca não encontrado');
+    }
 }
 
 // Função para criar gráfico de barras horizontais (Clientes) 
@@ -830,14 +850,23 @@ function limparFiltros() {
 
 // Função para atualizar status dos filtros
 function atualizarStatusFiltros() {
+    console.log('🏷️ Iniciando atualizarStatusFiltros...');
+    
     const perfil = document.getElementById('filtro-perfil').value;
     const cliente = document.getElementById('filtro-clientes').value;
     const veiculo = document.getElementById('filtro-veiculo').value;
     const mes = document.getElementById('filtro-mes').value;
     const ano = document.getElementById('filtro-ano').value;
     
+    console.log(`📋 Valores dos filtros:`, {perfil, cliente, veiculo, mes, ano});
+    
     const statusElement = document.getElementById('filtrosStatus');
-    const statusBadge = statusElement.querySelector('.status-badge');
+    const statusBadge = statusElement?.querySelector('.status-badge');
+    
+    if (!statusBadge) {
+        console.log('❌ Status badge não encontrado!');
+        return;
+    }
     
     let statusText = '';
     let isFiltrado = false;
@@ -849,12 +878,16 @@ function atualizarStatusFiltros() {
         if (cliente !== '') partes.push(cliente);
         if (veiculo !== '') partes.push(veiculo);
         statusText = partes.join(' + ') + ` | ${mes}/${ano}`;
+        console.log(`🔍 Status filtrado: "${statusText}"`);
     } else {
         statusText = `Todos os dados | ${mes}/${ano}`;
+        console.log(`📊 Status sem filtros: "${statusText}"`);
     }
     
     statusBadge.textContent = statusText;
     statusBadge.className = isFiltrado ? 'status-badge filtrado' : 'status-badge';
+    
+    console.log('✅ Status badge atualizado:', statusBadge.textContent, statusBadge.className);
 }
 
 // Event listeners para os filtros
@@ -916,14 +949,20 @@ function atualizarDashboard() {
     const totalAtual = document.getElementById('totalFreteCorreto').textContent;
     console.log('💰 Total atual antes da atualização:', totalAtual);
     
-    fetch('/painel_frete/api/dados', {
+    fetch('/frete/painel/api/dados', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(filtros)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 Status da resposta:', response.status, response.statusText);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         console.log('✅ Dados atualizados recebidos:', data);
         console.log('📊 Frete diário recebido:', data.frete_diario);
@@ -946,15 +985,30 @@ function atualizarDashboard() {
         });
         
         // Restaurar status dos filtros
+        console.log('🔄 Iniciando restore do status dos filtros...');
         setTimeout(() => {
+            console.log('⏰ Executando atualizarStatusFiltros após 500ms...');
             atualizarStatusFiltros();
+            console.log('✅ Status dos filtros restaurado com sucesso!');
         }, 500);
     })
     .catch(error => {
-        console.error('Erro ao atualizar dashboard:', error);
+        console.error('❌ Erro ao atualizar dashboard:', error);
+        
+        // Restaurar interface em caso de erro
         document.querySelectorAll('.chart-container').forEach(container => {
             container.style.opacity = '1';
         });
+        
+        // Restaurar status
+        const statusBadge = document.querySelector('.status-badge');
+        statusBadge.textContent = '⚠️ Erro ao filtrar';
+        statusBadge.className = 'status-badge filtrado';
+        
+        // Tentar restaurar status após 3 segundos
+        setTimeout(() => {
+            atualizarStatusFiltros();
+        }, 3000);
     });
 }
 
@@ -975,22 +1029,42 @@ function atualizarMetricas(metricas) {
 
 // Função para atualizar gráficos
 function atualizarGraficos(data) {
+    console.log('🎯 Iniciando atualização dos gráficos...');
+    console.log('📊 Dados recebidos para gráfico:', data.frete_diario);
+    
     // Atualizar gráfico diário (Frete Correto vs Despesas Gerais)
     if (chartDialio) {
         const dadosDiarios = data.frete_diario.dados_diarios || data.frete_diario;
         const totaisMensais = data.frete_diario.totais_mensais || {};
         
-        const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
-        const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
-        const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
+        console.log('📈 Dados diários:', dadosDiarios ? dadosDiarios.length : 'undefined');
+        console.log('💰 Totais mensais:', totaisMensais);
         
-        chartDialio.data.labels = labels;
-        chartDialio.data.datasets[0].data = freteCorreto;
-        chartDialio.data.datasets[1].data = despesasGerais;
-        chartDialio.update();
+        if (dadosDiarios && Array.isArray(dadosDiarios)) {
+            const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
+            const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
+            const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
+            
+            console.log('📊 Atualizando gráfico com novos dados:');
+            console.log('   Labels:', labels.length);
+            console.log('   FC max:', Math.max(...freteCorreto));
+            console.log('   DG max:', Math.max(...despesasGerais));
+            
+            chartDialio.data.labels = labels;
+            chartDialio.data.datasets[0].data = freteCorreto;
+            chartDialio.data.datasets[1].data = despesasGerais;
+            chartDialio.update('active');
+            
+            console.log('✅ Gráfico atualizado!');
+        } else {
+            console.log('⚠️ Dados diários inválidos:', dadosDiarios);
+        }
         
         // Atualizar totais mensais
         atualizarTotaisMensais(totaisMensais);
+        console.log('🏁 Gráfico principal atualizado com sucesso!');
+    } else {
+        console.log('❌ Gráfico não encontrado!');
     }
     
     // Atualizar gráfico de clientes
