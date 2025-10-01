@@ -144,13 +144,20 @@ def extrair_dados_manifesto_real(filtros=None):
                 
         wb.close()
         
-        # Organizar dados por dia (1-31)
+        # Organizar dados por dia (1-31) - ACUMULADOS
         dados_finais = []
+        frete_acumulado = 0
+        despesas_acumuladas = 0
+        
         for dia in range(1, 32):
+            # Acumular valores até o dia atual
+            frete_acumulado += dados_por_dia[dia]['frete_correto']
+            despesas_acumuladas += dados_por_dia[dia]['despesas_gerais']
+            
             dados_finais.append({
                 'dia': dia,
-                'frete_correto': dados_por_dia[dia]['frete_correto'],
-                'despesas_gerais': dados_por_dia[dia]['despesas_gerais']
+                'frete_correto': frete_acumulado,
+                'despesas_gerais': despesas_acumuladas
             })
         
         return {

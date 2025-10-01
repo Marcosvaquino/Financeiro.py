@@ -184,7 +184,7 @@
 .grafico-diario {
     background: #636e72;
     border-radius: 8px;
-    padding: 15px;
+    padding: 15px 15px 25px 15px;
     position: relative;
     overflow: hidden;
 }
@@ -562,6 +562,8 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js DataLabels Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <script>
 // Dados do dashboard passados do backend
@@ -573,6 +575,9 @@ Chart.defaults.color = '#ffffff';
 Chart.defaults.backgroundColor = 'rgba(255, 255, 255, 0.1)';
 Chart.defaults.borderColor = 'rgba(116, 185, 255, 0.5)';
 
+// Registrar plugin datalabels
+Chart.register(ChartDataLabels);
+
 // Função para criar gráfico de linha (Frete Correto vs Despesas Gerais)
 function criarGraficoDialio() {
     const ctx = document.getElementById('chartFreteDialio').getContext('2d');
@@ -581,7 +586,7 @@ function criarGraficoDialio() {
     const dadosDiarios = dashboardData.frete_diario.dados_diarios || dashboardData.frete_diario;
     const totaisMensais = dashboardData.frete_diario.totais_mensais || {};
     
-    const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
+    const labels = dadosDiarios.map(d => d.dia.toString());
     const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
     const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
     
@@ -635,6 +640,41 @@ function criarGraficoDialio() {
                             });
                         }
                     }
+                },
+                datalabels: {
+                    display: function(context) {
+                        // Mostrar rótulos APENAS no Frete Correto (primeiro dataset)
+                        if (context.datasetIndex !== 0) {
+                            return false; // Ocultar para Despesas Gerais
+                        }
+                        // Mostrar rótulos apenas a cada 5 dias para não poluir
+                        const index = context.dataIndex;
+                        return index % 5 === 0 || index === context.dataset.data.length - 1;
+                    },
+                    color: '#ffffff',
+                    backgroundColor: '#00b894', // Cor fixa verde para Frete Correto
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    borderRadius: 4,
+                    borderWidth: 1,
+                    padding: {
+                        top: 4,
+                        bottom: 4,
+                        left: 6,
+                        right: 6
+                    },
+                    font: {
+                        size: 10,
+                        weight: 'bold'
+                    },
+                    formatter: function(value, context) {
+                        if (value > 0) {
+                            return 'R$ ' + (value / 1000).toFixed(0) + 'k';
+                        }
+                        return '';
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 10
                 }
             },
             scales: {
@@ -644,7 +684,10 @@ function criarGraficoDialio() {
                         callback: function(value) {
                             return 'R$ ' + (value / 1000).toFixed(0) + 'k';
                         },
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        font: {
+                            size: 11
+                        }
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
@@ -652,7 +695,15 @@ function criarGraficoDialio() {
                 },
                 x: {
                     ticks: {
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        font: {
+                            size: 10
+                        },
+                        maxTicksLimit: 31,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        padding: 5,
+                        autoSkip: false
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
@@ -1041,7 +1092,7 @@ function atualizarGraficos(data) {
         console.log('💰 Totais mensais:', totaisMensais);
         
         if (dadosDiarios && Array.isArray(dadosDiarios)) {
-            const labels = dadosDiarios.map(d => `Dia ${d.dia}`);
+            const labels = dadosDiarios.map(d => d.dia.toString());
             const freteCorreto = dadosDiarios.map(d => d.frete_correto || 0);
             const despesasGerais = dadosDiarios.map(d => d.despesas_gerais || 0);
             
