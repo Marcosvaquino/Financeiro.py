@@ -420,3 +420,32 @@ def processar():
         flash(f'❓ Arquivo "{arquivo.filename}" de tipo indefinido foi recebido!')
     
     return redirect(url_for('upload_sistema.index'))
+
+
+@bp.route('/reprocessar', methods=['POST'])
+def reprocessar():
+    """Rota para reprocessar o Manifesto Acumulado usando a lógica existente."""
+    from flask import jsonify
+    
+    try:
+        # Importar e executar a função existente
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'criar_manifesto_acumulado.py'))
+        spec = importlib.util.spec_from_file_location('criar_manifesto_acumulado', script_path)
+        if spec and spec.loader:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            
+            # Executar a função existente que já tem toda a lógica
+            uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
+            mod.criar_manifesto_acumulado(upload_dir=uploads_dir)
+            
+            return jsonify({
+                "success": True,
+                "message": "Manifesto Acumulado reprocessado com sucesso!"
+            })
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Erro ao reprocessar: {str(e)}"
+        })

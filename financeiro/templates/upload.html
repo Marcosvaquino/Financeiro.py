@@ -76,6 +76,22 @@
                 {% endif %}
             {% endwith %}
         </div>
+
+        <!-- Seção de Reprocessamento -->
+        <div class="content-card">
+            <h2 class="section-title">⚙️ Reprocessar Manifesto</h2>
+            
+            <div class="reprocessar-info">
+                <p>Use esta opção para reprocessar o Manifesto Acumulado aplicando todas as lógicas de colunas extras já configuradas.</p>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="btnReprocessar">
+                    <span class="btn-icon">⚙️</span>
+                    Reprocessar Manifesto Acumulado
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -337,6 +353,42 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadTitle.textContent = 'Arquivo selecionado: ' + fileName;
         uploadArea.style.borderColor = 'var(--success-color, #28a745)';
         uploadArea.style.background = 'var(--success-light, #d4edda)';
+    }
+
+    // Botão de reprocessamento
+    const btnReprocessar = document.getElementById('btnReprocessar');
+    if (btnReprocessar) {
+        btnReprocessar.addEventListener('click', function() {
+            if (!confirm('Deseja reprocessar o Manifesto Acumulado? Isso irá aplicar todas as lógicas das colunas extras.')) {
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span class="btn-icon">⏳</span> Reprocessando...';
+
+            fetch('/upload/reprocessar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('❌ Erro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Erro na comunicação com o servidor');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<span class="btn-icon">⚙️</span> Reprocessar Manifesto Acumulado';
+            });
+        });
     }
 });
 </script>
