@@ -330,6 +330,11 @@
     background: linear-gradient(135deg, rgba(116, 185, 255, 0.2), rgba(9, 132, 227, 0.2));
 }
 
+.total-card.projecao-final {
+    border-color: #fdcb6e;
+    background: linear-gradient(135deg, rgba(253, 203, 110, 0.2), rgba(230, 176, 16, 0.2));
+}
+
 .total-label {
     font-size: 10px;
     font-weight: bold;
@@ -729,6 +734,10 @@
                         <div class="total-label">⚖️ Diferença</div>
                         <div class="total-valor" id="totalDiferenca">R$ 0,00</div>
                     </div>
+                    <div class="total-card projecao-final">
+                        <div class="total-label">🎯 Projeção Final</div>
+                        <div class="total-valor" id="totalProjecaoFinal">R$ 0,00</div>
+                    </div>
                 </div>
             </div>
             <div class="chart-container">
@@ -905,6 +914,13 @@ function criarGraficoDialio() {
     // Calcular projeção futura para Frete Correto
     const projecaoFrete = calcularProjecaoFutura(freteCorreto, labels);
     
+    // Calcular projeção final (valor do último dia da projeção)
+    const projecaoFinal = projecaoFrete.filter(p => p !== null && p > 0);
+    const valorProjecaoFinal = projecaoFinal.length > 0 ? projecaoFinal[projecaoFinal.length - 1] : 0;
+    
+    // Adicionar projeção final aos totais mensais
+    totaisMensais.projecao_final = valorProjecaoFinal;
+    
     // Atualizar totais mensais na interface
     atualizarTotaisMensais(totaisMensais);
     
@@ -952,7 +968,14 @@ function criarGraficoDialio() {
                 borderDash: [5, 5],
                 fill: false,
                 tension: 0.1,
-                pointRadius: 0
+                pointRadius: 2,
+                pointHoverRadius: 2,
+                pointBackgroundColor: 'rgba(253, 203, 110, 0.7)',
+                pointBorderColor: 'rgba(255, 255, 255, 0.3)',
+                pointBorderWidth: 1,
+                pointHoverBackgroundColor: 'rgba(253, 203, 110, 0.7)',
+                pointHoverBorderColor: 'rgba(255, 255, 255, 0.3)',
+                pointHoverBorderWidth: 1
             }]
         },
         options: {
@@ -1189,6 +1212,24 @@ function atualizarTotaisMensais(totais) {
         console.log('✅ Total Diferença atualizado');
     } else {
         console.log('❌ Elemento totalDiferenca não encontrado');
+    }
+    
+    // Atualizar Projeção Final
+    const elementoProjecao = document.getElementById('totalProjecaoFinal');
+    if (elementoProjecao && totais.projecao_final) {
+        const projecaoFinal = totais.projecao_final || 0;
+        elementoProjecao.textContent = 'R$ ' + projecaoFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Cor baseada na projeção vs atual
+        if (projecaoFinal > totalFreteCorreto) {
+            elementoProjecao.style.color = '#00d4aa'; // Verde se projeção é maior
+        } else {
+            elementoProjecao.style.color = '#fdcb6e'; // Amarelo se igual/menor
+        }
+        
+        console.log('✅ Total Projeção Final atualizado');
+    } else {
+        console.log('❌ Elemento totalProjecaoFinal não encontrado ou sem dados de projeção');
     }
 }
 
@@ -1541,10 +1582,18 @@ function atualizarGraficos(data) {
             // Recalcular projeção futura
             const projecaoFrete = calcularProjecaoFutura(freteCorreto, labels);
             
+            // Calcular projeção final (valor do último dia da projeção)
+            const projecaoFinal = projecaoFrete.filter(p => p !== null && p > 0);
+            const valorProjecaoFinal = projecaoFinal.length > 0 ? projecaoFinal[projecaoFinal.length - 1] : 0;
+            
+            // Adicionar projeção final aos totais mensais
+            totaisMensais.projecao_final = valorProjecaoFinal;
+            
             console.log('📊 Atualizando gráfico com novos dados:');
             console.log('   Labels:', labels.length);
             console.log('   FC max:', Math.max(...freteCorreto));
             console.log('   DG max:', Math.max(...despesasGerais));
+            console.log('   Projeção Final:', valorProjecaoFinal);
             
             chartDialio.data.labels = labels;
             chartDialio.data.datasets[0].data = freteCorreto;
