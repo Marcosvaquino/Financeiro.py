@@ -405,6 +405,16 @@
                                style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 6px;"
                                onkeyup="aplicarFiltrosDespesas()">
                     </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">🚦 Status:</label>
+                        <select id="filtro-status" 
+                                style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 6px; background: white;"
+                                onchange="aplicarFiltrosDespesas()">
+                            <option value="">Todos</option>
+                            <option value="pago">✅ Pago</option>
+                            <option value="pendente">⏳ Pendente</option>
+                        </select>
+                    </div>
                     <div style="flex: 0 0 auto;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">&nbsp;</label>
                         <button onclick="limparFiltrosDespesas()" 
@@ -417,14 +427,15 @@
             
             <div class="frz-planejamento-table">
                 <div class="frz-table-header">
-                    <div class="frz-table-cell header" style="flex: 2;">Fornecedor</div>
-                    <div class="frz-table-cell header" style="flex: 2;">Conta Contábil</div>
-                    <div class="frz-table-cell header" style="flex: 1;">Despesa</div>
-                    <div class="frz-table-cell header" style="flex: 0.5;">% do Total</div>
+                    <div class="frz-table-cell header" style="flex: 3;">Fornecedor</div>
+                    <div class="frz-table-cell header" style="flex: 3;">Conta Contábil</div>
+                    <div class="frz-table-cell header" style="flex: 1.5;">Despesa</div>
+                    <div class="frz-table-cell header" style="flex: 1.2;">Status</div>
+                    <div class="frz-table-cell header" style="flex: 1;">% do Total</div>
                 </div>
                 
                 <div id="despesa-clientes-loading" class="frz-loading">Carregando dados...</div>
-                <div id="despesa-clientes-data" style="display: none; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;"></div>
+                <div id="despesa-clientes-data" style="display: none; max-height: 400px; overflow-y: auto; overflow-x: auto; border: 1px solid #ddd; border-radius: 6px;"></div>
             </div>
         </div>
     </div>
@@ -572,7 +583,7 @@ function preencherModalDespesa(data) {
     despesasCompletas = data.despesas;
     
     // Atualiza o total
-    totalValor.textContent = `R$ ${data.total.toLocaleString('pt-BR')}`;
+    totalValor.textContent = `R$ ${data.total.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
     
     // Renderiza todos os dados
     renderizarDespesas(despesasCompletas, data.total);
@@ -587,12 +598,24 @@ function renderizarDespesas(despesas, totalOriginal) {
     let html = '';
     despesas.forEach(despesa => {
         const percentual = ((despesa.valor / totalOriginal) * 100).toFixed(1);
+        
+        // Status mais limpo e compacto na mesma linha
+        let statusHtml = '';
+        if (despesa.status === 'Recebido') {
+            statusHtml = '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">✅ Pago</span>';
+        } else {
+            statusHtml = '<span style="background: #ffc107; color: #333; padding: 2px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">⏳ Pendente</span>';
+        }
+        
         html += `
             <div class="frz-table-row">
-                <div class="frz-table-cell cliente" style="flex: 2;">${despesa.fornecedor}</div>
-                <div class="frz-table-cell cliente" style="flex: 2;">${despesa.conta_contabil}</div>
-                <div class="frz-table-cell realizado" style="flex: 1;">R$ ${despesa.valor.toLocaleString('pt-BR')}</div>
-                <div class="frz-table-cell status" style="flex: 0.5;">${percentual}%</div>
+                <div class="frz-table-cell cliente" style="flex: 3;">${despesa.fornecedor}</div>
+                <div class="frz-table-cell cliente" style="flex: 3;">${despesa.conta_contabil}</div>
+                <div class="frz-table-cell realizado" style="flex: 1.5;">R$ ${despesa.valor.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+                <div class="frz-table-cell status" style="flex: 1.2; text-align: center;">
+                    ${statusHtml}
+                </div>
+                <div class="frz-table-cell status" style="flex: 1; text-align: center;">${percentual}%</div>
             </div>
         `;
     });
@@ -603,11 +626,22 @@ function renderizarDespesas(despesas, totalOriginal) {
 function aplicarFiltrosDespesas() {
     const filtroFornecedor = document.getElementById('filtro-fornecedor').value.toLowerCase();
     const filtroConta = document.getElementById('filtro-conta').value.toLowerCase();
+    const filtroStatus = document.getElementById('filtro-status').value.toLowerCase();
     
     let despesasFiltradas = despesasCompletas.filter(despesa => {
         const matchFornecedor = despesa.fornecedor.toLowerCase().includes(filtroFornecedor);
         const matchConta = despesa.conta_contabil.toLowerCase().includes(filtroConta);
-        return matchFornecedor && matchConta;
+        
+        // Filtro de status com dropdown - "todos", "pago", "pendente"
+        let matchStatus = true;
+        if (filtroStatus === 'pago') {
+            matchStatus = despesa.status === 'Recebido';
+        } else if (filtroStatus === 'pendente') {
+            matchStatus = despesa.status === 'Pendente';
+        }
+        // Se filtroStatus está vazio ("todos"), matchStatus permanece true
+        
+        return matchFornecedor && matchConta && matchStatus;
     });
     
     // Calcula o total filtrado
@@ -615,7 +649,7 @@ function aplicarFiltrosDespesas() {
     
     // Atualiza o total exibido
     const totalValor = document.getElementById('despesa-total-valor');
-    totalValor.textContent = `R$ ${totalFiltrado.toLocaleString('pt-BR')} (${despesasFiltradas.length} registros)`;
+    totalValor.textContent = `R$ ${totalFiltrado.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${despesasFiltradas.length} registros)`;
     
     // Renderiza os dados filtrados
     renderizarDespesas(despesasFiltradas, totalFiltrado);
@@ -624,13 +658,14 @@ function aplicarFiltrosDespesas() {
 function limparFiltrosDespesas() {
     document.getElementById('filtro-fornecedor').value = '';
     document.getElementById('filtro-conta').value = '';
+    document.getElementById('filtro-status').selectedIndex = 0; // Volta para "Todos"
     
     // Calcula o total original
     const totalOriginal = despesasCompletas.reduce((sum, despesa) => sum + despesa.valor, 0);
     
     // Restaura o total original
     const totalValor = document.getElementById('despesa-total-valor');
-    totalValor.textContent = `R$ ${totalOriginal.toLocaleString('pt-BR')}`;
+    totalValor.textContent = `R$ ${totalOriginal.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
     
     // Renderiza todos os dados
     renderizarDespesas(despesasCompletas, totalOriginal);

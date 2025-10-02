@@ -174,19 +174,121 @@
     flex: 1;
     display: grid;
     grid-template-columns: 2fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
-    padding: 10px;
+    grid-template-rows: auto 1fr 1fr;
+    gap: 15px;
+    padding: 15px;
     min-height: 0;
+}
+
+/* Painel de insights e projeções */
+.insights-panel {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+    border-radius: 8px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    border: 1px solid #74b9ff;
+    box-shadow: 0 4px 15px rgba(116, 185, 255, 0.15);
+}
+
+.insight-card {
+    background: rgba(45, 52, 54, 0.7);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s;
+}
+
+.insight-card:hover::before {
+    left: 100%;
+}
+
+.insight-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.insight-card.performance {
+    border-color: #00d4aa;
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.15), rgba(0, 184, 148, 0.15));
+}
+
+.insight-card.trend {
+    border-color: #fdcb6e;
+    background: linear-gradient(135deg, rgba(253, 203, 110, 0.15), rgba(225, 112, 85, 0.15));
+}
+
+.insight-card.projection {
+    border-color: #ff6b9d;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(230, 126, 34, 0.15));
+}
+
+.insight-card.efficiency {
+    border-color: #74b9ff;
+    background: linear-gradient(135deg, rgba(116, 185, 255, 0.15), rgba(9, 132, 227, 0.15));
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.insight-icon {
+    font-size: 14px;
+    display: inline-block;
+}
+
+.insight-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    opacity: 0.9;
+    color: white;
+}
+
+.insight-value {
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.insight-description {
+    font-size: 9px;
+    opacity: 0.8;
+    color: #ddd;
+    line-height: 1.3;
 }
 
 /* Gráfico de frete diário (superior esquerda) */
 .grafico-diario {
-    background: #636e72;
-    border-radius: 8px;
-    padding: 15px 15px 25px 15px;
+    background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+    border-radius: 12px;
+    padding: 20px;
     position: relative;
     overflow: hidden;
+    border: 2px solid #00d4aa;
+    box-shadow: 0 8px 25px rgba(0, 212, 170, 0.15);
 }
 
 .grafico-header {
@@ -260,25 +362,49 @@
 .metricas-clientes {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
 }
 
 .metricas-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    height: 120px;
+    gap: 12px;
+    height: 140px;
 }
 
 .metrica-card {
-    background: #2d3436;
-    border-radius: 6px;
-    padding: 10px;
+    background: rgba(45, 52, 54, 0.8);
+    border-radius: 10px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border: 1px solid #74b9ff;
+    border: 2px solid;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.metrica-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s;
+}
+
+.metrica-card:hover::before {
+    left: 100%;
+}
+
+.metrica-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
 .metrica-card.receber {
@@ -315,28 +441,38 @@
 }
 
 .clientes-chart {
-    background: #636e72;
-    border-radius: 8px;
-    padding: 15px;
+    background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+    border-radius: 12px;
+    padding: 20px;
     flex: 1;
     min-height: 0;
+    border: 2px solid #fdcb6e;
+    box-shadow: 0 8px 25px rgba(253, 203, 110, 0.15);
 }
 
 /* Gráfico mensal (inferior, span de 2 colunas) */
 .grafico-mensal {
-    background: #636e72;
-    border-radius: 8px;
-    padding: 15px;
+    background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+    border-radius: 12px;
+    padding: 20px;
     grid-column: 1 / -1;
     position: relative;
     overflow: hidden;
+    border: 2px solid #ff6b9d;
+    box-shadow: 0 8px 25px rgba(255, 107, 157, 0.15);
 }
 
 /* Responsividade para telas menores */
 @media (max-width: 1200px) {
     .dashboard-main {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto auto;
+    }
+    
+    .insights-panel {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 8px;
+        gap: 6px;
     }
     
     .grafico-mensal {
@@ -367,6 +503,23 @@
         min-width: 100px;
         font-size: 11px;
     }
+    
+    .insight-value {
+        font-size: 14px;
+    }
+    
+    .insight-title {
+        font-size: 9px;
+    }
+    
+    .insight-icon {
+        font-size: 13px;
+    }
+    
+    .insight-header {
+        gap: 5px;
+        margin-bottom: 5px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -375,6 +528,37 @@
         padding: 10px;
         flex-wrap: wrap;
         gap: 10px;
+    }
+    
+    .insights-panel {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        padding: 6px;
+    }
+    
+    .insight-card {
+        padding: 8px 10px;
+    }
+    
+    .insight-value {
+        font-size: 13px;
+    }
+    
+    .insight-title {
+        font-size: 9px;
+    }
+    
+    .insight-description {
+        font-size: 8px;
+    }
+    
+    .insight-icon {
+        font-size: 12px;
+    }
+    
+    .insight-header {
+        gap: 4px;
+        margin-bottom: 4px;
     }
     
     .metricas-cards {
@@ -485,22 +669,64 @@
 
     <!-- Dashboard Principal -->
     <div class="dashboard-main">
+        <!-- Painel de Insights -->
+        <div class="insights-panel">
+            <div class="insight-card performance">
+                <div class="insight-header">
+                    <span class="insight-icon">📈</span>
+                    <div class="insight-title">Performance Atual</div>
+                </div>
+                <div class="insight-value" id="performance-value">R$ 0,00</div>
+                <div class="insight-description">Diferença entre frete correto e despesas gerais hoje</div>
+            </div>
+            
+            <div class="insight-card trend">
+                <div class="insight-header">
+                    <span class="insight-icon">📊</span>
+                    <div class="insight-title">Tendência</div>
+                </div>
+                <div class="insight-value" id="trend-value">+0%</div>
+                <div class="insight-description">Crescimento médio diário baseado na projeção</div>
+            </div>
+            
+            <div class="insight-card projection">
+                <div class="insight-header">
+                    <span class="insight-icon">🔮</span>
+                    <div class="insight-title">Projeção Mensal</div>
+                </div>
+                <div class="insight-value" id="projection-value">R$ 0,00</div>
+                <div class="insight-description">Estimativa total do mês com base na tendência</div>
+            </div>
+            
+            <div class="insight-card efficiency">
+                <div class="insight-header">
+                    <span class="insight-icon">⚡</span>
+                    <div class="insight-title">Eficiência</div>
+                </div>
+                <div class="insight-value" id="efficiency-value">0%</div>
+                <div class="insight-description">Porcentagem de dias com resultado positivo</div>
+            </div>
+        </div>
+
         <!-- Gráfico Frete Diário -->
         <div class="grafico-diario">
             <div class="grafico-header">
-                <div class="grafico-title">Frete Correto vs Despesas Gerais</div>
+                <div class="grafico-title">
+                    📊 Frete Correto vs Despesas Gerais
+                    <span id="data-status" style="font-size: 10px; opacity: 0.7; margin-left: 10px;">com Projeção Inteligente</span>
+                </div>
                 <!-- Totais Mensais -->
                 <div class="totais-mensais">
                     <div class="total-card frete-correto">
-                        <div class="total-label">Frete Correto</div>
+                        <div class="total-label">💚 Frete Correto</div>
                         <div class="total-valor" id="totalFreteCorreto">R$ 0,00</div>
                     </div>
                     <div class="total-card despesas-gerais">
-                        <div class="total-label">Despesas Gerais</div>
+                        <div class="total-label">🔴 Despesas Gerais</div>
                         <div class="total-valor" id="totalDespesasGerais">R$ 0,00</div>
                     </div>
                     <div class="total-card diferenca-total">
-                        <div class="total-label">Diferença</div>
+                        <div class="total-label">⚖️ Diferença</div>
                         <div class="total-valor" id="totalDiferenca">R$ 0,00</div>
                     </div>
                 </div>
@@ -578,9 +804,9 @@ Chart.defaults.borderColor = 'rgba(116, 185, 255, 0.5)';
 // Registrar plugin datalabels
 Chart.register(ChartDataLabels);
 
-// Função para calcular projeção futura baseada nos dados reais
-function calcularProjecaoFutura(dados, labels) {
-    // Encontrar onde os dados param de mudar (valores repetidos)
+// Função para detectar último dia com dados reais (reutilizada)
+function detectarUltimoDiaComDados(dados) {
+    console.log('🔍 Detectando último dia com dados para:', dados.length, 'dias');
     let ultimoIndiceComDadosReais = -1;
     
     // Procurar o último dia onde houve mudança significativa
@@ -605,6 +831,15 @@ function calcularProjecaoFutura(dados, labels) {
             }
         }
     }
+    
+    console.log('📅 Último dia com dados reais detectado:', ultimoIndiceComDadosReais);
+    return ultimoIndiceComDadosReais;
+}
+
+// Função para calcular projeção futura baseada nos dados reais
+function calcularProjecaoFutura(dados, labels) {
+    // Encontrar onde os dados param de mudar (valores repetidos)
+    let ultimoIndiceComDadosReais = detectarUltimoDiaComDados(dados);
     
     if (ultimoIndiceComDadosReais < 1) {
         return dados.map(() => null);
@@ -672,6 +907,21 @@ function criarGraficoDialio() {
     
     // Atualizar totais mensais na interface
     atualizarTotaisMensais(totaisMensais);
+    
+    // Calcular e atualizar insights
+    const insights = calcularInsights(dadosDiarios, projecaoFrete);
+    atualizarInsights(insights);
+    
+    // Atualizar status dos dados
+    const statusEl = document.getElementById('data-status');
+    if (statusEl) {
+        const ultimoDiaComDados = detectarUltimoDiaComDados(freteCorreto);
+        if (ultimoDiaComDados > 0) {
+            statusEl.textContent = `Dados reais até dia ${ultimoDiaComDados + 1}, projeção a partir do dia ${ultimoDiaComDados + 2}`;
+        } else {
+            statusEl.textContent = 'com Projeção Inteligente';
+        }
+    }
     
     chartDialio = new Chart(ctx, {
         type: 'line',
@@ -804,6 +1054,100 @@ function criarGraficoDialio() {
     });
 }
 
+// Função para calcular insights avançados
+function calcularInsights(dadosDiarios, projecao) {
+    const hoje = new Date().getDate();
+    const dadosAteHoje = dadosDiarios.slice(0, hoje);
+    
+    // Performance atual (diferença do dia atual)
+    const ultimoDia = dadosAteHoje[dadosAteHoje.length - 1];
+    const performanceAtual = ultimoDia ? (ultimoDia.frete_correto - ultimoDia.despesas_gerais) : 0;
+    
+    // Tendência (crescimento médio baseado na projeção)
+    const projecaoValida = projecao.filter(p => p !== null && p > 0);
+    let tendencia = 0;
+    if (projecaoValida.length > 1) {
+        const inicio = projecaoValida[0];
+        const fim = projecaoValida[projecaoValida.length - 1];
+        tendencia = ((fim - inicio) / inicio) * 100 / projecaoValida.length;
+    }
+    
+    // Projeção mensal (estimativa do total)
+    const ultimaProjecao = projecaoValida[projecaoValida.length - 1] || 0;
+    const projecaoMensal = ultimaProjecao * 1.1; // Ajuste para o mês completo
+    
+    // Eficiência (dias positivos)
+    const diasPositivos = dadosAteHoje.filter(d => (d.frete_correto - d.despesas_gerais) > 0).length;
+    const eficiencia = dadosAteHoje.length > 0 ? (diasPositivos / dadosAteHoje.length) * 100 : 0;
+    
+    return {
+        performance: performanceAtual,
+        tendencia: tendencia,
+        projecaoMensal: projecaoMensal,
+        eficiencia: eficiencia
+    };
+}
+
+// Função para atualizar insights na interface
+function atualizarInsights(insights) {
+    // Performance atual
+    const performanceEl = document.getElementById('performance-value');
+    if (performanceEl) {
+        performanceEl.textContent = 'R$ ' + insights.performance.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        // Atualizar cor baseada na performance
+        const card = performanceEl.closest('.insight-card');
+        if (insights.performance > 0) {
+            card.style.borderColor = '#00d4aa';
+        } else {
+            card.style.borderColor = '#ff6b6b';
+        }
+    }
+    
+    // Tendência
+    const tendenciaEl = document.getElementById('trend-value');
+    if (tendenciaEl) {
+        const sinal = insights.tendencia > 0 ? '+' : '';
+        tendenciaEl.textContent = sinal + insights.tendencia.toFixed(1) + '%';
+        
+        // Atualizar cor baseada na tendência
+        const card = tendenciaEl.closest('.insight-card');
+        if (insights.tendencia > 0) {
+            card.style.borderColor = '#00d4aa';
+        } else {
+            card.style.borderColor = '#ff6b6b';
+        }
+    }
+    
+    // Projeção mensal
+    const projecaoEl = document.getElementById('projection-value');
+    if (projecaoEl) {
+        projecaoEl.textContent = 'R$ ' + insights.projecaoMensal.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Eficiência
+    const eficienciaEl = document.getElementById('efficiency-value');
+    if (eficienciaEl) {
+        eficienciaEl.textContent = insights.eficiencia.toFixed(1) + '%';
+        
+        // Atualizar cor baseada na eficiência
+        const card = eficienciaEl.closest('.insight-card');
+        if (insights.eficiencia >= 70) {
+            card.style.borderColor = '#00d4aa';
+        } else if (insights.eficiencia >= 50) {
+            card.style.borderColor = '#fdcb6e';
+        } else {
+            card.style.borderColor = '#ff6b6b';
+        }
+    }
+}
+
 // Função para atualizar totais mensais
 function atualizarTotaisMensais(totais) {
     console.log('💰 Atualizando totais mensais:', totais);
@@ -834,6 +1178,14 @@ function atualizarTotaisMensais(totais) {
     
     if (elementoDiff) {
         elementoDiff.textContent = 'R$ ' + diferenca.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Atualizar cor baseada no resultado
+        if (diferenca > 0) {
+            elementoDiff.style.color = '#00d4aa';
+        } else {
+            elementoDiff.style.color = '#ff6b6b';
+        }
+        
         console.log('✅ Total Diferença atualizado');
     } else {
         console.log('❌ Elemento totalDiferenca não encontrado');
@@ -1202,13 +1554,30 @@ function atualizarGraficos(data) {
             }
             chartDialio.update('active');
             
+            // Atualizar totais mensais
+            atualizarTotaisMensais(totaisMensais);
+            
+            // Recalcular insights
+            const insights = calcularInsights(dadosDiarios, projecaoFrete);
+            atualizarInsights(insights);
+            
+            // Atualizar status dos dados
+            const statusEl = document.getElementById('data-status');
+            if (statusEl) {
+                const ultimoDiaComDados = detectarUltimoDiaComDados(freteCorreto);
+                if (ultimoDiaComDados > 0) {
+                    statusEl.textContent = `Dados reais até dia ${ultimoDiaComDados + 1}, projeção a partir do dia ${ultimoDiaComDados + 2}`;
+                } else {
+                    statusEl.textContent = 'com Projeção Inteligente';
+                }
+                console.log('🔄 Status atualizado:', statusEl.textContent);
+            }
+            
             console.log('✅ Gráfico atualizado!');
         } else {
             console.log('⚠️ Dados diários inválidos:', dadosDiarios);
         }
         
-        // Atualizar totais mensais
-        atualizarTotaisMensais(totaisMensais);
         console.log('🏁 Gráfico principal atualizado com sucesso!');
     } else {
         console.log('❌ Gráfico não encontrado!');

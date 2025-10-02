@@ -444,12 +444,11 @@ def buscar_despesas_por_cliente(mes, ano):
     """Busca despesas detalhadas por fornecedor no mês/ano especificado."""
     conn = get_connection()
     
-    # Buscar TODOS os registros individuais (não agrupados) EXCLUINDO REIS TRANSPORTES
+    # Buscar TODOS os registros individuais (incluindo pendentes) EXCLUINDO REIS TRANSPORTES
     query = """
-    SELECT fornecedor, conta_contabil, valor_principal
+    SELECT fornecedor, conta_contabil, valor_principal, status
     FROM contas_pagar 
     WHERE competencia = ?
-      AND status = 'Recebido'
       AND fornecedor != 'REIS TRANSPORTES'
     ORDER BY valor_principal DESC
     """
@@ -466,7 +465,8 @@ def buscar_despesas_por_cliente(mes, ano):
         despesas_data.append({
             'fornecedor': row['fornecedor'],
             'conta_contabil': row['conta_contabil'],
-            'valor': valor
+            'valor': valor,
+            'status': row['status']
         })
         total_geral += valor
     
