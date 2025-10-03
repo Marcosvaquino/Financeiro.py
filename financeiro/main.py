@@ -179,6 +179,11 @@ try:
     app.register_blueprint(custo_frota_bp)
 except Exception:
     pass
+try:
+    from .painel_frete import painel_frete_bp
+    app.register_blueprint(painel_frete_bp)
+except Exception:
+    pass
 
 
 

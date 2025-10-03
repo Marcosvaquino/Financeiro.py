@@ -1,0 +1,421 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Painel de Gerenciamento de Frete{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Profissional -->
+    <div class="dashboard-hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>🚛 Painel de Gerenciamento de Frete</h1>
+                <p class="hero-subtitle">Análise Completa de Performance e Rentabilidade</p>
+            </div>
+            <div class="hero-filters-compact">
+                <div class="filter-inline">
+                    <select id="filtro-perfil" class="select-compact">
+                        <option value="">Todos Perfis</option>
+                    </select>
+                    <span class="filter-separator">|</span>
+                    <select id="filtro-cliente" class="select-compact">
+                        <option value="">Todos Clientes</option>
+                    </select>
+                    <span class="filter-separator">|</span>
+                    <select id="filtro-mes" class="select-compact">
+                        <option value="">Todos Meses</option>
+                    </select>
+                    <span class="filter-separator">/</span>
+                    <select id="filtro-ano" class="select-compact">
+                        <option value="">Todos Anos</option>
+                    </select>
+                </div>
+                <button onclick="carregarDados()" class="btn-update-compact">
+                    📊
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs Principais Compactos -->
+    <div class="kpi-section-compact">
+        <div class="kpi-row">
+            <!-- Total Faturado -->
+            <div class="kpi-card-compact receita">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">💰</span>
+                    <h3>Faturado</h3>
+                    <span class="kpi-trend-compact up">📈</span>
+                </div>
+                <div class="kpi-main-value" id="total-faturado">R$ 0,00</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Receita Total</span>
+                    <span class="kpi-percent success">Bruto</span>
+                </div>
+            </div>
+
+            <!-- Total Despesas -->
+            <div class="kpi-card-compact margem">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">📉</span>
+                    <h3>Despesas</h3>
+                    <span class="kpi-trend-compact down">📊</span>
+                </div>
+                <div class="kpi-main-value" id="total-despesas">R$ 0,00</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Custos Totais</span>
+                    <span class="kpi-percent warning">Gastos</span>
+                </div>
+            </div>
+
+            <!-- Margem % -->
+            <div class="kpi-card-compact clientes">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">📊</span>
+                    <h3>Margem</h3>
+                    <span class="kpi-trend-compact up">⚡</span>
+                </div>
+                <div class="kpi-main-value" id="margem-liquida">0%</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Rentabilidade</span>
+                    <span class="kpi-percent success">Líquida</span>
+                </div>
+            </div>
+
+            <!-- Viagens -->
+            <div class="kpi-card-compact extra">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">🚚</span>
+                    <h3>Viagens</h3>
+                    <span class="kpi-trend-compact up">🎯</span>
+                </div>
+                <div class="kpi-main-value" id="numero-viagens">0</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Total Entregas</span>
+                    <span class="kpi-percent success">Volume</span>
+                </div>
+            </div>
+
+            <!-- Ticket Médio -->
+            <div class="kpi-card-compact growth">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">🎯</span>
+                    <h3>Ticket Médio</h3>
+                    <span class="kpi-trend-compact up">💎</span>
+                </div>
+                <div class="kpi-main-value" id="ticket-medio">R$ 0,00</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Por Viagem</span>
+                    <span class="kpi-percent success">Média</span>
+                </div>
+            </div>
+
+            <!-- Cliente Top -->
+            <div class="kpi-card-compact receita">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">👑</span>
+                    <h3>Top Cliente</h3>
+                    <span class="kpi-trend-compact up">⭐</span>
+                </div>
+                <div class="kpi-main-value" id="cliente-mais-rentavel" style="font-size: 16px;">N/A</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Mais Rentável</span>
+                    <span class="kpi-percent success">MVP</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Gráficos -->
+    <div class="charts-section">
+        <!-- Gráfico 1: Receita/Despesa Diária Acumulativa -->
+        <div class="chart-container-full">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>📈 Receita e Despesa Diária (Acumulativo)</h3>
+                    <p class="chart-subtitle">Evolução diária do desempenho financeiro - Dias 1 a 31</p>
+                </div>
+                <div class="chart-content">
+                    <canvas id="graficoDiario"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos 2 e 3: Layout Side by Side -->
+        <div class="charts-row">
+            <!-- Gráfico 2: Frete Mensal com Rentabilidade -->
+            <div class="chart-container-half">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>📊 Análise Mensal de Frete</h3>
+                        <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade</p>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="graficoMensal"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Performance por Cliente -->
+            <div class="chart-container-half">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>👥 Top 10 Clientes</h3>
+                        <p class="chart-subtitle">Receita, despesa e % rentabilidade por cliente</p>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="graficoClientes"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
+<script>
+    let graficos = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarFiltros();
+        carregarDados();
+    });
+
+    async function carregarFiltros() {
+        try {
+            const response = await fetch('/api/painel-frete/filtros');
+            const filtros = await response.json();
+            
+            preencherSelect('filtro-perfil', filtros.perfis || []);
+            preencherSelect('filtro-cliente', filtros.clientes || []);
+            preencherSelect('filtro-mes', filtros.meses || []);
+            preencherSelect('filtro-ano', filtros.anos || []);
+        } catch (error) {
+            console.error('Erro ao carregar filtros:', error);
+        }
+    }
+
+    function preencherSelect(id, opcoes) {
+        const select = document.getElementById(id);
+        const firstOption = select.children[0];
+        select.innerHTML = '';
+        select.appendChild(firstOption);
+        
+        opcoes.forEach(opcao => {
+            const option = document.createElement('option');
+            option.value = opcao;
+            option.textContent = opcao;
+            select.appendChild(option);
+        });
+    }
+
+    async function carregarDados() {
+        try {
+            const params = new URLSearchParams();
+            
+            const perfil = document.getElementById('filtro-perfil').value;
+            const cliente = document.getElementById('filtro-cliente').value;
+            const mes = document.getElementById('filtro-mes').value;
+            const ano = document.getElementById('filtro-ano').value;
+            
+            if (perfil) params.append('perfil', perfil);
+            if (cliente) params.append('cliente', cliente);
+            if (mes) params.append('mes', mes);
+            if (ano) params.append('ano', ano);
+            
+            const response = await fetch('/api/painel-frete/dados?' + params.toString());
+            const dados = await response.json();
+            
+            atualizarCards(dados.cards);
+            atualizarGraficos(dados);
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+        }
+    }
+
+    function atualizarCards(cards) {
+        document.getElementById('total-faturado').textContent = formatarMoeda(cards.total_faturado);
+        document.getElementById('total-despesas').textContent = formatarMoeda(cards.total_despesas);
+        document.getElementById('margem-liquida').textContent = cards.margem_liquida_pct + '%';
+        document.getElementById('numero-viagens').textContent = cards.numero_viagens;
+        document.getElementById('ticket-medio').textContent = formatarMoeda(cards.ticket_medio);
+        document.getElementById('cliente-mais-rentavel').textContent = cards.cliente_mais_rentavel;
+    }
+
+    function atualizarGraficos(dados) {
+        // Destruir gráficos existentes
+        Object.values(graficos).forEach(g => g && g.destroy());
+
+        // Gráfico 1: Receita/Despesa Diária Acumulativa
+        graficos.diario = new Chart(document.getElementById('graficoDiario').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: dados.grafico_diario.dias || [],
+                datasets: [{
+                    label: 'Receita Acumulada',
+                    data: dados.grafico_diario.receita_acumulada || [],
+                    borderColor: '#4facfe',
+                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'Despesa Acumulada',  
+                    data: dados.grafico_diario.despesa_acumulada || [],
+                    borderColor: '#fa709a',
+                    backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR');
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico 2: Frete Mensal
+        graficos.mensal = new Chart(document.getElementById('graficoMensal').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dados.grafico_mensal.meses || [],
+                datasets: [{
+                    label: 'Frete a Receber',
+                    data: dados.grafico_mensal.frete_receber || [],
+                    backgroundColor: '#4facfe',
+                    borderRadius: 8,
+                    borderSkipped: false
+                }, {
+                    label: 'Frete a Pagar',
+                    data: dados.grafico_mensal.frete_pagar || [],
+                    backgroundColor: '#fa709a',
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR');
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico 3: Top Clientes
+        graficos.clientes = new Chart(document.getElementById('graficoClientes').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dados.grafico_clientes.clientes || [],
+                datasets: [{
+                    label: 'Receita',
+                    data: dados.grafico_clientes.receita || [],
+                    backgroundColor: '#4facfe',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }, {
+                    label: 'Despesa',
+                    data: dados.grafico_clientes.despesa || [],
+                    backgroundColor: '#fa709a',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR');
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function formatarMoeda(valor) {
+        return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+</script>
+{% endblock %}
