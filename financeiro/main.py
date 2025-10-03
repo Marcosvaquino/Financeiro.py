@@ -180,11 +180,7 @@ try:
 except Exception:
     pass
 
-try:
-    from .painel_frete import bp as painel_frete_bp
-    app.register_blueprint(painel_frete_bp)
-except Exception:
-    pass
+
 
 # Inicializa banco de dados somente quando executado como script
 # (não executar no import para evitar apagar dados durante testes/imports)
