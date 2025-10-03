@@ -7,76 +7,79 @@
     <div class="dashboard-hero">
         <div class="hero-content">
             <div class="hero-text">
-                <h1> Painel de Gerenciamento de Frete</h1>
+                <h1>🚛 Painel de Gerenciamento de Frete</h1>
                 <p class="hero-subtitle">Análise Completa de Performance e Rentabilidade</p>
             </div>
             <div class="hero-filters-compact">
                 <div class="filter-inline">
-                    <select id="filtro-perfil" class="select-compact">
+                    <select id="filtro-perfil" class="select-compact" onchange="carregarDadosDebounced()">
                         <option value="">Todos Perfis</option>
                     </select>
                     <span class="filter-separator">|</span>
-                    <select id="filtro-cliente" class="select-compact">
+                    <select id="filtro-cliente" class="select-compact" onchange="carregarDadosDebounced()">
                         <option value="">Todos Clientes</option>
                     </select>
                     <span class="filter-separator">|</span>
-                    <select id="filtro-mes" class="select-compact">
+                    <select id="filtro-mes" class="select-compact" onchange="carregarDadosDebounced()">
                         <option value="">Todos Meses</option>
                     </select>
                     <span class="filter-separator">/</span>
-                    <select id="filtro-ano" class="select-compact">
+                    <select id="filtro-ano" class="select-compact" onchange="carregarDadosDebounced()">
                         <option value="">Todos Anos</option>
                     </select>
                 </div>
-                <button onclick="carregarDados()" class="btn-update-compact"></button>
+                <div class="filter-status">
+                    <span id="loading-indicator" class="status-loading" style="display: none;">🔄 Atualizando...</span>
+                    <span id="last-update" class="status-success">📊 Dados atualizados</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="kpi-section-compact">
         <div class="kpi-row">
-            <div class="kpi-card-compact receita" onclick="abrirModal('faturado')" style="cursor: pointer;">
+            <div class="kpi-card-compact receita executive-card" onclick="abrirAnaliseReceita()">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">💰</span>
                     <h3>Faturado</h3>
                     <span class="kpi-trend-compact up"></span>
                 </div>
                 <div class="kpi-main-value" id="total-faturado">R$ 0,00</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">Receita Total</span>
-                    <span class="kpi-percent success">Bruto</span>
+                    <span class="kpi-percent success">📊 Ver Análise</span>
                 </div>
             </div>
 
-            <div class="kpi-card-compact margem" onclick="abrirModal('despesas')" style="cursor: pointer;">
+            <div class="kpi-card-compact margem executive-card" onclick="abrirAnaliseOperacional()">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">⚡</span>
                     <h3>Despesas</h3>
                     <span class="kpi-trend-compact down"></span>
                 </div>
                 <div class="kpi-main-value" id="total-despesas">R$ 0,00</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">Custos Totais</span>
-                    <span class="kpi-percent warning">Gastos</span>
+                    <span class="kpi-percent warning">🔍 Otimizar</span>
                 </div>
             </div>
 
-            <div class="kpi-card-compact clientes" onclick="abrirModal('margem')" style="cursor: pointer;">
+            <div class="kpi-card-compact clientes executive-card" onclick="abrirAnaliseRentabilidade()">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">📈</span>
                     <h3>Margem</h3>
                     <span class="kpi-trend-compact up"></span>
                 </div>
                 <div class="kpi-main-value" id="margem-liquida">0%</div>
                 <div class="kpi-sub-info">
                     <span class="kpi-meta">Rentabilidade</span>
-                    <span class="kpi-percent success">Líquida</span>
+                    <span class="kpi-percent success">📈 Estratégia</span>
                 </div>
             </div>
 
-            <div class="kpi-card-compact extra" onclick="abrirModal('viagens')" style="cursor: pointer;">
+            <div class="kpi-card-compact extra">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">🎯</span>
                     <h3>Viagens</h3>
                     <span class="kpi-trend-compact up"></span>
                 </div>
@@ -87,9 +90,9 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact growth" onclick="abrirModal('ticket')" style="cursor: pointer;">
+            <div class="kpi-card-compact growth">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">🎲</span>
                     <h3>Ticket Médio</h3>
                     <span class="kpi-trend-compact up"></span>
                 </div>
@@ -100,9 +103,9 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact receita" onclick="abrirModal('cliente')" style="cursor: pointer;">
+            <div class="kpi-card-compact receita">
                 <div class="kpi-header">
-                    <span class="kpi-icon-small"></span>
+                    <span class="kpi-icon-small">🏆</span>
                     <h3>Top Cliente</h3>
                     <span class="kpi-trend-compact up"></span>
                 </div>
@@ -116,12 +119,11 @@
     </div>
 
     <div class="charts-section">
-        <!-- Primeira linha: Gráfico Mensal em largura total -->
         <div class="chart-container-full">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3> Análise Mensal de Frete</h3>
-                    <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade - Todos os meses do ano</p>
+                    <h3>� Análise Mensal de Frete</h3>
+                    <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade - Todos os meses</p>
                 </div>
                 <div class="chart-content">
                     <canvas id="graficoMensal"></canvas>
@@ -129,12 +131,11 @@
             </div>
         </div>
 
-        <!-- Segunda linha: 2 gráficos lado a lado -->
         <div class="charts-row">
             <div class="chart-container-half">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3> Receita e Despesa Diária (Acumulativo)</h3>
+                        <h3>� Receita e Despesa Diária (Acumulativo)</h3>
                         <p class="chart-subtitle">Evolução diária do desempenho financeiro - Dias 1 a 31</p>
                     </div>
                     <div class="chart-content">
@@ -146,7 +147,7 @@
             <div class="chart-container-half">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3> Top 10 Clientes por Rentabilidade</h3>
+                        <h3>🎯 Top 10 Clientes</h3>
                         <p class="chart-subtitle">Receita, despesa e % rentabilidade por cliente</p>
                     </div>
                     <div class="chart-content">
@@ -157,15 +158,198 @@
         </div>
     </div>
 
-    <!-- Modais de Resumo -->
-    <div id="modal-resumo" class="modal-overlay" onclick="fecharModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modal-titulo">Resumo da Situação</h3>
-                <span class="modal-close" onclick="fecharModal()">&times;</span>
+    <!-- Painel Executivo de Análises -->
+    <div class="executive-analytics-section" id="executive-panel" style="display: none;">
+        <div class="executive-header">
+            <h2 id="executive-title">Análise Executiva</h2>
+            <button onclick="fecharAnaliseExecutiva()" class="btn-close-executive">✕</button>
+        </div>
+        
+        <div class="executive-content" id="executive-content">
+            <!-- Conteúdo será carregado dinamicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Templates de Análise Executiva -->
+<div id="template-receita" style="display: none;">
+    <div class="executive-dashboard">
+        <div class="executive-stats-grid">
+            <div class="exec-stat-card revenue">
+                <div class="stat-header">
+                    <span class="stat-icon">💰</span>
+                    <h4>Cliente Top</h4>
+                </div>
+                <div class="stat-value" id="exec-cliente-top">-</div>
+                <div class="stat-detail" id="exec-cliente-receita">R$ 0</div>
+                <div class="stat-growth positive" id="exec-cliente-participacao">0% do total</div>
             </div>
-            <div class="modal-body" id="modal-conteudo">
-                <!-- Conteúdo será inserido dinamicamente -->
+            
+            <div class="exec-stat-card growth">
+                <div class="stat-header">
+                    <span class="stat-icon">📊</span>
+                    <h4>Projeção</h4>
+                </div>
+                <div class="stat-value" id="exec-projecao">R$ 0</div>
+                <div class="stat-detail">Próximo Mês</div>
+                <div class="stat-growth positive" id="exec-tendencia">Estável</div>
+            </div>
+            
+            <div class="exec-stat-card target">
+                <div class="stat-header">
+                    <span class="stat-icon">🎯</span>
+                    <h4>Meta Sugerida</h4>
+                </div>
+                <div class="stat-value" id="exec-meta">R$ 0</div>
+                <div class="stat-detail">120% da projeção</div>
+                <div class="stat-growth neutral">Otimista</div>
+            </div>
+        </div>
+        
+        <div class="executive-insights">
+            <div class="insight-card primary">
+                <h4>🔍 Análise Estratégica</h4>
+                <div class="insight-content" id="exec-analise-estrategica">
+                    <p><strong>Performance Atual:</strong> <span id="exec-performance">-</span></p>
+                    <p><strong>Sazonalidade:</strong> <span id="exec-sazonalidade">-</span></p>
+                </div>
+            </div>
+            
+            <div class="insight-card secondary">
+                <h4>📋 Recomendações Executivas</h4>
+                <div class="insight-content">
+                    <ul id="exec-recomendacoes">
+                        <li>Fortalecer relacionamento com cliente top</li>
+                        <li>Diversificar portfolio para reduzir dependência</li>
+                        <li>Implementar estratégias de upselling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="template-operacional" style="display: none;">
+    <div class="executive-dashboard">
+        <div class="executive-stats-grid">
+            <div class="exec-stat-card cost">
+                <div class="stat-header">
+                    <span class="stat-icon">⚠️</span>
+                    <h4>Maior Custo</h4>
+                </div>
+                <div class="stat-value" id="exec-maior-custo-cat">-</div>
+                <div class="stat-detail" id="exec-maior-custo-valor">R$ 0</div>
+                <div class="stat-growth negative" id="exec-maior-custo-pct">0% do total</div>
+            </div>
+            
+            <div class="exec-stat-card efficiency">
+                <div class="stat-header">
+                    <span class="stat-icon">⚡</span>
+                    <h4>Eficiência</h4>
+                </div>
+                <div class="stat-value" id="exec-eficiencia">-</div>
+                <div class="stat-detail">Operacional</div>
+                <div class="stat-growth" id="exec-eficiencia-status">Avaliar</div>
+            </div>
+            
+            <div class="exec-stat-card benchmark">
+                <div class="stat-header">
+                    <span class="stat-icon">📏</span>
+                    <h4>Benchmark</h4>
+                </div>
+                <div class="stat-value" id="exec-benchmark">-</div>
+                <div class="stat-detail">vs Mercado</div>
+                <div class="stat-growth neutral">Referência</div>
+            </div>
+        </div>
+        
+        <div class="executive-insights">
+            <div class="insight-card warning">
+                <h4>🚨 Ação Prioritária</h4>
+                <div class="insight-content">
+                    <p id="exec-recomendacao-corte">Analisando oportunidades de otimização...</p>
+                </div>
+            </div>
+            
+            <div class="insight-card info">
+                <h4>💡 Oportunidades de Melhoria</h4>
+                <div class="insight-content">
+                    <ul>
+                        <li>Revisar rotas com maior custo por km</li>
+                        <li>Negociar melhores condições com fornecedores</li>
+                        <li>Implementar controle de combustível por veículo</li>
+                        <li>Otimizar ocupação de carga</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="template-rentabilidade" style="display: none;">
+    <div class="executive-dashboard">
+        <div class="executive-stats-grid">
+            <div class="exec-stat-card profit">
+                <div class="stat-header">
+                    <span class="stat-icon">💎</span>
+                    <h4>Margem Atual</h4>
+                </div>
+                <div class="stat-value" id="exec-margem-atual">0%</div>
+                <div class="stat-detail">Rentabilidade</div>
+                <div class="stat-growth" id="exec-margem-status">Avaliar</div>
+            </div>
+            
+            <div class="exec-stat-card potential">
+                <div class="stat-header">
+                    <span class="stat-icon">🚀</span>
+                    <h4>Potencial</h4>
+                </div>
+                <div class="stat-value" id="exec-potencial">+5%</div>
+                <div class="stat-detail">Melhoria Estimada</div>
+                <div class="stat-growth positive">Oportunidade</div>
+            </div>
+            
+            <div class="exec-stat-card roi">
+                <div class="stat-header">
+                    <span class="stat-icon">📈</span>
+                    <h4>ROI Projetado</h4>
+                </div>
+                <div class="stat-value" id="exec-roi">15%</div>
+                <div class="stat-detail">Anualizado</div>
+                <div class="stat-growth positive">Atrativo</div>
+            </div>
+        </div>
+        
+        <div class="executive-insights">
+            <div class="insight-card success">
+                <h4>🎯 Estratégia de Crescimento</h4>
+                <div class="insight-content">
+                    <ul>
+                        <li><strong>Foco nos Top Clientes:</strong> Expandir serviços para clientes mais rentáveis</li>
+                        <li><strong>Otimização de Rotas:</strong> Reduzir custos operacionais em 8-12%</li>
+                        <li><strong>Precificação Dinâmica:</strong> Ajustar preços conforme sazonalidade</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="insight-card premium">
+                <h4>💼 Plano de Ação Executivo</h4>
+                <div class="insight-content">
+                    <div class="action-items">
+                        <div class="action-item priority-high">
+                            <span class="action-priority">🔴</span>
+                            <span class="action-text">Revisar contratos com margem < 15%</span>
+                        </div>
+                        <div class="action-item priority-medium">
+                            <span class="action-priority">🟡</span>
+                            <span class="action-text">Implementar dashboard de rentabilidade por rota</span>
+                        </div>
+                        <div class="action-item priority-low">
+                            <span class="action-priority">🟢</span>
+                            <span class="action-text">Capacitar equipe em negociação de preços</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -175,505 +359,470 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
 <script>
-    let graficos = {};
+let graficos = {};
+let dadosAnaliseExecutiva = {};
 
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM carregado! Iniciando...');
-        console.log('Elementos encontrados:', {
-            perfil: !!document.getElementById('filtro-perfil'),
-            cliente: !!document.getElementById('filtro-cliente'),
-            totalFaturado: !!document.getElementById('total-faturado'),
-            graficoDiario: !!document.getElementById('graficoDiario')
-        });
-        carregarFiltros();
-        carregarDados();
+document.addEventListener('DOMContentLoaded', function() {
+    carregarFiltros();
+    carregarDados();
+});
+
+async function carregarFiltros() {
+    try {
+        const response = await fetch('/api/painel-frete/filtros');
+        const filtros = await response.json();
+        
+        preencherSelect('filtro-perfil', filtros.perfis || []);
+        preencherSelect('filtro-cliente', filtros.clientes || []);
+        preencherSelect('filtro-mes', filtros.meses || []);
+        preencherSelect('filtro-ano', filtros.anos || []);
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+    }
+}
+
+function preencherSelect(id, opcoes) {
+    const select = document.getElementById(id);
+    const firstOption = select.children[0];
+    select.innerHTML = '';
+    select.appendChild(firstOption);
+    
+    opcoes.forEach(opcao => {
+        const option = document.createElement('option');
+        option.value = opcao;
+        option.textContent = opcao;
+        select.appendChild(option);
+    });
+}
+
+async function carregarDados() {
+    try {
+        // Mostrar indicador de loading
+        mostrarLoading(true);
+        
+        const params = new URLSearchParams();
+        
+        const perfil = document.getElementById('filtro-perfil').value;
+        const cliente = document.getElementById('filtro-cliente').value;
+        const mes = document.getElementById('filtro-mes').value;
+        const ano = document.getElementById('filtro-ano').value;
+        
+        if (perfil) params.append('perfil', perfil);
+        if (cliente) params.append('cliente', cliente);
+        if (mes) params.append('mes', mes);
+        if (ano) params.append('ano', ano);
+        
+        const response = await fetch('/api/painel-frete/dados?' + params.toString());
+        const dados = await response.json();
+        
+        dadosAnaliseExecutiva = {
+            receita: dados.analise_receita || {},
+            despesas: dados.analise_despesas || {}
+        };
+        
+        atualizarCards(dados.cards);
+        atualizarGraficos(dados);
+        
+        // Esconder indicador de loading e mostrar sucesso
+        mostrarLoading(false);
+        atualizarStatusFiltros();
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        mostrarLoading(false);
+        mostrarErro('Erro ao carregar dados. Tente novamente.');
+    }
+}
+
+function atualizarCards(cards) {
+    document.getElementById('total-faturado').textContent = formatarMoeda(cards.total_faturado);
+    document.getElementById('total-despesas').textContent = formatarMoeda(cards.total_despesas);
+    document.getElementById('margem-liquida').textContent = cards.margem_liquida_pct + '%';
+    document.getElementById('numero-viagens').textContent = cards.numero_viagens;
+    document.getElementById('ticket-medio').textContent = formatarMoeda(cards.ticket_medio);
+    document.getElementById('cliente-mais-rentavel').textContent = cards.cliente_mais_rentavel;
+}
+
+function atualizarGraficos(dados) {
+    Object.values(graficos).forEach(g => g && g.destroy());
+
+    // Gráfico Diário
+    graficos.diario = new Chart(document.getElementById('graficoDiario').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: dados.grafico_diario.dias || [],
+            datasets: [{
+                label: 'Receita Acumulada',
+                data: dados.grafico_diario.receita_acumulada || [],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#28a745',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                datalabels: {
+                    display: true,
+                    align: 'top',
+                    anchor: 'end',
+                    color: '#28a745',
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    formatter: function(value) {
+                        return 'R$ ' + value.toLocaleString('pt-BR', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        });
+                    }
+                }
+            }, {
+                label: 'Despesa Acumulada',
+                data: dados.grafico_diario.despesa_acumulada || [],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#dc3545',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                datalabels: {
+                    display: false
+                }
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                datalabels: {
+                    display: function(context) {
+                        return context.datasetIndex === 0; // Só mostrar para receita (primeiro dataset)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: function(context) {
+                        // Encontrar o valor máximo entre receita e despesa
+                        const receitaMax = Math.max(...(dados.grafico_diario.receita_acumulada || [0]));
+                        const despesaMax = Math.max(...(dados.grafico_diario.despesa_acumulada || [0]));
+                        const valorMaximo = Math.max(receitaMax, despesaMax);
+                        
+                        // Adicionar margem e arredondar para números bonitos
+                        let valorComMargem;
+                        if (valorMaximo >= 1000000) {
+                            // Casa dos milhões - arredondar para milhões inteiros
+                            valorComMargem = valorMaximo + 3000000;
+                            return Math.ceil(valorComMargem / 1000000) * 1000000;
+                        } else {
+                            // Casa dos milhares - arredondar para centenas de milhares
+                            valorComMargem = valorMaximo + 3000;
+                            return Math.ceil(valorComMargem / 100000) * 100000;
+                        }
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: 'datalabels',
+            afterDatasetsDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    if (datasetIndex === 0) { // Só para receita
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((element, index) => {
+                            const data = dataset.data[index];
+                            if (data > 0) {
+                                // Salvar o estado atual do contexto
+                                ctx.save();
+                                
+                                // Configurar o estilo do texto
+                                ctx.fillStyle = '#28a745';
+                                ctx.font = 'bold 11px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                
+                                // Texto a ser exibido
+                                const text = 'R$ ' + data.toLocaleString('pt-BR', {
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0
+                                });
+                                
+                                // Posicionar bem acima do ponto (40px acima da bolinha)
+                                ctx.translate(element.x, element.y - 40);
+                                
+                                // Rotacionar 270° (texto vertical de baixo para cima)
+                                ctx.rotate(-Math.PI / 2);
+                                
+                                // Desenhar o texto rotacionado
+                                ctx.fillText(text, 0, 0);
+                                
+                                // Restaurar o estado do contexto
+                                ctx.restore();
+                            }
+                        });
+                    }
+                });
+            }
+        }]
     });
 
-    async function carregarFiltros() {
-        try {
-            const response = await fetch('/api/painel-frete/filtros');
-            const filtros = await response.json();
-            console.log('Filtros:', filtros);
-            
-            preencherSelect('filtro-perfil', filtros.perfis || []);
-            preencherSelect('filtro-cliente', filtros.clientes || []);
-            preencherSelect('filtro-mes', filtros.meses || []);
-            preencherSelect('filtro-ano', filtros.anos || []);
-        } catch (error) {
-            console.error('Erro filtros:', error);
-        }
-    }
-
-    function preencherSelect(id, opcoes) {
-        const select = document.getElementById(id);
-        if (!select) return;
-        
-        const firstOption = select.children[0];
-        select.innerHTML = '';
-        select.appendChild(firstOption);
-        
-        opcoes.forEach(opcao => {
-            const option = document.createElement('option');
-            option.value = opcao;
-            option.textContent = opcao;
-            select.appendChild(option);
-        });
-    }
-
-    async function carregarDados() {
-        try {
-            console.log('Carregando dados...');
-            const params = new URLSearchParams();
-            
-            const perfil = document.getElementById('filtro-perfil')?.value || '';
-            const cliente = document.getElementById('filtro-cliente')?.value || '';
-            const mes = document.getElementById('filtro-mes')?.value || '';
-            const ano = document.getElementById('filtro-ano')?.value || '';
-            
-            if (perfil) params.append('perfil', perfil);
-            if (cliente) params.append('cliente', cliente);
-            if (mes) params.append('mes', mes);
-            if (ano) params.append('ano', ano);
-            
-            const response = await fetch('/api/painel-frete/dados?' + params.toString());
-            const dados = await response.json();
-            console.log('Dados recebidos:', dados);
-            
-            atualizarCards(dados.cards);
-            atualizarGraficos(dados);
-        } catch (error) {
-            console.error('Erro dados:', error);
-        }
-    }
-
-    function atualizarCards(cards) {
-        console.log('Atualizando cards:', cards);
-        
-        const el1 = document.getElementById('total-faturado');
-        const el2 = document.getElementById('total-despesas');
-        const el3 = document.getElementById('margem-liquida');
-        const el4 = document.getElementById('numero-viagens');
-        const el5 = document.getElementById('ticket-medio');
-        const el6 = document.getElementById('cliente-mais-rentavel');
-        
-        console.log('Elementos cards:', {el1: !!el1, el2: !!el2, el3: !!el3, el4: !!el4, el5: !!el5, el6: !!el6});
-        
-        if (el1) el1.textContent = formatarMoeda(cards.total_faturado);
-        if (el2) el2.textContent = formatarMoeda(cards.total_despesas);
-        if (el3) el3.textContent = cards.margem_liquida_pct + '%';
-        if (el4) el4.textContent = cards.numero_viagens;
-        if (el5) el5.textContent = formatarMoeda(cards.ticket_medio);
-        if (el6) el6.textContent = cards.cliente_mais_rentavel;
-        
-        console.log('Cards atualizados!');
-    }
-
-    function atualizarGraficos(dados) {
-        Object.values(graficos).forEach(g => g && g.destroy());
-
-        // Gráfico Diário
-        const ctxDiario = document.getElementById('graficoDiario');
-        if (ctxDiario) {
-            graficos.diario = new Chart(ctxDiario.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: dados.grafico_diario.dias || [],
-                    datasets: [{
-                        label: 'Receita Acumulada',
-                        data: dados.grafico_diario.receita_acumulada || [],
-                        borderColor: '#4facfe',
-                        backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Despesa Acumulada',  
-                        data: dados.grafico_diario.despesa_acumulada || [],
-                        borderColor: '#fa709a',
-                        backgroundColor: 'rgba(250, 112, 154, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
-                            }
+    // Gráfico Mensal
+    graficos.mensal = new Chart(document.getElementById('graficoMensal').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: dados.grafico_mensal.meses || [],
+            datasets: [{
+                label: 'Frete a Receber',
+                data: dados.grafico_mensal.frete_receber || [],
+                backgroundColor: '#28a745',
+                borderColor: '#28a745',
+                borderWidth: 2,
+                borderRadius: 6
+            }, {
+                label: 'Frete a Pagar',
+                data: dados.grafico_mensal.frete_pagar || [],
+                backgroundColor: '#dc3545',
+                borderColor: '#dc3545', 
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
                         }
                     }
                 }
-            });
+            }
         }
+    });
 
-        // Gráfico Mensal
-        const ctxMensal = document.getElementById('graficoMensal');
-        if (ctxMensal) {
-            graficos.mensal = new Chart(ctxMensal.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: dados.grafico_mensal.meses || [],
-                    datasets: [{
-                        label: 'Frete a Receber',
-                        data: dados.grafico_mensal.frete_receber || [],
-                        backgroundColor: '#4facfe'
-                    }, {
-                        label: 'Frete a Pagar',
-                        data: dados.grafico_mensal.frete_pagar || [],
-                        backgroundColor: '#fa709a'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
-                            }
-                        }
-                    }
+    // Gráfico Clientes
+    graficos.clientes = new Chart(document.getElementById('graficoClientes').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: dados.grafico_clientes.clientes || [],
+            datasets: [{
+                label: 'Receita',
+                data: dados.grafico_clientes.receita || [],
+                backgroundColor: '#28a745',
+                borderColor: '#28a745',
+                borderWidth: 1,
+                borderRadius: 4
+            }, {
+                label: 'Despesa',
+                data: dados.grafico_clientes.despesa || [],
+                backgroundColor: '#dc3545',
+                borderColor: '#dc3545',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    position: 'top',
                 }
-            });
+            }
         }
+    });
+}
 
-        // Gráfico Clientes
-        const ctxClientes = document.getElementById('graficoClientes');
-        if (ctxClientes) {
-            graficos.clientes = new Chart(ctxClientes.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: dados.grafico_clientes.clientes || [],
-                    datasets: [{
-                        label: 'Receita',
-                        data: dados.grafico_clientes.receita || [],
-                        backgroundColor: '#4facfe'
-                    }, {
-                        label: 'Despesa',
-                        data: dados.grafico_clientes.despesa || [],
-                        backgroundColor: '#fa709a'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+// Funções de Análise Executiva
+function abrirAnaliseReceita() {
+    const title = "💰 Análise Executiva - Faturamento";
+    const template = document.getElementById('template-receita').innerHTML;
+    
+    mostrarAnaliseExecutiva(title, template);
+    
+    // Preencher dados específicos
+    if (dadosAnaliseExecutiva.receita) {
+        const receita = dadosAnaliseExecutiva.receita;
+        document.getElementById('exec-cliente-top').textContent = receita.cliente_top?.nome || 'N/A';
+        document.getElementById('exec-cliente-receita').textContent = formatarMoeda(receita.cliente_top?.receita || 0);
+        document.getElementById('exec-cliente-participacao').textContent = (receita.cliente_top?.participacao_pct || 0) + '% do total';
+        document.getElementById('exec-projecao').textContent = formatarMoeda(receita.projecao_proximo_mes || 0);
+        document.getElementById('exec-tendencia').textContent = receita.tendencia_anual || 'Estável';
+        document.getElementById('exec-meta').textContent = formatarMoeda(receita.meta_sugerida || 0);
+        document.getElementById('exec-performance').textContent = receita.tendencia_anual || 'Avaliar';
+        document.getElementById('exec-sazonalidade').textContent = receita.analise_sazonal || 'Sem dados';
+    }
+}
+
+function abrirAnaliseOperacional() {
+    const title = "⚡ Análise Executiva - Operacional";
+    const template = document.getElementById('template-operacional').innerHTML;
+    
+    mostrarAnaliseExecutiva(title, template);
+    
+    // Preencher dados específicos
+    if (dadosAnaliseExecutiva.despesas) {
+        const despesas = dadosAnaliseExecutiva.despesas;
+        document.getElementById('exec-maior-custo-cat').textContent = despesas.maior_custo?.categoria || 'N/A';
+        document.getElementById('exec-maior-custo-valor').textContent = formatarMoeda(despesas.maior_custo?.valor || 0);
+        document.getElementById('exec-maior-custo-pct').textContent = (despesas.maior_custo?.pct_total || 0) + '% do total';
+        document.getElementById('exec-eficiencia').textContent = despesas.eficiencia_operacional || 'Avaliar';
+        document.getElementById('exec-benchmark').textContent = despesas.benchmark_mercado || 'Sem dados';
+        document.getElementById('exec-recomendacao-corte').textContent = despesas.recomendacao_corte || 'Analisar oportunidades';
+        
+        // Status da eficiência
+        const eficienciaEl = document.getElementById('exec-eficiencia-status');
+        if (despesas.eficiencia_operacional?.includes('Excelente')) {
+            eficienciaEl.className = 'stat-growth positive';
+            eficienciaEl.textContent = 'Excelente';
+        } else if (despesas.eficiencia_operacional?.includes('Boa')) {
+            eficienciaEl.className = 'stat-growth positive';
+            eficienciaEl.textContent = 'Boa';
+        } else if (despesas.eficiencia_operacional?.includes('Regular')) {
+            eficienciaEl.className = 'stat-growth neutral';
+            eficienciaEl.textContent = 'Regular';
+        } else {
+            eficienciaEl.className = 'stat-growth negative';
+            eficienciaEl.textContent = 'Crítica';
         }
     }
+}
 
-    function formatarMoeda(valor) {
-        return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+function abrirAnaliseRentabilidade() {
+    const title = "📈 Análise Executiva - Rentabilidade";
+    const template = document.getElementById('template-rentabilidade').innerHTML;
+    
+    mostrarAnaliseExecutiva(title, template);
+    
+    // Calcular margem atual dos dados disponíveis
+    const totalFaturado = parseFloat(document.getElementById('total-faturado').textContent.replace(/[R$\s.]/g, '').replace(',', '.'));
+    const totalDespesas = parseFloat(document.getElementById('total-despesas').textContent.replace(/[R$\s.]/g, '').replace(',', '.'));
+    const margemAtual = totalFaturado > 0 ? ((totalFaturado - totalDespesas) / totalFaturado * 100) : 0;
+    
+    document.getElementById('exec-margem-atual').textContent = margemAtual.toFixed(1) + '%';
+    
+    // Status da margem
+    const margemStatus = document.getElementById('exec-margem-status');
+    if (margemAtual > 25) {
+        margemStatus.className = 'stat-growth positive';
+        margemStatus.textContent = 'Excelente';
+    } else if (margemAtual > 15) {
+        margemStatus.className = 'stat-growth positive';
+        margemStatus.textContent = 'Boa';
+    } else if (margemAtual > 5) {
+        margemStatus.className = 'stat-growth neutral';
+        margemStatus.textContent = 'Regular';
+    } else {
+        margemStatus.className = 'stat-growth negative';
+        margemStatus.textContent = 'Crítica';
     }
+}
 
-    // Variável global para armazenar dados dos cards
-    let dadosCards = {};
+function mostrarAnaliseExecutiva(title, content) {
+    document.getElementById('executive-title').innerHTML = title;
+    document.getElementById('executive-content').innerHTML = content;
+    document.getElementById('executive-panel').style.display = 'block';
+    
+    // Smooth scroll para o painel
+    document.getElementById('executive-panel').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
 
-    function abrirModal(tipo) {
-        const modal = document.getElementById('modal-resumo');
-        const titulo = document.getElementById('modal-titulo');
-        const conteudo = document.getElementById('modal-conteudo');
-        
-        let tituloModal, conteudoModal;
-        
-        switch(tipo) {
-            case 'faturado':
-                tituloModal = '💰 Análise do Faturamento';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Receita Total</h4>
-                            <p class="stat-value">${formatarMoeda(dadosCards.total_faturado || 0)}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Status</h4>
-                            <p class="stat-status">${analisarFaturamento(dadosCards.total_faturado, dadosCards.total_despesas)}</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${gerarInsightReceita(dadosCards.total_faturado, dadosCards.numero_viagens)}</li>
-                            <li>Ticket médio de ${formatarMoeda(dadosCards.ticket_medio || 0)} por viagem</li>
-                            <li>${analisarPerformanceReceita(dadosCards.margem_liquida_pct)}</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-                
-            case 'despesas':
-                tituloModal = '📊 Análise das Despesas';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Despesas Totais</h4>
-                            <p class="stat-value">${formatarMoeda(dadosCards.total_despesas || 0)}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>% do Faturamento</h4>
-                            <p class="stat-status">${calcularPercentualDespesas(dadosCards.total_despesas, dadosCards.total_faturado)}%</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${analisarNivelDespesas(dadosCards.total_despesas, dadosCards.total_faturado)}</li>
-                            <li>Custo médio por viagem: ${formatarMoeda((dadosCards.total_despesas || 0) / (dadosCards.numero_viagens || 1))}</li>
-                            <li>${sugerirOtimizacaoDespesas(dadosCards.margem_liquida_pct)}</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-                
-            case 'margem':
-                tituloModal = '📈 Análise da Margem';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Margem Líquida</h4>
-                            <p class="stat-value">${dadosCards.margem_liquida_pct || 0}%</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Lucro Líquido</h4>
-                            <p class="stat-status">${formatarMoeda((dadosCards.total_faturado || 0) - (dadosCards.total_despesas || 0))}</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${avaliarMargemLiquida(dadosCards.margem_liquida_pct)}</li>
-                            <li>${compararMargemMercado(dadosCards.margem_liquida_pct)}</li>
-                            <li>${sugerirMelhoriaMargem(dadosCards.margem_liquida_pct)}</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-                
-            case 'viagens':
-                tituloModal = '🚚 Análise das Viagens';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Total de Viagens</h4>
-                            <p class="stat-value">${dadosCards.numero_viagens || 0}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Produtividade</h4>
-                            <p class="stat-status">${avaliarProdutividade(dadosCards.numero_viagens)}</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${analisarVolumeViagens(dadosCards.numero_viagens)}</li>
-                            <li>Receita média por viagem: ${formatarMoeda((dadosCards.total_faturado || 0) / (dadosCards.numero_viagens || 1))}</li>
-                            <li>${sugerirOtimizacaoViagens(dadosCards.numero_viagens, dadosCards.ticket_medio)}</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-                
-            case 'ticket':
-                tituloModal = '🎯 Análise do Ticket Médio';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Ticket Médio</h4>
-                            <p class="stat-value">${formatarMoeda(dadosCards.ticket_medio || 0)}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Classificação</h4>
-                            <p class="stat-status">${classificarTicketMedio(dadosCards.ticket_medio)}</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${analisarTicketMedio(dadosCards.ticket_medio)}</li>
-                            <li>${compararTicketMercado(dadosCards.ticket_medio)}</li>
-                            <li>${sugerirMelhoriaTicket(dadosCards.ticket_medio)}</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-                
-            case 'cliente':
-                tituloModal = '👑 Análise do Top Cliente';
-                conteudoModal = `
-                    <div class="modal-stats">
-                        <div class="stat-card">
-                            <h4>Cliente Mais Rentável</h4>
-                            <p class="stat-value">${dadosCards.cliente_mais_rentavel || 'N/A'}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Importância</h4>
-                            <p class="stat-status">Cliente Premium</p>
-                        </div>
-                    </div>
-                    <div class="modal-insights">
-                        <h4>💡 Insights</h4>
-                        <ul>
-                            <li>${analisarTopCliente(dadosCards.cliente_mais_rentavel)}</li>
-                            <li>Foco na manutenção do relacionamento comercial</li>
-                            <li>Oportunidade de replicar estratégias para outros clientes</li>
-                        </ul>
-                    </div>
-                `;
-                break;
-        }
-        
-        titulo.innerHTML = tituloModal;
-        conteudo.innerHTML = conteudoModal;
-        modal.style.display = 'flex';
+function fecharAnaliseExecutiva() {
+    document.getElementById('executive-panel').style.display = 'none';
+}
+
+function formatarMoeda(valor) {
+    return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// Funções auxiliares para UX
+function mostrarLoading(mostrar) {
+    const loadingEl = document.getElementById('loading-indicator');
+    const updateEl = document.getElementById('last-update');
+    
+    if (mostrar) {
+        loadingEl.style.display = 'inline';
+        updateEl.style.display = 'none';
+    } else {
+        loadingEl.style.display = 'none';
+        updateEl.style.display = 'inline';
     }
+}
 
-    function fecharModal() {
-        document.getElementById('modal-resumo').style.display = 'none';
-    }
+function atualizarStatusFiltros() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    const updateEl = document.getElementById('last-update');
+    updateEl.textContent = `📊 Atualizado às ${timeString}`;
+    updateEl.style.color = '#22c55e';
+    
+    // Fade back to normal after 2 seconds
+    setTimeout(() => {
+        updateEl.style.color = '';
+    }, 2000);
+}
 
-    // Funções de análise para gerar insights dinâmicos
-    function analisarFaturamento(faturado, despesas) {
-        if (faturado > despesas) return '✅ Faturamento Positivo';
-        return '⚠️ Atenção: Despesas Altas';
-    }
+function mostrarErro(mensagem) {
+    const updateEl = document.getElementById('last-update');
+    updateEl.textContent = `❌ ${mensagem}`;
+    updateEl.style.color = '#ef4444';
+    
+    // Clear error message after 5 seconds
+    setTimeout(() => {
+        updateEl.textContent = '📊 Dados atualizados';
+        updateEl.style.color = '';
+    }, 5000);
+}
 
-    function gerarInsightReceita(faturado, viagens) {
-        if (faturado > 50000) return 'Excelente volume de faturamento registrado';
-        if (faturado > 20000) return 'Bom desempenho no faturamento';
-        return 'Oportunidade de crescimento no faturamento';
-    }
+// Debounce function para evitar muitas requests
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-    function analisarPerformanceReceita(margem) {
-        if (margem > 20) return 'Margem excelente, mantendo alta rentabilidade';
-        if (margem > 10) return 'Margem satisfatória, com espaço para otimização';
-        return 'Margem baixa, requer atenção urgente';
-    }
-
-    function calcularPercentualDespesas(despesas, faturado) {
-        if (faturado === 0) return 0;
-        return ((despesas / faturado) * 100).toFixed(1);
-    }
-
-    function analisarNivelDespesas(despesas, faturado) {
-        const percentual = (despesas / faturado) * 100;
-        if (percentual < 70) return 'Nível de despesas controlado e eficiente';
-        if (percentual < 85) return 'Despesas dentro do aceitável, mas atenção aos custos';
-        return 'Nível de despesas alto, necessário revisar custos';
-    }
-
-    function sugerirOtimizacaoDespesas(margem) {
-        if (margem < 15) return 'Recomendado: revisão completa da estrutura de custos';
-        return 'Foque na otimização de rotas e combustível';
-    }
-
-    function avaliarMargemLiquida(margem) {
-        if (margem > 25) return 'Margem excepcional para o setor de logística';
-        if (margem > 15) return 'Margem saudável e competitiva';
-        if (margem > 5) return 'Margem aceitável, mas com potencial de melhoria';
-        return 'Margem crítica, ação imediata necessária';
-    }
-
-    function compararMargemMercado(margem) {
-        if (margem > 20) return 'Acima da média do setor de transporte (15-20%)';
-        if (margem > 10) return 'Dentro da média do setor de transporte';
-        return 'Abaixo da média do setor, necessário melhorar';
-    }
-
-    function sugerirMelhoriaMargem(margem) {
-        if (margem < 10) return 'Priorize: revisão de preços e redução de custos operacionais';
-        return 'Oportunidade: otimização de rotas e negociação com fornecedores';
-    }
-
-    function avaliarProdutividade(viagens) {
-        if (viagens > 100) return 'Alta Produtividade';
-        if (viagens > 50) return 'Boa Produtividade';
-        return 'Potencial de Aumento';
-    }
-
-    function analisarVolumeViagens(viagens) {
-        if (viagens > 100) return 'Volume alto de operações, excelente movimentação';
-        if (viagens > 50) return 'Volume adequado de viagens para o período';
-        return 'Volume baixo, oportunidade de captação de mais clientes';
-    }
-
-    function sugerirOtimizacaoViagens(viagens, ticket) {
-        if (viagens < 50) return 'Foque em aumentar o número de viagens e clientes';
-        return 'Otimize rotas para aumentar a eficiência operacional';
-    }
-
-    function classificarTicketMedio(ticket) {
-        if (ticket > 2000) return 'Excelente';
-        if (ticket > 1000) return 'Bom';
-        if (ticket > 500) return 'Regular';
-        return 'Baixo';
-    }
-
-    function analisarTicketMedio(ticket) {
-        if (ticket > 2000) return 'Ticket médio excelente, indicando fretes de alto valor';
-        if (ticket > 1000) return 'Ticket médio satisfatório para operações regulares';
-        return 'Ticket médio baixo, foque em fretes de maior valor agregado';
-    }
-
-    function compararTicketMercado(ticket) {
-        if (ticket > 1500) return 'Acima da média do mercado de frete';
-        return 'Oportunidade de aumentar o valor médio por frete';
-    }
-
-    function sugerirMelhoriaTicket(ticket) {
-        if (ticket < 1000) return 'Busque clientes com fretes de maior distância/valor';
-        return 'Negocie reajustes e valores diferenciados por tipo de carga';
-    }
-
-    function analisarTopCliente(cliente) {
-        if (cliente && cliente !== 'N/A') return `Cliente ${cliente} é estratégico para o negócio`;
-        return 'Identifique e desenvolva relacionamentos com clientes-chave';
-    }
-
-    // Atualizar dadosCards quando os dados forem carregados
-    function atualizarCards(cards) {
-        dadosCards = cards; // Armazenar dados globalmente
-        
-        console.log('Atualizando cards:', cards);
-        
-        const el1 = document.getElementById('total-faturado');
-        const el2 = document.getElementById('total-despesas');
-        const el3 = document.getElementById('margem-liquida');
-        const el4 = document.getElementById('numero-viagens');
-        const el5 = document.getElementById('ticket-medio');
-        const el6 = document.getElementById('cliente-mais-rentavel');
-        
-        console.log('Elementos cards:', {el1: !!el1, el2: !!el2, el3: !!el3, el4: !!el4, el5: !!el5, el6: !!el6});
-        
-        if (el1) el1.textContent = formatarMoeda(cards.total_faturado);
-        if (el2) el2.textContent = formatarMoeda(cards.total_despesas);
-        if (el3) el3.textContent = cards.margem_liquida_pct + '%';
-        if (el4) el4.textContent = cards.numero_viagens;
-        if (el5) el5.textContent = formatarMoeda(cards.ticket_medio);
-        if (el6) el6.textContent = cards.cliente_mais_rentavel;
-        
-        console.log('Cards atualizados!');
-    }
+// Versão debounced da função carregarDados
+const carregarDadosDebounced = debounce(carregarDados, 300);
 </script>
 {% endblock %}
