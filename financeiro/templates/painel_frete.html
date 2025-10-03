@@ -35,7 +35,7 @@
 
     <div class="kpi-section-compact">
         <div class="kpi-row">
-            <div class="kpi-card-compact receita">
+            <div class="kpi-card-compact receita" onclick="abrirModal('faturado')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Faturado</h3>
@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact margem">
+            <div class="kpi-card-compact margem" onclick="abrirModal('despesas')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Despesas</h3>
@@ -61,7 +61,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact clientes">
+            <div class="kpi-card-compact clientes" onclick="abrirModal('margem')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Margem</h3>
@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact extra">
+            <div class="kpi-card-compact extra" onclick="abrirModal('viagens')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Viagens</h3>
@@ -87,7 +87,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact growth">
+            <div class="kpi-card-compact growth" onclick="abrirModal('ticket')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Ticket Médio</h3>
@@ -100,7 +100,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card-compact receita">
+            <div class="kpi-card-compact receita" onclick="abrirModal('cliente')" style="cursor: pointer;">
                 <div class="kpi-header">
                     <span class="kpi-icon-small"></span>
                     <h3>Top Cliente</h3>
@@ -116,27 +116,29 @@
     </div>
 
     <div class="charts-section">
+        <!-- Primeira linha: Gráfico Mensal em largura total -->
         <div class="chart-container-full">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3> Receita e Despesa Diária (Acumulativo)</h3>
-                    <p class="chart-subtitle">Evolução diária do desempenho financeiro - Dias 1 a 31</p>
+                    <h3> Análise Mensal de Frete</h3>
+                    <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade - Todos os meses do ano</p>
                 </div>
                 <div class="chart-content">
-                    <canvas id="graficoDiario"></canvas>
+                    <canvas id="graficoMensal"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- Segunda linha: 2 gráficos lado a lado -->
         <div class="charts-row">
             <div class="chart-container-half">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3> Análise Mensal de Frete</h3>
-                        <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade</p>
+                        <h3> Receita e Despesa Diária (Acumulativo)</h3>
+                        <p class="chart-subtitle">Evolução diária do desempenho financeiro - Dias 1 a 31</p>
                     </div>
                     <div class="chart-content">
-                        <canvas id="graficoMensal"></canvas>
+                        <canvas id="graficoDiario"></canvas>
                     </div>
                 </div>
             </div>
@@ -144,13 +146,26 @@
             <div class="chart-container-half">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3> Top 10 Clientes</h3>
+                        <h3> Top 10 Clientes por Rentabilidade</h3>
                         <p class="chart-subtitle">Receita, despesa e % rentabilidade por cliente</p>
                     </div>
                     <div class="chart-content">
                         <canvas id="graficoClientes"></canvas>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais de Resumo -->
+    <div id="modal-resumo" class="modal-overlay" onclick="fecharModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-titulo">Resumo da Situação</h3>
+                <span class="modal-close" onclick="fecharModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-conteudo">
+                <!-- Conteúdo será inserido dinamicamente -->
             </div>
         </div>
     </div>
@@ -371,6 +386,294 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    }
+
+    // Variável global para armazenar dados dos cards
+    let dadosCards = {};
+
+    function abrirModal(tipo) {
+        const modal = document.getElementById('modal-resumo');
+        const titulo = document.getElementById('modal-titulo');
+        const conteudo = document.getElementById('modal-conteudo');
+        
+        let tituloModal, conteudoModal;
+        
+        switch(tipo) {
+            case 'faturado':
+                tituloModal = '💰 Análise do Faturamento';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Receita Total</h4>
+                            <p class="stat-value">${formatarMoeda(dadosCards.total_faturado || 0)}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Status</h4>
+                            <p class="stat-status">${analisarFaturamento(dadosCards.total_faturado, dadosCards.total_despesas)}</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${gerarInsightReceita(dadosCards.total_faturado, dadosCards.numero_viagens)}</li>
+                            <li>Ticket médio de ${formatarMoeda(dadosCards.ticket_medio || 0)} por viagem</li>
+                            <li>${analisarPerformanceReceita(dadosCards.margem_liquida_pct)}</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+                
+            case 'despesas':
+                tituloModal = '📊 Análise das Despesas';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Despesas Totais</h4>
+                            <p class="stat-value">${formatarMoeda(dadosCards.total_despesas || 0)}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>% do Faturamento</h4>
+                            <p class="stat-status">${calcularPercentualDespesas(dadosCards.total_despesas, dadosCards.total_faturado)}%</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${analisarNivelDespesas(dadosCards.total_despesas, dadosCards.total_faturado)}</li>
+                            <li>Custo médio por viagem: ${formatarMoeda((dadosCards.total_despesas || 0) / (dadosCards.numero_viagens || 1))}</li>
+                            <li>${sugerirOtimizacaoDespesas(dadosCards.margem_liquida_pct)}</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+                
+            case 'margem':
+                tituloModal = '📈 Análise da Margem';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Margem Líquida</h4>
+                            <p class="stat-value">${dadosCards.margem_liquida_pct || 0}%</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Lucro Líquido</h4>
+                            <p class="stat-status">${formatarMoeda((dadosCards.total_faturado || 0) - (dadosCards.total_despesas || 0))}</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${avaliarMargemLiquida(dadosCards.margem_liquida_pct)}</li>
+                            <li>${compararMargemMercado(dadosCards.margem_liquida_pct)}</li>
+                            <li>${sugerirMelhoriaMargem(dadosCards.margem_liquida_pct)}</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+                
+            case 'viagens':
+                tituloModal = '🚚 Análise das Viagens';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Total de Viagens</h4>
+                            <p class="stat-value">${dadosCards.numero_viagens || 0}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Produtividade</h4>
+                            <p class="stat-status">${avaliarProdutividade(dadosCards.numero_viagens)}</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${analisarVolumeViagens(dadosCards.numero_viagens)}</li>
+                            <li>Receita média por viagem: ${formatarMoeda((dadosCards.total_faturado || 0) / (dadosCards.numero_viagens || 1))}</li>
+                            <li>${sugerirOtimizacaoViagens(dadosCards.numero_viagens, dadosCards.ticket_medio)}</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+                
+            case 'ticket':
+                tituloModal = '🎯 Análise do Ticket Médio';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Ticket Médio</h4>
+                            <p class="stat-value">${formatarMoeda(dadosCards.ticket_medio || 0)}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Classificação</h4>
+                            <p class="stat-status">${classificarTicketMedio(dadosCards.ticket_medio)}</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${analisarTicketMedio(dadosCards.ticket_medio)}</li>
+                            <li>${compararTicketMercado(dadosCards.ticket_medio)}</li>
+                            <li>${sugerirMelhoriaTicket(dadosCards.ticket_medio)}</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+                
+            case 'cliente':
+                tituloModal = '👑 Análise do Top Cliente';
+                conteudoModal = `
+                    <div class="modal-stats">
+                        <div class="stat-card">
+                            <h4>Cliente Mais Rentável</h4>
+                            <p class="stat-value">${dadosCards.cliente_mais_rentavel || 'N/A'}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Importância</h4>
+                            <p class="stat-status">Cliente Premium</p>
+                        </div>
+                    </div>
+                    <div class="modal-insights">
+                        <h4>💡 Insights</h4>
+                        <ul>
+                            <li>${analisarTopCliente(dadosCards.cliente_mais_rentavel)}</li>
+                            <li>Foco na manutenção do relacionamento comercial</li>
+                            <li>Oportunidade de replicar estratégias para outros clientes</li>
+                        </ul>
+                    </div>
+                `;
+                break;
+        }
+        
+        titulo.innerHTML = tituloModal;
+        conteudo.innerHTML = conteudoModal;
+        modal.style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-resumo').style.display = 'none';
+    }
+
+    // Funções de análise para gerar insights dinâmicos
+    function analisarFaturamento(faturado, despesas) {
+        if (faturado > despesas) return '✅ Faturamento Positivo';
+        return '⚠️ Atenção: Despesas Altas';
+    }
+
+    function gerarInsightReceita(faturado, viagens) {
+        if (faturado > 50000) return 'Excelente volume de faturamento registrado';
+        if (faturado > 20000) return 'Bom desempenho no faturamento';
+        return 'Oportunidade de crescimento no faturamento';
+    }
+
+    function analisarPerformanceReceita(margem) {
+        if (margem > 20) return 'Margem excelente, mantendo alta rentabilidade';
+        if (margem > 10) return 'Margem satisfatória, com espaço para otimização';
+        return 'Margem baixa, requer atenção urgente';
+    }
+
+    function calcularPercentualDespesas(despesas, faturado) {
+        if (faturado === 0) return 0;
+        return ((despesas / faturado) * 100).toFixed(1);
+    }
+
+    function analisarNivelDespesas(despesas, faturado) {
+        const percentual = (despesas / faturado) * 100;
+        if (percentual < 70) return 'Nível de despesas controlado e eficiente';
+        if (percentual < 85) return 'Despesas dentro do aceitável, mas atenção aos custos';
+        return 'Nível de despesas alto, necessário revisar custos';
+    }
+
+    function sugerirOtimizacaoDespesas(margem) {
+        if (margem < 15) return 'Recomendado: revisão completa da estrutura de custos';
+        return 'Foque na otimização de rotas e combustível';
+    }
+
+    function avaliarMargemLiquida(margem) {
+        if (margem > 25) return 'Margem excepcional para o setor de logística';
+        if (margem > 15) return 'Margem saudável e competitiva';
+        if (margem > 5) return 'Margem aceitável, mas com potencial de melhoria';
+        return 'Margem crítica, ação imediata necessária';
+    }
+
+    function compararMargemMercado(margem) {
+        if (margem > 20) return 'Acima da média do setor de transporte (15-20%)';
+        if (margem > 10) return 'Dentro da média do setor de transporte';
+        return 'Abaixo da média do setor, necessário melhorar';
+    }
+
+    function sugerirMelhoriaMargem(margem) {
+        if (margem < 10) return 'Priorize: revisão de preços e redução de custos operacionais';
+        return 'Oportunidade: otimização de rotas e negociação com fornecedores';
+    }
+
+    function avaliarProdutividade(viagens) {
+        if (viagens > 100) return 'Alta Produtividade';
+        if (viagens > 50) return 'Boa Produtividade';
+        return 'Potencial de Aumento';
+    }
+
+    function analisarVolumeViagens(viagens) {
+        if (viagens > 100) return 'Volume alto de operações, excelente movimentação';
+        if (viagens > 50) return 'Volume adequado de viagens para o período';
+        return 'Volume baixo, oportunidade de captação de mais clientes';
+    }
+
+    function sugerirOtimizacaoViagens(viagens, ticket) {
+        if (viagens < 50) return 'Foque em aumentar o número de viagens e clientes';
+        return 'Otimize rotas para aumentar a eficiência operacional';
+    }
+
+    function classificarTicketMedio(ticket) {
+        if (ticket > 2000) return 'Excelente';
+        if (ticket > 1000) return 'Bom';
+        if (ticket > 500) return 'Regular';
+        return 'Baixo';
+    }
+
+    function analisarTicketMedio(ticket) {
+        if (ticket > 2000) return 'Ticket médio excelente, indicando fretes de alto valor';
+        if (ticket > 1000) return 'Ticket médio satisfatório para operações regulares';
+        return 'Ticket médio baixo, foque em fretes de maior valor agregado';
+    }
+
+    function compararTicketMercado(ticket) {
+        if (ticket > 1500) return 'Acima da média do mercado de frete';
+        return 'Oportunidade de aumentar o valor médio por frete';
+    }
+
+    function sugerirMelhoriaTicket(ticket) {
+        if (ticket < 1000) return 'Busque clientes com fretes de maior distância/valor';
+        return 'Negocie reajustes e valores diferenciados por tipo de carga';
+    }
+
+    function analisarTopCliente(cliente) {
+        if (cliente && cliente !== 'N/A') return `Cliente ${cliente} é estratégico para o negócio`;
+        return 'Identifique e desenvolva relacionamentos com clientes-chave';
+    }
+
+    // Atualizar dadosCards quando os dados forem carregados
+    function atualizarCards(cards) {
+        dadosCards = cards; // Armazenar dados globalmente
+        
+        console.log('Atualizando cards:', cards);
+        
+        const el1 = document.getElementById('total-faturado');
+        const el2 = document.getElementById('total-despesas');
+        const el3 = document.getElementById('margem-liquida');
+        const el4 = document.getElementById('numero-viagens');
+        const el5 = document.getElementById('ticket-medio');
+        const el6 = document.getElementById('cliente-mais-rentavel');
+        
+        console.log('Elementos cards:', {el1: !!el1, el2: !!el2, el3: !!el3, el4: !!el4, el5: !!el5, el6: !!el6});
+        
+        if (el1) el1.textContent = formatarMoeda(cards.total_faturado);
+        if (el2) el2.textContent = formatarMoeda(cards.total_despesas);
+        if (el3) el3.textContent = cards.margem_liquida_pct + '%';
+        if (el4) el4.textContent = cards.numero_viagens;
+        if (el5) el5.textContent = formatarMoeda(cards.ticket_medio);
+        if (el6) el6.textContent = cards.cliente_mais_rentavel;
+        
+        console.log('Cards atualizados!');
     }
 </script>
 {% endblock %}

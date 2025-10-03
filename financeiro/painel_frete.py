@@ -150,37 +150,46 @@ class PainelFreteService:
             return {'dias': [], 'receita_acumulada': [], 'despesa_acumulada': [], 'margem_acumulada': []}
 
     def calcular_grafico_mensal_rentabilidade(self, df_filtrado):
-        if df_filtrado.empty:
-            return {'meses': [], 'frete_pagar': [], 'frete_receber': [], 'rentabilidade_pct': []}
+        # Sempre retornar os 12 meses do ano
+        meses_nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        meses_numeros = list(range(1, 13))
         
-        try:
-            # Agrupar por mês
-            dados_mensais = df_filtrado.groupby('Mes').agg({
-                'Frete Correto': 'sum',
-                'Despesas Gerais': 'sum'
-            }).reset_index()
-            
-            dados_mensais['rentabilidade_pct'] = (
-                (dados_mensais['Frete Correto'] - dados_mensais['Despesas Gerais']) / 
-                dados_mensais['Frete Correto'] * 100
-            ).fillna(0)
-            
-            # Mapear números dos meses para nomes
-            meses_nomes = {
-                1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
-                7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
-            }
-            dados_mensais['mes_nome'] = dados_mensais['Mes'].map(meses_nomes)
-            
-            return {
-                'meses': dados_mensais['mes_nome'].tolist(),
-                'frete_pagar': dados_mensais['Despesas Gerais'].round(2).tolist(),
-                'frete_receber': dados_mensais['Frete Correto'].round(2).tolist(),
-                'rentabilidade_pct': dados_mensais['rentabilidade_pct'].round(2).tolist()
-            }
-        except Exception as e:
-            print(f"Erro ao calcular gráfico mensal: {e}")
-            return {'meses': [], 'frete_pagar': [], 'frete_receber': [], 'rentabilidade_pct': []}
+        # Inicializar arrays com zeros para todos os meses
+        frete_receber = [0.0] * 12
+        frete_pagar = [0.0] * 12
+        rentabilidade_pct = [0.0] * 12
+        
+        if not df_filtrado.empty:
+            try:
+                # Agrupar por mês
+                dados_mensais = df_filtrado.groupby('Mes').agg({
+                    'Frete Correto': 'sum',
+                    'Despesas Gerais': 'sum'
+                }).reset_index()
+                
+                # Preencher os dados para os meses que existem
+                for _, row in dados_mensais.iterrows():
+                    mes_idx = int(row['Mes']) - 1  # Converter para índice (0-11)
+                    if 0 <= mes_idx <= 11:
+                        frete_receber[mes_idx] = round(float(row['Frete Correto']), 2)
+                        frete_pagar[mes_idx] = round(float(row['Despesas Gerais']), 2)
+                        
+                        # Calcular rentabilidade apenas se houver receita
+                        if row['Frete Correto'] > 0:
+                            rentabilidade = ((row['Frete Correto'] - row['Despesas Gerais']) / 
+                                           row['Frete Correto'] * 100)
+                            rentabilidade_pct[mes_idx] = round(float(rentabilidade), 2)
+                        
+            except Exception as e:
+                print(f"Erro ao calcular gráfico mensal: {e}")
+        
+        return {
+            'meses': meses_nomes,
+            'frete_pagar': frete_pagar,
+            'frete_receber': frete_receber,
+            'rentabilidade_pct': rentabilidade_pct
+        }
 
     def calcular_grafico_clientes(self, df_filtrado):
         if df_filtrado.empty:
