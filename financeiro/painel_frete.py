@@ -9,6 +9,11 @@ from .database import get_connection
 
 bp = Blueprint('painel_frete', __name__, url_prefix='/frete/painel')
 
+@bp.route('/v2')
+def index_v2():
+    """Página do Dashboard V2 - Versão Limpa"""
+    return render_template('painel_frete_v2.html')
+
 def get_db_connection():
     """Retorna conexão com o banco de dados usando o wrapper central."""
     conn = get_connection()

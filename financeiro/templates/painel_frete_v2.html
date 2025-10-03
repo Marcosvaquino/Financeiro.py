@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Frete - Dashboard V2{% endblock %}
+
+{% block content %}
+<style>
+    /    /* Gráfico Principal */
+    .grafico-principal {
+        background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+        border-radius: 12px;
+        padding: 15px;
+        border: 2px solid #00d4aa;
+        margin-bottom: 20px;
+        height: 350px;
+        width: 100%;
+        box-sizing: border-box;
+    } layout principal */
+    .dashboard-container {
+        margin-left: 220px;
+        padding: 20px;
+        background: #2d3436;
+        min-height: 100vh;
+        width: calc(100vw - 260px);
+        overflow: hidden;
+    }
+
+    /* Seção de filtros */
+    .filtros-section {
+        background: #636e72;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 2px solid #00d4aa;
+    }
+
+    .filtros-row {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .filter-group select {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        background: #ffffff;
+        color: #2d3436;
+        font-weight: bold;
+    }
+
+    .btn-limpar, .btn-dados {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+
+    .btn-limpar {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .btn-dados {
+        background: #00d4aa;
+        color: white;
+    }
+
+    /* Cards de insights - linha independente */
+    .insights-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .insight-card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        text-align: center;
+        border: 2px solid;
+    }
+
+    .insight-card.performance {
+        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        border-color: #00d4aa;
+    }
+
+    .insight-card.tendencia {
+        background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+        border-color: #fdcb6e;
+    }
+
+    .insight-card.projecao {
+        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        border-color: #6c5ce7;
+    }
+
+    .insight-card.eficiencia {
+        background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+        border-color: #fd79a8;
+    }
+
+    .insight-card h3 {
+        font-size: 14px;
+        margin: 0 0 5px 0;
+        opacity: 0.9;
+    }
+
+    .insight-card .valor {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .insight-card .descricao {
+        font-size: 11px;
+        margin: 5px 0 0 0;
+        opacity: 0.8;
+    }
+
+    /* Gráfico principal - independente */
+    .grafico-principal {
+        background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px solid #00d4aa;
+        margin-bottom: 20px;
+        height: 400px;
+    }
+
+    .grafico-principal h3 {
+        color: #ffffff;
+        margin: 0 0 15px 0;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .grafico-principal .subtitulo {
+        color: #b2bec3;
+        font-size: 12px;
+        margin: 0 0 20px 0;
+    }
+
+    .chart-container {
+        height: 280px;
+        position: relative;
+        width: 100%;
+    }
+
+    /* Estilos gerais */
+    .emoji {
+        font-size: 16px;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Seção de Filtros -->
+    <div class="filtros-section">
+        <div class="filtros-row">
+            <div class="filter-group">
+                <label><span class="emoji">🔥</span> PERFIL</label>
+                <select id="perfil-filter">
+                    <option value="">TODOS</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><span class="emoji">👥</span> CLIENTES</label>
+                <select id="clientes-filter">
+                    <option value="">TODOS OS CLIENTES</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><span class="emoji">🚛</span> VEÍCULOS</label>
+                <select id="veiculos-filter">
+                    <option value="">TODOS OS VEÍCULOS</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><span class="emoji">📅</span> MÊS</label>
+                <select id="mes-filter">
+                    <option value="8">Agosto</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><span class="emoji">📅</span> ANO</label>
+                <select id="ano-filter">
+                    <option value="2025">2025</option>
+                </select>
+            </div>
+            
+            <button class="btn-limpar">🗑️ Limpar Filtros</button>
+            <button class="btn-dados">TODOS OS DADOS</button>
+        </div>
+    </div>
+
+    <!-- Cards de Insights -->
+    <div class="insights-section">
+        <div class="insight-card performance">
+            <h3><span class="emoji">💰</span> PERFORMANCE ATUAL</h3>
+            <div class="valor">R$ 139.215,93</div>
+            <div class="descricao">Diferença entre frete correto e despesas gerais hoje</div>
+        </div>
+        
+        <div class="insight-card tendencia">
+            <h3><span class="emoji">📈</span> TENDÊNCIA</h3>
+            <div class="valor">+89,4%</div>
+            <div class="descricao">Crescimento médio diário baseado na projeção</div>
+        </div>
+        
+        <div class="insight-card projecao">
+            <h3><span class="emoji">🎯</span> PROJEÇÃO MENSAL</h3>
+            <div class="valor">R$ 6.039.310,59</div>
+            <div class="descricao">Estimativa total do mês com base na tendência</div>
+        </div>
+        
+        <div class="insight-card eficiencia">
+            <h3><span class="emoji">⚡</span> EFICIÊNCIA</h3>
+            <div class="valor">100,0%</div>
+            <div class="descricao">Porcentagem de dias com resultado positivo</div>
+        </div>
+    </div>
+
+    <!-- Gráfico Principal -->
+    <div class="grafico-principal">
+        <h3><span class="emoji">📊</span> FRETE CORRETO VS DESPESAS GERAIS</h3>
+        <div class="subtitulo">DADOS REAIS ATÉ DIA 30, PROJEÇÃO A PARTIR DO DIA 31</div>
+        
+        <div class="chart-container">
+            <canvas id="graficoFreteCorreto"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Frete Correto vs Despesas Gerais
+const ctxFrete = document.getElementById('graficoFreteCorreto').getContext('2d');
+const graficoFrete = new Chart(ctxFrete, {
+    type: 'line',
+    data: {
+        labels: Array.from({length: 31}, (_, i) => i + 1),
+        datasets: [
+            {
+                label: 'Frete Correto',
+                data: [95000, 120000, 135000, 148000, 162000, 175000, 190000, 205000, 220000, 235000, 
+                       250000, 265000, 280000, 295000, 310000, 325000, 340000, 355000, 370000, 385000,
+                       400000, 415000, 430000, 445000, 460000, 475000, 490000, 505000, 520000, 535000, 550000],
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#00d4aa',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                fill: false,
+                tension: 0.4
+            },
+            {
+                label: 'Despesas Gerais',
+                data: [80000, 95000, 110000, 125000, 140000, 155000, 170000, 185000, 200000, 215000,
+                       230000, 245000, 260000, 275000, 290000, 305000, 320000, 335000, 350000, 365000,
+                       380000, 395000, 410000, 425000, 440000, 455000, 470000, 485000, 500000, 515000, 530000],
+                borderColor: '#fd79a8',
+                backgroundColor: 'rgba(253, 121, 168, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#fd79a8',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                fill: false,
+                tension: 0.4
+            },
+            {
+                label: 'Projeção Frete',
+                data: [null, null, null, null, null, null, null, null, null, null,
+                       null, null, null, null, null, null, null, null, null, null,
+                       null, null, null, null, null, null, null, null, null, 535000, 550000],
+                borderColor: '#fdcb6e',
+                backgroundColor: 'rgba(253, 203, 110, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointBackgroundColor: '#fdcb6e',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 3,
+                fill: false,
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#ffffff',
+                    font: {
+                        size: 12
+                    },
+                    usePointStyle: true,
+                    padding: 20
+                }
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: false
+                },
+                ticks: {
+                    color: '#b2bec3',
+                    font: {
+                        size: 11
+                    }
+                },
+                grid: {
+                    color: 'rgba(178, 190, 195, 0.2)',
+                    drawBorder: false
+                }
+            },
+            y: {
+                title: {
+                    display: false
+                },
+                ticks: {
+                    color: '#b2bec3',
+                    font: {
+                        size: 11
+                    },
+                    callback: function(value) {
+                        return 'R$ ' + (value/1000) + 'k';
+                    }
+                },
+                grid: {
+                    color: 'rgba(178, 190, 195, 0.2)',
+                    drawBorder: false
+                }
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
+});
+</script>
+{% endblock %}
