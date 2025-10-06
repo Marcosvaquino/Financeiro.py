@@ -1,7 +1,25 @@
 from flask import Blueprint, render_template, jsonify, request
 import pandas as pd
 import os
+import numpy as np
 from datetime import datetime
+
+def convert_to_json_serializable(obj):
+    """Converte tipos numpy/pandas para tipos Python nativos"""
+    if isinstance(obj, dict):
+        return {key: convert_to_json_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_json_serializable(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif pd.isna(obj):
+        return None
+    else:
+        return obj
 
 painel_frete_bp = Blueprint('painel_frete', __name__)
 
@@ -11,11 +29,31 @@ MANIFESTO_PATH = os.path.join(os.path.dirname(__file__), 'uploads', 'Manifesto_A
 class PainelFreteService:
     def __init__(self):
         self.df_manifesto = None
+        self.ultima_modificacao = None
         self.carregar_dados()
     
-    def carregar_dados(self):
+    def verificar_atualizacao_arquivo(self):
+        """Verifica se o arquivo foi modificado desde a última leitura"""
         try:
             if os.path.exists(MANIFESTO_PATH):
+                modificacao_atual = os.path.getmtime(MANIFESTO_PATH)
+                if self.ultima_modificacao is None or modificacao_atual > self.ultima_modificacao:
+                    self.ultima_modificacao = modificacao_atual
+                    return True
+            return False
+        except Exception as e:
+            print(f"Erro ao verificar modificação do arquivo: {e}")
+            return False
+    
+    def carregar_dados(self, forcar_recarga=False):
+        """Carrega dados do Excel, recarregando se necessário"""
+        try:
+            # Verificar se precisa recarregar
+            if not forcar_recarga and not self.verificar_atualizacao_arquivo():
+                return self.df_manifesto  # Dados já estão atualizados, retornar DataFrame existente
+                
+            if os.path.exists(MANIFESTO_PATH):
+                print("🔄 Recarregando dados do manifesto...")
                 self.df_manifesto = pd.read_excel(MANIFESTO_PATH)
                 self.df_manifesto['Data'] = pd.to_datetime(self.df_manifesto['Data'], errors='coerce')
                 self.df_manifesto['Mes'] = self.df_manifesto['Data'].dt.month
@@ -25,15 +63,20 @@ class PainelFreteService:
                 self.df_manifesto['Frete Correto'] = pd.to_numeric(self.df_manifesto['Frete Correto'], errors='coerce').fillna(0)
                 self.df_manifesto['Despesas Gerais'] = pd.to_numeric(self.df_manifesto['Despesas Gerais'], errors='coerce').fillna(0)
                 
-                print(f"Dados carregados: {len(self.df_manifesto)} registros")
+                print(f"✅ Dados carregados: {len(self.df_manifesto)} registros")
             else:
-                print(f"Arquivo não encontrado: {MANIFESTO_PATH}")
+                print(f"❌ Arquivo não encontrado: {MANIFESTO_PATH}")
                 self.df_manifesto = pd.DataFrame()
         except Exception as e:
-            print(f"Erro ao carregar dados: {e}")
+            print(f"❌ Erro ao carregar dados: {e}")
             self.df_manifesto = pd.DataFrame()
+        
+        return self.df_manifesto
     
     def obter_filtros_disponiveis(self):
+        # Verificar se dados precisam ser atualizados
+        self.carregar_dados()
+        
         if self.df_manifesto.empty:
             return {}
         
@@ -51,6 +94,9 @@ class PainelFreteService:
             return {'perfis': [], 'clientes': [], 'veiculos': [], 'meses': [], 'anos': []}
     
     def filtrar_dados(self, perfil=None, cliente=None, veiculo=None, mes=None, ano=None):
+        # Verificar se dados precisam ser atualizados
+        self.carregar_dados()
+        
         if self.df_manifesto.empty:
             return pd.DataFrame()
         
@@ -104,12 +150,12 @@ class PainelFreteService:
                 cliente_mais_rentavel = 'N/A'
             
             return {
-                'total_faturado': round(total_faturado, 2),
-                'total_despesas': round(total_despesas, 2),
-                'margem_liquida_pct': round(margem_liquida_pct, 2),
-                'numero_viagens': numero_viagens,
-                'ticket_medio': round(ticket_medio, 2),
-                'cliente_mais_rentavel': cliente_mais_rentavel
+                'total_faturado': float(round(total_faturado, 2)),
+                'total_despesas': float(round(total_despesas, 2)),
+                'margem_liquida_pct': float(round(margem_liquida_pct, 2)),
+                'numero_viagens': int(numero_viagens),
+                'ticket_medio': float(round(ticket_medio, 2)),
+                'cliente_mais_rentavel': str(cliente_mais_rentavel)
             }
         except Exception as e:
             print(f"Erro ao calcular cards: {e}")
@@ -285,6 +331,9 @@ def api_dados():
             'grafico_clientes': painel_service.calcular_grafico_clientes(df_filtrado),
             'grafico_veiculos': painel_service.calcular_grafico_veiculos(df_filtrado)
         }
+        
+        # Converter todos os tipos numpy para tipos Python nativos
+        dados = convert_to_json_serializable(dados)
         
         return jsonify(dados)
     except Exception as e:
@@ -466,3 +515,20 @@ def api_detalhes_despesas_completo():
     except Exception as e:
         print(f"Erro na API detalhes despesas completo: {e}")
         return jsonify({'error': str(e)}), 500
+
+@painel_frete_bp.route('/api/painel-frete/reload-data', methods=['POST'])
+def reload_data():
+    """Força a recarga dos dados do arquivo Excel"""
+    try:
+        print("🔄 API de recarga chamada - forçando reload dos dados...")
+        painel_service.carregar_dados(forcar_recarga=True)
+        return jsonify({
+            'success': True,
+            'message': 'Dados recarregados com sucesso!'
+        })
+    except Exception as e:
+        print(f"❌ Erro ao recarregar dados: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
