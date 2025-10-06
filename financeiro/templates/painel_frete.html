@@ -64,6 +64,19 @@
                 </div>
             </div>
 
+            <div class="kpi-card-compact margem-liquida executive-card" onclick="abrirAnaliseMargem()">
+                <div class="kpi-header">
+                    <span class="kpi-icon-small">💎</span>
+                    <h3>Margem Líquida</h3>
+                    <span class="kpi-trend-compact up"></span>
+                </div>
+                <div class="kpi-main-value" id="total-margem-liquida">R$ 0,00</div>
+                <div class="kpi-sub-info">
+                    <span class="kpi-meta">Receita - Despesas</span>
+                    <span class="kpi-percent success">💰 Ver Detalhes</span>
+                </div>
+            </div>
+
             <div class="kpi-card-compact clientes executive-card" onclick="abrirAnaliseRentabilidade()">
                 <div class="kpi-header">
                     <span class="kpi-icon-small">📈</span>
@@ -483,6 +496,96 @@
                         </thead>
                         <tbody id="tabela-despesas-completa">
                             <tr><td colspan="5">Carregando dados...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Análise de Margem Líquida -->
+    <div id="modalMargem" class="modal-overlay" style="display: none;" onclick="fecharModal('modalMargem')">
+        <div class="modal-content-wide" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>💎 Margem Líquida - Detalhamento Completo</h2>
+                <button onclick="fecharModal('modalMargem')" class="btn-close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Cards de resumo no topo -->
+                <div class="executive-stats-grid compact">
+                    <div class="exec-stat-card profit">
+                        <div class="stat-header">
+                            <span class="stat-icon">�</span>
+                            <h4>Total Margem</h4>
+                        </div>
+                        <div class="stat-value" id="exec-margem-total">R$ 0</div>
+                        <div class="stat-detail">Receita - Despesas</div>
+                        <div class="stat-growth positive">Lucro</div>
+                    </div>
+                    
+                    <div class="exec-stat-card efficiency">
+                        <div class="stat-header">
+                            <span class="stat-icon">�</span>
+                            <h4>Top Cliente</h4>
+                        </div>
+                        <div class="stat-value" id="exec-melhor-margem-cliente" style="font-size: 18px;">-</div>
+                        <div class="stat-detail" id="exec-melhor-margem-valor">R$ 0</div>
+                        <div class="stat-growth positive" id="exec-melhor-margem-percent">0%</div>
+                    </div>
+                    
+                    <div class="exec-stat-card benchmark">
+                        <div class="stat-header">
+                            <span class="stat-icon">⚡</span>
+                            <h4>% Médio</h4>
+                        </div>
+                        <div class="stat-value" id="exec-percentual-margem">0%</div>
+                        <div class="stat-detail">Rentabilidade</div>
+                        <div class="stat-growth neutral" id="exec-status-margem">Normal</div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filtro-cliente-margem">Cliente:</label>
+                            <select id="filtro-cliente-margem" onchange="aplicarFiltrosMargem()">
+                                <option value="">Todos os Clientes</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filtro-veiculo-margem">Veículo:</label>
+                            <select id="filtro-veiculo-margem" onchange="aplicarFiltrosMargem()">
+                                <option value="">Todos os Veículos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filtro-mes-margem">Mês:</label>
+                            <select id="filtro-mes-margem" onchange="aplicarFiltrosMargem()">
+                                <option value="">Todos os Meses</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button onclick="limparFiltrosMargem()" class="btn-clear-filters">Limpar Filtros</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela detalhada -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>CLIENTE</th>
+                                <th>VEÍCULO</th>
+                                <th>RECEITA</th>
+                                <th>DESPESAS</th>
+                                <th>MARGEM LÍQUIDA</th>
+                                <th>% MARGEM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-margem-completa">
+                            <tr><td colspan="6">Carregando dados...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -961,6 +1064,7 @@ async function carregarDados() {
 function atualizarCards(cards) {
     document.getElementById('total-faturado').textContent = formatarMoeda(cards.total_faturado);
     document.getElementById('total-despesas').textContent = formatarMoeda(cards.total_despesas);
+    document.getElementById('total-margem-liquida').textContent = formatarMoeda(cards.margem_liquida_valor || 0);
     document.getElementById('margem-liquida').textContent = cards.margem_liquida_pct + '%';
     document.getElementById('numero-viagens').textContent = cards.numero_viagens;
     document.getElementById('ticket-medio').textContent = formatarMoeda(cards.ticket_medio);
@@ -1306,6 +1410,11 @@ function abrirAnaliseOperacional() {
     preencherDadosOperacional();
 }
 
+function abrirAnaliseMargem() {
+    abrirModal('modalMargem');
+    preencherDadosMargem();
+}
+
 function abrirAnaliseRentabilidade() {
     abrirModal('modalRentabilidade');
     preencherDadosRentabilidade();
@@ -1326,6 +1435,11 @@ function abrirModal(modalId) {
         // Sempre limpar dados anteriores ao abrir o modal
         dadosOriginaisCompletosDespesas = [];
         carregarDadosCompletosDespesas();
+    } else if (modalId === 'modalMargem') {
+        console.log('Abrindo modal de margem líquida...');
+        // Sempre limpar dados anteriores ao abrir o modal
+        dadosOriginaisCompletosMargem = [];
+        carregarDadosCompletosMargem();
     }
 }
 
@@ -1703,6 +1817,9 @@ function gerarMotoristaFicticio() {
 // Variável global para armazenar dados originais de despesas
 let dadosOriginaisCompletosDespesas = [];
 
+// Variável global para armazenar dados originais de margem líquida
+let dadosOriginaisCompletosMargem = [];
+
 // Função para preencher dados completos de despesas com filtros dropdown
 async function carregarDadosCompletosDespesas() {
     try {
@@ -1958,6 +2075,182 @@ function limparFiltrosDespesas() {
     }
 }
 
+// ========================= FUNÇÕES MODAL MARGEM LÍQUIDA =========================
+
+// Função para preencher dados completos de margem líquida com filtros dropdown
+async function carregarDadosCompletosMargem() {
+    try {
+        console.log('Carregando dados completos de margem líquida...');
+        const response = await fetch('/api/painel-frete/detalhes-margem-completo');
+        const dados = await response.json();
+        
+        console.log('Dados de margem recebidos:', dados);
+        
+        if (dados && dados.detalhes) {
+            dadosOriginaisCompletosMargem = dados.detalhes;
+            preencherTabelaCompletaMargem(dados.detalhes);
+            preencherFiltrosDropdownMargem(dados.detalhes);
+            preencherCardsExecutivosMargem(dados);
+        } else {
+            console.error('Dados de margem inválidos:', dados);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados de margem:', error);
+    }
+}
+
+function preencherDadosMargem() {
+    carregarDadosCompletosMargem();
+}
+
+// Função para preencher cards executivos de margem
+function preencherCardsExecutivosMargem(dados) {
+    console.log('Preenchendo cards executivos de margem:', dados);
+    
+    // Card 1: Margem Total
+    const execMargemTotal = document.getElementById('exec-margem-total');
+    if (execMargemTotal && dados.margem_total !== undefined) {
+        execMargemTotal.textContent = formatarMoeda(dados.margem_total);
+    }
+    
+    // Card 2: Percentual de Margem
+    const execPercentualMargem = document.getElementById('exec-percentual-margem');
+    if (execPercentualMargem && dados.percentual_margem !== undefined) {
+        execPercentualMargem.textContent = `${dados.percentual_margem.toFixed(1)}%`;
+    }
+    
+    // Status da margem baseado no percentual
+    const execStatusMargem = document.getElementById('exec-status-margem');
+    if (execStatusMargem && dados.percentual_margem !== undefined) {
+        if (dados.percentual_margem >= 20) {
+            execStatusMargem.textContent = 'Excelente';
+            execStatusMargem.className = 'stat-growth positive';
+        } else if (dados.percentual_margem >= 10) {
+            execStatusMargem.textContent = 'Boa';
+            execStatusMargem.className = 'stat-growth neutral';
+        } else {
+            execStatusMargem.textContent = 'Baixa';
+            execStatusMargem.className = 'stat-growth negative';
+        }
+    }
+    
+    // Card 3: Melhor Cliente
+    const execMelhorMargemCliente = document.getElementById('exec-melhor-margem-cliente');
+    const execMelhorMargemValor = document.getElementById('exec-melhor-margem-valor');
+    const execMelhorMargemPercent = document.getElementById('exec-melhor-margem-percent');
+    
+    if (dados.melhor_cliente) {
+        if (execMelhorMargemCliente) {
+            execMelhorMargemCliente.textContent = dados.melhor_cliente.nome || 'N/A';
+        }
+        if (execMelhorMargemValor) {
+            execMelhorMargemValor.textContent = formatarMoeda(dados.melhor_cliente.margem || 0);
+        }
+        if (execMelhorMargemPercent) {
+            execMelhorMargemPercent.textContent = `${(dados.melhor_cliente.percentual || 0).toFixed(1)}%`;
+        }
+    }
+}
+
+// Função para preencher tabela completa de margem
+function preencherTabelaCompletaMargem(detalhes) {
+    const tbody = document.getElementById('tabela-margem-completa');
+    if (!tbody || !detalhes) return;
+    
+    if (detalhes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">Nenhum dado encontrado</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = detalhes.map(item => `
+        <tr>
+            <td>${item.cliente || 'N/A'}</td>
+            <td>${item.veiculo || 'N/A'}</td>
+            <td>${formatarMoeda(item.receita || 0)}</td>
+            <td>${formatarMoeda(item.despesas || 0)}</td>
+            <td class="${(item.margem || 0) >= 0 ? 'positive' : 'negative'}">${formatarMoeda(item.margem || 0)}</td>
+            <td class="${(item.percentual_margem || 0) >= 0 ? 'positive' : 'negative'}">${(item.percentual_margem || 0).toFixed(1)}%</td>
+        </tr>
+    `).join('');
+}
+
+// Função para preencher dropdowns de filtros de margem
+function preencherFiltrosDropdownMargem(detalhes) {
+    // Filtro Cliente
+    const selectCliente = document.getElementById('filtro-cliente-margem');
+    if (selectCliente) {
+        const clientes = [...new Set(detalhes.map(item => item.cliente).filter(c => c))].sort();
+        selectCliente.innerHTML = '<option value="">Todos os Clientes</option>' +
+            clientes.map(cliente => `<option value="${cliente}">${cliente}</option>`).join('');
+    }
+    
+    // Filtro Veículo
+    const selectVeiculo = document.getElementById('filtro-veiculo-margem');
+    if (selectVeiculo) {
+        const veiculos = [...new Set(detalhes.map(item => item.veiculo).filter(v => v))].sort();
+        selectVeiculo.innerHTML = '<option value="">Todos os Veículos</option>' +
+            veiculos.map(veiculo => `<option value="${veiculo}">${veiculo}</option>`).join('');
+    }
+    
+    // Filtro Mês
+    const selectMes = document.getElementById('filtro-mes-margem');
+    if (selectMes) {
+        const meses = [...new Set(detalhes.map(item => item.mes).filter(m => m))].sort();
+        selectMes.innerHTML = '<option value="">Todos os Meses</option>' +
+            meses.map(mes => `<option value="${mes}">${mes}</option>`).join('');
+    }
+}
+
+// Função para aplicar filtros de margem
+function aplicarFiltrosMargem() {
+    if (!dadosOriginaisCompletosMargem || dadosOriginaisCompletosMargem.length === 0) {
+        console.log('Nenhum dado original de margem para filtrar');
+        return;
+    }
+    
+    const filtroCliente = document.getElementById('filtro-cliente-margem').value;
+    const filtroVeiculo = document.getElementById('filtro-veiculo-margem').value;
+    const filtroMes = document.getElementById('filtro-mes-margem').value;
+    
+    let dadosFiltrados = dadosOriginaisCompletosMargem;
+    
+    // Aplicar filtro de cliente
+    if (filtroCliente) {
+        dadosFiltrados = dadosFiltrados.filter(item => item.cliente === filtroCliente);
+    }
+    
+    // Aplicar filtro de veículo
+    if (filtroVeiculo) {
+        dadosFiltrados = dadosFiltrados.filter(item => item.veiculo === filtroVeiculo);
+    }
+    
+    // Aplicar filtro de mês
+    if (filtroMes) {
+        dadosFiltrados = dadosFiltrados.filter(item => item.mes === filtroMes);
+    }
+    
+    console.log(`Dados após filtros: ${dadosFiltrados.length} de ${dadosOriginaisCompletosMargem.length}`);
+    
+    // Atualizar apenas a tabela completa com dados filtrados
+    preencherTabelaCompletaMargem(dadosFiltrados);
+}
+
+// Função para limpar filtros de margem
+function limparFiltrosMargem() {
+    const selectCliente = document.getElementById('filtro-cliente-margem');
+    const selectVeiculo = document.getElementById('filtro-veiculo-margem');
+    const selectMes = document.getElementById('filtro-mes-margem');
+    
+    if (selectCliente) selectCliente.value = '';
+    if (selectVeiculo) selectVeiculo.value = '';
+    if (selectMes) selectMes.value = '';
+    
+    // Restaurar dados originais
+    if (dadosOriginaisCompletosMargem && dadosOriginaisCompletosMargem.length > 0) {
+        preencherTabelaCompletaMargem(dadosOriginaisCompletosMargem);
+    }
+}
+
 function obterFiltrosAtuais() {
     const filtros = {};
     
@@ -2096,7 +2389,7 @@ function preencherDadosTopCliente() {
 // Fechar modal com ESC
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        const modals = ['modalReceita', 'modalOperacional', 'modalRentabilidade', 'modalViagens', 'modalTicketMedio', 'modalTopCliente'];
+        const modals = ['modalReceita', 'modalOperacional', 'modalMargem', 'modalRentabilidade', 'modalViagens', 'modalTicketMedio', 'modalTopCliente'];
         modals.forEach(modalId => {
             if (document.getElementById(modalId).style.display === 'flex') {
                 fecharModal(modalId);

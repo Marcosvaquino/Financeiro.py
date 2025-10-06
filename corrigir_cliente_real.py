@@ -23,10 +23,10 @@ cursor.execute("SELECT nome_real, nome_ajustado FROM clientes_suporte WHERE ativ
 clientes_cadastrados = cursor.fetchall()
 conn.close()
 
-# Criar dicionário de mapeamento: nome_real -> nome_ajustado
+# Criar dicionário de mapeamento: nome_ajustado -> nome_real
 mapeamento = {}
 for nome_real, nome_ajustado in clientes_cadastrados:
-    mapeamento[nome_real.upper().strip()] = nome_ajustado
+    mapeamento[nome_ajustado.upper().strip()] = nome_real
 
 print(f"👥 {len(mapeamento)} clientes encontrados no banco:")
 for real, ajustado in list(mapeamento.items())[:5]:
@@ -45,7 +45,7 @@ def mapear_cliente(nome_cliente):
         # Se não encontrar, retorna o nome original
         return str(nome_cliente).strip()
 
-# Aplicar o mapeamento na coluna Cliente_Real
+# Aplicar o mapeamento na coluna Cliente_Real (usando Cliente como fonte)
 df['Cliente_Real'] = df['Cliente'].apply(mapear_cliente)
 
 # 4. Verificar resultados

@@ -59,7 +59,7 @@ def integrar_dados_manifesto(ws_out):
     
     # Índices das colunas importantes
     col_veiculo = header_map.get('Veículo', 4)  # Coluna D por padrão
-    col_classificacao = header_map.get('Classificação', 21)  # Coluna U por padrão
+    col_classificacao = header_map.get('Cliente', 31)  # Usar coluna Cliente que tem os dados
     col_km_saida = header_map.get('Km saída', 17)
     col_km_chegada = header_map.get('Km chegada', 18)
     col_status_veiculo = header_map.get('Status_Veiculo')

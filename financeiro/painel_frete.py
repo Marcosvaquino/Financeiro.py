@@ -124,6 +124,7 @@ class PainelFreteService:
             return {
                 'total_faturado': 0,
                 'total_despesas': 0,
+                'margem_liquida_valor': 0,
                 'margem_liquida_pct': 0,
                 'numero_viagens': 0,
                 'ticket_medio': 0,
@@ -152,6 +153,7 @@ class PainelFreteService:
             return {
                 'total_faturado': float(round(total_faturado, 2)),
                 'total_despesas': float(round(total_despesas, 2)),
+                'margem_liquida_valor': float(round(margem_liquida, 2)),
                 'margem_liquida_pct': float(round(margem_liquida_pct, 2)),
                 'numero_viagens': int(numero_viagens),
                 'ticket_medio': float(round(ticket_medio, 2)),
@@ -162,6 +164,7 @@ class PainelFreteService:
             return {
                 'total_faturado': 0,
                 'total_despesas': 0,
+                'margem_liquida_valor': 0,
                 'margem_liquida_pct': 0,
                 'numero_viagens': 0,
                 'ticket_medio': 0,
@@ -514,6 +517,80 @@ def api_detalhes_despesas_completo():
         
     except Exception as e:
         print(f"Erro na API detalhes despesas completo: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@painel_frete_bp.route('/api/painel-frete/detalhes-margem-completo')
+def api_detalhes_margem_completo():
+    """Retorna dados detalhados da margem líquida para o modal"""
+    try:
+        perfil = request.args.get('perfil')
+        cliente = request.args.get('cliente')
+        veiculo = request.args.get('veiculo')
+        mes = request.args.get('mes')
+        ano = request.args.get('ano')
+        
+        df_filtrado = painel_service.filtrar_dados(perfil, cliente, veiculo, mes, ano)
+        
+        if df_filtrado.empty:
+            return jsonify({
+                'margem_total': 0,
+                'percentual_margem': 0,
+                'melhor_cliente': None,
+                'detalhes': []
+            })
+        
+        # Calcular dados agregados por cliente e veículo
+        detalhes = []
+        if 'Cliente_Real' in df_filtrado.columns:
+            agrupado = df_filtrado.groupby(['Cliente_Real', 'Veículo']).agg({
+                'Frete Correto': 'sum',
+                'Despesas Gerais': 'sum',
+                'Data': 'first'
+            }).reset_index()
+            
+            for _, row in agrupado.iterrows():
+                receita = float(row['Frete Correto']) if not pd.isna(row['Frete Correto']) else 0.0
+                despesas = float(row['Despesas Gerais']) if not pd.isna(row['Despesas Gerais']) else 0.0
+                margem = receita - despesas
+                percentual_margem = (margem / receita * 100) if receita > 0 else 0
+                
+                detalhes.append({
+                    'cliente': str(row['Cliente_Real']) if not pd.isna(row['Cliente_Real']) else 'N/A',
+                    'veiculo': str(row['Veículo']) if not pd.isna(row['Veículo']) else 'N/A',
+                    'receita': receita,
+                    'despesas': despesas,
+                    'margem': margem,
+                    'percentual_margem': percentual_margem,
+                    'mes': row['Data'].strftime('%m/%Y') if not pd.isna(row['Data']) else 'N/A'
+                })
+        
+        # Calcular totais
+        total_receita = df_filtrado['Frete Correto'].sum()
+        total_despesas = df_filtrado['Despesas Gerais'].sum()
+        margem_total = total_receita - total_despesas
+        percentual_margem = (margem_total / total_receita * 100) if total_receita > 0 else 0
+        
+        # Encontrar melhor cliente
+        melhor_cliente = None
+        if detalhes:
+            melhor = max(detalhes, key=lambda x: x['margem'])
+            melhor_cliente = {
+                'nome': melhor['cliente'],
+                'margem': melhor['margem'],
+                'percentual': melhor['percentual_margem']
+            }
+        
+        resultado = {
+            'margem_total': float(round(margem_total, 2)),
+            'percentual_margem': float(round(percentual_margem, 2)),
+            'melhor_cliente': melhor_cliente,
+            'detalhes': detalhes
+        }
+        
+        return jsonify(convert_to_json_serializable(resultado))
+        
+    except Exception as e:
+        print(f"Erro na API detalhes margem completo: {e}")
         return jsonify({'error': str(e)}), 500
 
 @painel_frete_bp.route('/api/painel-frete/reload-data', methods=['POST'])
