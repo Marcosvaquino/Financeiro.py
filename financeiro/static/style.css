@@ -3728,28 +3728,648 @@ body {
     line-height: 1.5;
 }
 
+/* ===== MODAL STYLES ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-heavy);
+    max-width: 1200px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 25px 30px;
+    border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-close-modal {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 28px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Executive Stats Grid for Modals - Compacto */
+.executive-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* Versão ainda mais compacta */
+.executive-stats-grid.compact {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.exec-stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Cards ainda mais compactos */
+.exec-stat-card.mini {
+    padding: 10px;
+    min-height: 75px;
+    border-radius: 6px;
+}
+
+/* Aplicar estilo compacto globalmente nos modais */
+.modal-body .exec-stat-card {
+    padding: 10px;
+    min-height: 70px;
+    border-radius: 6px;
+}
+
+.modal-body .stat-value {
+    font-size: 22px;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.modal-body .stat-detail {
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.modal-body .stat-header h4 {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modal-body .stat-icon {
+    font-size: 18px;
+}
+
+.modal-body .stat-growth {
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
+/* Tabelas nos modais com fonte maior e mais espaçamento */
+.modal-body .executive-table {
+    margin-top: 15px;
+}
+
+.modal-body .executive-table th {
+    font-size: 13px;
+    padding: 12px 10px;
+    font-weight: 600;
+}
+
+.modal-body .executive-table td {
+    font-size: 13px;
+    padding: 10px 10px;
+    line-height: 1.5;
+}
+
+.modal-body .executive-table .valor-monetario {
+    font-size: 14px;
+    font-weight: 600;
+    color: #059669;
+}
+
+.modal-body .executive-table .percentual {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0369a1;
+}
+
+.modal-body .executive-table tbody tr:hover {
+    background: #f0f9ff;
+}
+
+/* Títulos das seções de tabelas nos modais */
+.modal-body .insight-card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.exec-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.exec-stat-card.revenue {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.exec-stat-card.growth {
+    border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.exec-stat-card.target {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%);
+}
+
+.exec-stat-card.potential {
+    border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);
+}
+
+.exec-stat-card.cost {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.exec-stat-card.efficiency {
+    border-left-color: #06b6d4;
+    background: linear-gradient(135deg, #f0fdff 0%, #ffffff 100%);
+}
+
+.exec-stat-card.benchmark {
+    border-left-color: #84cc16;
+    background: linear-gradient(135deg, #f7fee7 0%, #ffffff 100%);
+}
+
+.exec-stat-card.savings {
+    border-left-color: #22c55e;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.exec-stat-card.margin {
+    border-left-color: #16a34a;
+    background: linear-gradient(135deg, #dcfce7 0%, #ffffff 100%);
+}
+
+.exec-stat-card.target-margin {
+    border-left-color: #eab308;
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.exec-stat-card.breakeven {
+    border-left-color: #f97316;
+    background: linear-gradient(135deg, #ffedd5 0%, #ffffff 100%);
+}
+
+.exec-stat-card.roi {
+    border-left-color: #9333ea;
+    background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%);
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.stat-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    line-height: 1.2;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+    line-height: 1.1;
+}
+
+.stat-detail {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.stat-growth {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.stat-growth.positive {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.stat-growth.negative {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.stat-growth.neutral {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Executive Insights for Modals - Mais Compacto */
+.executive-insights {
+    margin-top: 20px;
+}
+
+.insight-card {
+    background: white;
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-bottom: 15px;
+    border-left: 3px solid transparent;
+}
+
+.insight-card.success {
+    border-left-color: #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+}
+
+.insight-card.warning {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fefce8 100%);
+}
+
+.insight-card.premium {
+    border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 100%);
+}
+
+.insight-card h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.insight-content ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.insight-content li {
+    margin-bottom: 12px;
+    padding-left: 20px;
+    position: relative;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.insight-content li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+
+/* Action Items for Premium Cards */
+.action-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.action-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(4px);
+}
+
+.action-priority {
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.action-text {
+    color: #374151;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Recommendation Items for Warning Cards */
+.recommendation-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 0;
+}
+
+.rec-icon {
+    font-size: 18px;
+    width: 30px;
+    text-align: center;
+}
+
+.rec-text {
+    color: #374151;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
 /* KPI Card Hover Effect for Modal */
 .kpi-card-compact:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
+/* Tabelas Executivas - Mais Compactas */
+.table-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+
+.executive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.executive-table thead {
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.executive-table th {
+    padding: 8px 6px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 11px;
+}
+
+.executive-table td {
+    padding: 6px 6px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #4b5563;
+    font-size: 11px;
+}
+
+.executive-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.executive-table tbody tr:nth-child(even) {
+    background: #fefefe;
+}
+
+/* Layout Tabelas Side by Side - Mais Compacto */
+.tables-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.table-half {
+    min-width: 0; /* Permite que as tabelas sejam responsivas */
+}
+
+/* Posições da tabela */
+.executive-table td:first-child {
+    font-weight: 600;
+    color: #059669;
+    text-align: center;
+    width: 40px;
+}
+
+/* Valores monetários */
+.executive-table .valor-monetario {
+    font-weight: 600;
+    color: #059669;
+}
+
+.executive-table .percentual {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+/* Grid mais otimizado para diferentes telas */
+@media (min-width: 1200px) {
+    .executive-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+    .executive-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+    .executive-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Responsive Design for Modals */
 @media (max-width: 768px) {
     .modal-content {
         width: 95%;
         margin: 20px;
+        max-height: 95vh;
     }
     
-    .modal-stats {
+    .executive-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .tables-row {
         grid-template-columns: 1fr;
+        gap: 15px;
     }
     
     .modal-header {
         padding: 20px;
     }
     
+    .modal-header h2 {
+        font-size: 20px;
+    }
+    
     .modal-body {
         padding: 20px;
+    }
+    
+    .stat-value {
+        font-size: 18px;
+    }
+    
+    .exec-stat-card {
+        padding: 12px;
+        min-height: 85px;
+    }
+    
+    .insight-card {
+        padding: 20px;
+    }
+    
+    .executive-table {
+        font-size: 12px;
+    }
+    
+    .executive-table th,
+    .executive-table td {
+        padding: 8px 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .executive-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .exec-stat-card {
+        padding: 10px;
+        min-height: 75px;
+    }
+    
+    .stat-value {
+        font-size: 16px;
+    }
+    
+    .stat-header h4 {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 100%;
+        margin: 10px;
+        border-radius: var(--border-radius);
+    }
+    
+    .modal-header {
+        padding: 15px;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .executive-stats-grid {
+        gap: 12px;
+    }
+    
+    .exec-stat-card {
+        padding: 12px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
     }
 }

@@ -287,3 +287,106 @@ def api_dados():
     except Exception as e:
         print(f"Erro na API dados: {e}")
         return jsonify({'error': str(e)}), 500
+
+@painel_frete_bp.route('/api/painel-frete/detalhes-receita')
+def api_detalhes_receita():
+    try:
+        perfil = request.args.get('perfil')
+        cliente = request.args.get('cliente')
+        veiculo = request.args.get('veiculo')
+        mes = request.args.get('mes')
+        ano = request.args.get('ano')
+        
+        df_filtrado = painel_service.filtrar_dados(perfil, cliente, veiculo, mes, ano)
+        
+        if df_filtrado.empty:
+            return jsonify({'error': 'Nenhum dado encontrado'})
+        
+        # Top 5 clientes
+        top_clientes = df_filtrado.groupby('Cliente_Real').agg({
+            'Frete Correto': 'sum'
+        }).reset_index().sort_values('Frete Correto', ascending=False).head(5)
+        
+        total_faturado = df_filtrado['Frete Correto'].sum()
+        top_clientes['participacao_pct'] = (top_clientes['Frete Correto'] / total_faturado * 100).round(1)
+        
+        # Top 5 veículos
+        top_veiculos = df_filtrado.groupby('Veículo').agg({
+            'Frete Correto': 'sum',
+            'Manifesto': 'count'  # Número de viagens
+        }).reset_index().sort_values('Frete Correto', ascending=False).head(5)
+        
+        dados = {
+            'total_faturado': float(round(total_faturado, 2)),
+            'top_clientes': [
+                {
+                    'nome': str(row['Cliente_Real']),
+                    'faturamento': float(round(row['Frete Correto'], 2)),
+                    'participacao': float(row['participacao_pct'])
+                }
+                for _, row in top_clientes.iterrows()
+            ],
+            'top_veiculos': [
+                {
+                    'placa': str(row['Veículo']),
+                    'faturamento': float(round(row['Frete Correto'], 2)),
+                    'viagens': int(row['Manifesto'])
+                }
+                for _, row in top_veiculos.iterrows()
+            ]
+        }
+        
+        return jsonify(dados)
+    except Exception as e:
+        print(f"Erro na API detalhes receita: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@painel_frete_bp.route('/api/painel-frete/detalhes-despesas')
+def api_detalhes_despesas():
+    try:
+        perfil = request.args.get('perfil')
+        cliente = request.args.get('cliente')
+        veiculo = request.args.get('veiculo')
+        mes = request.args.get('mes')
+        ano = request.args.get('ano')
+        
+        df_filtrado = painel_service.filtrar_dados(perfil, cliente, veiculo, mes, ano)
+        
+        if df_filtrado.empty:
+            return jsonify({'error': 'Nenhum dado encontrado'})
+        
+        # Top 5 maiores despesas por cliente (simulando "beneficiários" do frete a pagar)
+        top_despesas = df_filtrado.groupby(['Cliente_Real', 'Veículo']).agg({
+            'Despesas Gerais': 'sum'
+        }).reset_index().sort_values('Despesas Gerais', ascending=False).head(5)
+        
+        total_despesas = df_filtrado['Despesas Gerais'].sum()
+        top_despesas['participacao_pct'] = (top_despesas['Despesas Gerais'] / total_despesas * 100).round(1)
+        
+        # Veículo mais usado
+        veiculo_mais_usado = df_filtrado.groupby('Veículo').agg({
+            'Manifesto': 'count'
+        }).reset_index().sort_values('Manifesto', ascending=False).iloc[0]
+        
+        dados = {
+            'total_despesas': float(round(total_despesas, 2)),
+            'maior_despesa': float(round(top_despesas.iloc[0]['Despesas Gerais'], 2)) if not top_despesas.empty else 0,
+            'maior_beneficiario': str(top_despesas.iloc[0]['Cliente_Real']) if not top_despesas.empty else 'N/A',
+            'veiculo_mais_usado': str(veiculo_mais_usado['Veículo']),
+            'viagens_veiculo': int(veiculo_mais_usado['Manifesto']),
+            'ticket_medio_pago': float(round(total_despesas / len(df_filtrado), 2)) if len(df_filtrado) > 0 else 0,
+            'top_pagamentos': [
+                {
+                    'beneficiario': f"{str(row['Cliente_Real'])} - {str(row['Veículo'])}",
+                    'veiculo': str(row['Veículo']),
+                    'valor': float(round(row['Despesas Gerais'], 2)),
+                    'participacao': float(row['participacao_pct'])
+                }
+                for _, row in top_despesas.iterrows()
+            ]
+        }
+        
+        return jsonify(dados)
+    except Exception as e:
+        print(f"Erro na API detalhes despesas: {e}")
+        return jsonify({'error': str(e)}), 500
