@@ -293,11 +293,15 @@
                 <div class="modal-filters">
                     <div class="filter-group">
                         <label>🏢 Filtrar por Cliente:</label>
-                        <input type="text" id="filtro-cliente-modal" placeholder="Digite o nome do cliente..." onkeyup="filtrarTabelaReceita()">
+                        <select id="filtro-cliente-modal" onchange="filtrarTabelaReceita()">
+                            <option value="">Todos os Clientes</option>
+                        </select>
                     </div>
                     <div class="filter-group">
                         <label>🚚 Filtrar por Veículo:</label>
-                        <input type="text" id="filtro-veiculo-modal" placeholder="Digite a placa do veículo..." onkeyup="filtrarTabelaReceita()">
+                        <select id="filtro-veiculo-modal" onchange="filtrarTabelaReceita()">
+                            <option value="">Todos os Veículos</option>
+                        </select>
                     </div>
                     <div class="filter-group">
                         <label>📊 Status:</label>
@@ -1050,6 +1054,9 @@ function abrirModal(modalId) {
     
     // Carregar dados específicos do modal
     if (modalId === 'modalReceita') {
+        console.log('Abrindo modal de receita...');
+        // Sempre limpar dados anteriores ao abrir o modal
+        dadosOriginaisCompletos = [];
         preencherDadosReceita();
     } else if (modalId === 'modalOperacional') {
         preencherDadosOperacional();
@@ -1099,54 +1106,144 @@ async function preencherDadosReceita() {
         preencherTabelaTopClientesReais(dados.top_clientes.slice(0, 5));
         preencherTabelaTopVeiculosReais(dados.top_veiculos.slice(0, 5));
         
+        // Primeiro armazenar os dados originais
+        console.log('Dados recebidos do servidor:', dados.tabela_completa.length);
+        dadosOriginaisCompletos = dados.tabela_completa.map(row => ({
+            ...row,
+            cliente: normalizarString(row.cliente),
+            veiculo: normalizarString(row.veiculo)
+        }));
+        console.log('Dados originais armazenados:', dadosOriginaisCompletos.length);
+        
         // Preencher tabela completa com todos os dados
-        preencherTabelaFaturamentoCompleta(dados.tabela_completa);
+        preencherTabelaFaturamentoCompleta(dadosOriginaisCompletos);
+        
+        // Popular dropdowns de filtros
+        popularDropdownsFiltros(dadosOriginaisCompletos);
         
     } catch (error) {
         console.error('Erro ao carregar dados de receita:', error);
     }
 }
 
-// Variável global para armazenar dados da tabela de faturamento
-let dadosFaturamentoCompletos = [];
+// Função para normalizar strings
+function normalizarString(str) {
+    if (!str) return '';
+    return String(str).trim().replace(/\s+/g, ' ');
+}
+
+// Variável para dados originais (nunca muda - sempre usada como base para filtros)
+let dadosOriginaisCompletos = [];
 
 function preencherTabelaFaturamentoCompleta(dados) {
-    dadosFaturamentoCompletos = dados; // Armazenar para filtros
+    console.log('Preenchendo tabela com', dados ? dados.length : 0, 'registros');
+    
     const tbody = document.getElementById('tabela-faturamento-completa');
     tbody.innerHTML = '';
     
-    dados.forEach(row => {
-        const tr = `
-            <tr>
-                <td>${row.cliente}</td>
-                <td>${row.veiculo}</td>
-                <td class="valor-monetario">${formatarMoeda(row.faturamento)}</td>
-                <td>${row.viagens}</td>
-                <td class="percentual">${row.participacao}%</td>
-            </tr>
-        `;
-        tbody.innerHTML += tr;
-    });
+    // Usar os dados passados para renderizar
+    if (dados && dados.length > 0) {
+        dados.forEach(row => {
+            const tr = `
+                <tr>
+                    <td>${row.cliente}</td>
+                    <td>${row.veiculo}</td>
+                    <td class="valor-monetario">${formatarMoeda(row.faturamento)}</td>
+                    <td>${row.viagens}</td>
+                    <td class="percentual">${row.participacao}%</td>
+                </tr>
+            `;
+            tbody.innerHTML += tr;
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum dado encontrado</td></tr>';
+    }
+}
+
+function popularDropdownsFiltros(dados) {
+    console.log('Populando dropdowns com', dados.length, 'registros');
+    
+    // Normalizar e obter listas únicas de clientes e veículos
+    const clientesUnicos = [...new Set(dados.map(row => normalizarString(row.cliente)).filter(c => c))].sort();
+    const veiculosUnicos = [...new Set(dados.map(row => normalizarString(row.veiculo)).filter(v => v))].sort();
+    
+    console.log('Clientes únicos encontrados:', clientesUnicos.length);
+    console.log('Veículos únicos encontrados:', veiculosUnicos.length);
+    
+    // Popular dropdown de clientes
+    const selectCliente = document.getElementById('filtro-cliente-modal');
+    if (selectCliente) {
+        selectCliente.innerHTML = '<option value="">Todos os Clientes</option>';
+        clientesUnicos.forEach(cliente => {
+            const clienteEscapado = cliente.replace(/"/g, '&quot;');
+            selectCliente.innerHTML += `<option value="${clienteEscapado}">${cliente}</option>`;
+        });
+        console.log('Dropdown clientes populado com', selectCliente.options.length - 1, 'opções');
+    }
+    
+    // Popular dropdown de veículos
+    const selectVeiculo = document.getElementById('filtro-veiculo-modal');
+    if (selectVeiculo) {
+        selectVeiculo.innerHTML = '<option value="">Todos os Veículos</option>';
+        veiculosUnicos.forEach(veiculo => {
+            const veiculoEscapado = veiculo.replace(/"/g, '&quot;');
+            selectVeiculo.innerHTML += `<option value="${veiculoEscapado}">${veiculo}</option>`;
+        });
+        console.log('Dropdown veículos populado com', selectVeiculo.options.length - 1, 'opções');
+    }
 }
 
 function filtrarTabelaReceita() {
-    const filtroCliente = document.getElementById('filtro-cliente-modal').value.toLowerCase();
-    const filtroVeiculo = document.getElementById('filtro-veiculo-modal').value.toLowerCase();
+    console.log('=== INICIANDO FILTRO ===');
     
-    const dadosFiltrados = dadosFaturamentoCompletos.filter(row => {
-        const matchCliente = !filtroCliente || row.cliente.toLowerCase().includes(filtroCliente);
-        const matchVeiculo = !filtroVeiculo || row.veiculo.toLowerCase().includes(filtroVeiculo);
+    const filtroCliente = document.getElementById('filtro-cliente-modal').value;
+    const filtroVeiculo = document.getElementById('filtro-veiculo-modal').value;
+    const filtroStatus = document.getElementById('filtro-status-modal').value;
+    
+    console.log('Filtros aplicados:', { filtroCliente, filtroVeiculo, filtroStatus });
+    console.log('Dados originais disponíveis:', dadosOriginaisCompletos.length);
+    
+    if (dadosOriginaisCompletos.length === 0) {
+        console.error('ERRO: Dados originais vazios! Recarregando...');
+        preencherDadosReceita(); // Recarregar dados se estiverem vazios
+        return;
+    }
+    
+    // Mostrar amostra dos dados originais
+    console.log('Amostra dados originais:', dadosOriginaisCompletos.slice(0, 3));
+    
+    // SEMPRE filtrar a partir dos dados originais
+    const dadosFiltrados = dadosOriginaisCompletos.filter(row => {
+        const clienteRow = normalizarString(row.cliente);
+        const veiculoRow = normalizarString(row.veiculo);
+        const filtroClienteNorm = normalizarString(filtroCliente);
+        const filtroVeiculoNorm = normalizarString(filtroVeiculo);
+        
+        const matchCliente = !filtroClienteNorm || clienteRow === filtroClienteNorm;
+        const matchVeiculo = !filtroVeiculoNorm || veiculoRow === filtroVeiculoNorm;
+        
         return matchCliente && matchVeiculo;
     });
     
+    console.log('Resultado do filtro:', dadosFiltrados.length, 'registros');
+    
+    if (dadosFiltrados.length === 0 && (filtroCliente || filtroVeiculo)) {
+        console.warn('Nenhum resultado encontrado!');
+        console.log('Valores únicos disponíveis:');
+        console.log('Clientes:', [...new Set(dadosOriginaisCompletos.map(r => r.cliente))]);
+        console.log('Veículos:', [...new Set(dadosOriginaisCompletos.map(r => r.veiculo))]);
+    }
+    
     preencherTabelaFaturamentoCompleta(dadosFiltrados);
+    console.log('=== FILTRO CONCLUÍDO ===');
 }
 
 function limparFiltrosReceita() {
-    document.getElementById('filtro-cliente-modal').value = '';
-    document.getElementById('filtro-veiculo-modal').value = '';
-    document.getElementById('filtro-status-modal').value = '';
-    preencherTabelaFaturamentoCompleta(dadosFaturamentoCompletos);
+    document.getElementById('filtro-cliente-modal').selectedIndex = 0;
+    document.getElementById('filtro-veiculo-modal').selectedIndex = 0;
+    document.getElementById('filtro-status-modal').selectedIndex = 0;
+    console.log('Filtros limpos, mostrando todos os dados:', dadosOriginaisCompletos.length);
+    preencherTabelaFaturamentoCompleta(dadosOriginaisCompletos);
 }
 
 function preencherTabelaTopClientes(totalFaturado) {
