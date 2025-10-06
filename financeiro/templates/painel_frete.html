@@ -122,11 +122,16 @@
         <div class="chart-container-full">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3>� Análise Mensal de Frete</h3>
-                    <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade - Todos os meses</p>
+                    <div class="chart-title-container">
+                        <h3>📊 Análise Mensal de Frete</h3>
+                        <div class="chart-subtitle-legend-row">
+                            <p class="chart-subtitle">Frete a pagar/receber com % rentabilidade - Todos os meses</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="chart-content">
                     <canvas id="graficoMensal"></canvas>
+                   
                 </div>
             </div>
         </div>
@@ -799,6 +804,82 @@
 
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* Estilos para legenda inline no cabeçalho do gráfico */
+.chart-title-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.chart-title-container h3 {
+    margin: 0 0 8px 0;
+}
+
+.chart-subtitle-legend-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+    gap: 20px !important;
+}
+
+.chart-subtitle-with-legend {
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.subtitle-text {
+    flex: 1 !important;
+}
+
+.legend-text {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    white-space: nowrap !important;
+    margin-left: auto !important;
+    text-align: right !important;
+}
+
+/* Estilos para labels de porcentagem em cima das barras */
+.chart-percentage-label {
+    position: absolute;
+    font-size: 12px;
+    font-weight: bold;
+    color: #2c3e50;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Legenda sobreposta no gráfico */
+.chart-overlay-legend {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    text-align: center;
+    white-space: nowrap;
+}
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
 <script>
@@ -1025,7 +1106,7 @@ function atualizarGraficos(dados) {
         }]
     });
 
-    // Gráfico Mensal
+    // Gráfico Mensal - BARRAS LADO A LADO COM GRADIENTES BONITOS
     graficos.mensal = new Chart(document.getElementById('graficoMensal').getContext('2d'), {
         type: 'bar',
         data: {
@@ -1033,38 +1114,151 @@ function atualizarGraficos(dados) {
             datasets: [{
                 label: 'Frete a Receber',
                 data: dados.grafico_mensal.frete_receber || [],
-                backgroundColor: '#28a745',
-                borderColor: '#28a745',
+                // GRADIENTE VERDE BONITO
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, '#28a745');    // Verde escuro embaixo
+                    gradient.addColorStop(0.5, '#34ce57');  // Verde médio no meio
+                    gradient.addColorStop(1, '#7dd87f');    // Verde claro em cima
+                    return gradient;
+                },
+                borderColor: '#1e7e34',
                 borderWidth: 2,
-                borderRadius: 6
+                borderRadius: 8,
+                borderSkipped: false,
             }, {
-                label: 'Frete a Pagar',
-                data: dados.grafico_mensal.frete_pagar || [],
-                backgroundColor: '#dc3545',
-                borderColor: '#dc3545', 
+                label: 'Frete a Pagar', 
+                data: dados.grafico_mensal.frete_pagar?.map((despesa, index) => {
+                    const receita = dados.grafico_mensal.frete_receber[index] || 0;
+                    return Math.min(despesa, receita); // Limitar ao valor da receita
+                }) || [],
+                // GRADIENTE VERMELHO BONITO
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, '#dc3545');    // Vermelho escuro embaixo
+                    gradient.addColorStop(0.5, '#e74c3c');  // Vermelho médio no meio
+                    gradient.addColorStop(1, '#ff6b6b');    // Vermelho claro em cima
+                    return gradient;
+                },
+                borderColor: '#c82333',
                 borderWidth: 2,
-                borderRadius: 6
+                borderRadius: 8,
+                borderSkipped: false,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            },
             scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
                             return 'R$ ' + value.toLocaleString('pt-BR');
                         }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            layout: {
+                padding: {
+                    top: 40
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            const index = context[0].dataIndex;
+                            const receita = dados.grafico_mensal.frete_receber[index] || 0;
+                            const despesaReal = dados.grafico_mensal.frete_pagar[index] || 0;
+                            const margem = receita > 0 ? ((receita - despesaReal) / receita * 100) : 0;
+                            
+                            return [
+                                '',
+                                `💡 Valores Reais:`,
+                                `📈 Receita: R$ ${receita.toLocaleString('pt-BR')}`,
+                                `📉 Despesa: R$ ${despesaReal.toLocaleString('pt-BR')}`,
+                                `📊 Margem: ${margem.toFixed(1)}%`
+                            ];
+                        }
                     }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'margemLabels',
+            afterDatasetsDraw: function(chart) {
+                const ctx = chart.ctx;
+                const receitas = dados.grafico_mensal.frete_receber || [];
+                const despesas = dados.grafico_mensal.frete_pagar || [];
+                
+                ctx.save();
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const meta = chart.getDatasetMeta(0);
+                
+                meta.data.forEach((bar, index) => {
+                    const receita = receitas[index] || 0;
+                    const despesa = despesas[index] || 0;
+                    
+                    if (receita > 0) {
+                        const margem = ((receita - despesa) / receita * 100);
+                        const texto = `${margem.toFixed(1)}%`;
+                        
+                        const x = bar.x;
+                        const y = bar.y - 25;
+                        
+                        let corTexto = '#dc3545';
+                        if (margem >= 20) {
+                            corTexto = '#28a745';
+                        } else if (margem >= 10) {
+                            corTexto = '#ffc107';
+                        }
+                        
+                        const medidas = ctx.measureText(texto);
+                        const largura = medidas.width + 12;
+                        const altura = 22;
+                        
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                        ctx.fillRect(x - largura/2, y - altura/2, largura, altura);
+                        
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x - largura/2, y - altura/2, largura, altura);
+                        
+                        ctx.fillStyle = corTexto;
+                        ctx.fillText(texto, x, y);
+                    }
+                });
+                
+                ctx.restore();
+            }
+        }]
     });
 
     // Gráfico Clientes

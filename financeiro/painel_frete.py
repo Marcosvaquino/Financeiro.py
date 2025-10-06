@@ -275,10 +275,13 @@ def api_dados():
         
         df_filtrado = painel_service.filtrar_dados(perfil, cliente, veiculo, mes, ano)
         
+        # Para o gráfico mensal, usar dados SEM filtro de mês (para mostrar todos os meses)
+        df_mensal_completo = painel_service.filtrar_dados(perfil, cliente, veiculo, None, ano)
+        
         dados = {
             'cards': painel_service.calcular_cards_resumo(df_filtrado),
             'grafico_diario': painel_service.calcular_grafico_diario_acumulativo(df_filtrado),
-            'grafico_mensal': painel_service.calcular_grafico_mensal_rentabilidade(df_filtrado),
+            'grafico_mensal': painel_service.calcular_grafico_mensal_rentabilidade(df_mensal_completo),
             'grafico_clientes': painel_service.calcular_grafico_clientes(df_filtrado),
             'grafico_veiculos': painel_service.calcular_grafico_veiculos(df_filtrado)
         }
