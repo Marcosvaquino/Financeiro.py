@@ -302,29 +302,39 @@ def api_detalhes_receita():
         if df_filtrado.empty:
             return jsonify({'error': 'Nenhum dado encontrado'})
         
-        # Top 5 clientes
+        # Todos os clientes (não apenas top 5)
         top_clientes = df_filtrado.groupby('Cliente_Real').agg({
             'Frete Correto': 'sum'
-        }).reset_index().sort_values('Frete Correto', ascending=False).head(5)
+        }).reset_index().sort_values('Frete Correto', ascending=False)
         
         total_faturado = df_filtrado['Frete Correto'].sum()
         top_clientes['participacao_pct'] = (top_clientes['Frete Correto'] / total_faturado * 100).round(1)
         
-        # Top 5 veículos
+        # Todos os veículos (não apenas top 5)
         top_veiculos = df_filtrado.groupby('Veículo').agg({
             'Frete Correto': 'sum',
             'Manifesto': 'count'  # Número de viagens
-        }).reset_index().sort_values('Frete Correto', ascending=False).head(5)
+        }).reset_index().sort_values('Frete Correto', ascending=False)
         
+        # Criar tabela completa combinando cliente e veículo
+        tabela_completa = df_filtrado.groupby(['Cliente_Real', 'Veículo']).agg({
+            'Frete Correto': 'sum',
+            'Manifesto': 'count'
+        }).reset_index().sort_values('Frete Correto', ascending=False)
+        
+        tabela_completa['participacao_pct'] = (tabela_completa['Frete Correto'] / total_faturado * 100).round(2)
+
         dados = {
             'total_faturado': float(round(total_faturado, 2)),
+            'meta_faturado': float(round(total_faturado * 1.15, 2)),  # Meta 15% maior
+            'performance_pct': min(100, round((total_faturado / (total_faturado * 1.15)) * 100, 0)),
             'top_clientes': [
                 {
                     'nome': str(row['Cliente_Real']),
                     'faturamento': float(round(row['Frete Correto'], 2)),
                     'participacao': float(row['participacao_pct'])
                 }
-                for _, row in top_clientes.iterrows()
+                for _, row in top_clientes.head(10).iterrows()  # Top 10 para ter dados suficientes
             ],
             'top_veiculos': [
                 {
@@ -332,7 +342,17 @@ def api_detalhes_receita():
                     'faturamento': float(round(row['Frete Correto'], 2)),
                     'viagens': int(row['Manifesto'])
                 }
-                for _, row in top_veiculos.iterrows()
+                for _, row in top_veiculos.head(10).iterrows()  # Top 10 para ter dados suficientes
+            ],
+            'tabela_completa': [
+                {
+                    'cliente': str(row['Cliente_Real']),
+                    'veiculo': str(row['Veículo']),
+                    'faturamento': float(round(row['Frete Correto'], 2)),
+                    'viagens': int(row['Manifesto']),
+                    'participacao': float(row['participacao_pct'])
+                }
+                for _, row in tabela_completa.iterrows()
             ]
         }
         
@@ -355,10 +375,10 @@ def api_detalhes_despesas():
         if df_filtrado.empty:
             return jsonify({'error': 'Nenhum dado encontrado'})
         
-        # Top 5 maiores despesas por cliente (simulando "beneficiários" do frete a pagar)
+        # Todas as despesas por cliente e veículo
         top_despesas = df_filtrado.groupby(['Cliente_Real', 'Veículo']).agg({
             'Despesas Gerais': 'sum'
-        }).reset_index().sort_values('Despesas Gerais', ascending=False).head(5)
+        }).reset_index().sort_values('Despesas Gerais', ascending=False)
         
         total_despesas = df_filtrado['Despesas Gerais'].sum()
         top_despesas['participacao_pct'] = (top_despesas['Despesas Gerais'] / total_despesas * 100).round(1)
@@ -368,8 +388,13 @@ def api_detalhes_despesas():
             'Manifesto': 'count'
         }).reset_index().sort_values('Manifesto', ascending=False).iloc[0]
         
+        # Top 5 para os cards
+        top_5_despesas = top_despesas.head(5)
+        
         dados = {
             'total_despesas': float(round(total_despesas, 2)),
+            'meta_despesas': float(round(total_despesas * 0.85, 2)),  # Meta 15% menor
+            'performance_pct': min(100, round(((total_despesas * 0.85) / total_despesas) * 100, 0)),
             'maior_despesa': float(round(top_despesas.iloc[0]['Despesas Gerais'], 2)) if not top_despesas.empty else 0,
             'maior_beneficiario': str(top_despesas.iloc[0]['Cliente_Real']) if not top_despesas.empty else 'N/A',
             'veiculo_mais_usado': str(veiculo_mais_usado['Veículo']),
@@ -377,8 +402,17 @@ def api_detalhes_despesas():
             'ticket_medio_pago': float(round(total_despesas / len(df_filtrado), 2)) if len(df_filtrado) > 0 else 0,
             'top_pagamentos': [
                 {
-                    'beneficiario': f"{str(row['Cliente_Real'])} - {str(row['Veículo'])}",
-                    'veiculo': str(row['Veículo']),
+                    'embarcador': str(row['Cliente_Real']),
+                    'placa': str(row['Veículo']),
+                    'valor': float(round(row['Despesas Gerais'], 2)),
+                    'participacao': float(row['participacao_pct'])
+                }
+                for _, row in top_5_despesas.iterrows()
+            ],
+            'tabela_completa': [
+                {
+                    'embarcador': str(row['Cliente_Real']),
+                    'placa': str(row['Veículo']),
                     'valor': float(round(row['Despesas Gerais'], 2)),
                     'participacao': float(row['participacao_pct'])
                 }

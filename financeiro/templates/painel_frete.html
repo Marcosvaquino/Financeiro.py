@@ -160,12 +160,13 @@
 
     <!-- Modal de Análise de Receita (Frete a Receber) -->
     <div id="modalReceita" class="modal-overlay" style="display: none;" onclick="fecharModal('modalReceita')">
-        <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-content-wide" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h2>💰 Análise Executiva - Frete a Receber</h2>
+                <h2>💰 Faturamento - Detalhamento Completo</h2>
                 <button onclick="fecharModal('modalReceita')" class="btn-close-modal">✕</button>
             </div>
             <div class="modal-body">
+                <!-- Cards de resumo no topo -->
                 <div class="executive-stats-grid compact">
                     <div class="exec-stat-card revenue">
                         <div class="stat-header">
@@ -179,7 +180,7 @@
                     
                     <div class="exec-stat-card growth">
                         <div class="stat-header">
-                            <span class="stat-icon">�</span>
+                            <span class="stat-icon">🎯</span>
                             <h4>Top Cliente</h4>
                         </div>
                         <div class="stat-value" id="exec-cliente-top" style="font-size: 18px;">-</div>
@@ -189,7 +190,7 @@
                     
                     <div class="exec-stat-card target">
                         <div class="stat-header">
-                            <span class="stat-icon">🚚</span>
+                            <span class="stat-icon">�</span>
                             <h4>Veículo + Rentável</h4>
                         </div>
                         <div class="stat-value" id="exec-veiculo-top" style="font-size: 18px;">-</div>
@@ -206,16 +207,47 @@
                         <div class="stat-detail">Por Frete</div>
                         <div class="stat-growth positive">Média</div>
                     </div>
+                    
+                    <!-- Cards antigos removidos -->
+                    <div class="exec-stat-card growth" style="display: none;">
+                        <div class="stat-header">
+                            <span class="stat-icon">�</span>
+                            <h4>Top Cliente</h4>
+                        </div>
+                        <div class="stat-value" id="exec-cliente-top" style="font-size: 18px;">-</div>
+                        <div class="stat-detail" id="exec-cliente-receita">R$ 0</div>
+                        <div class="stat-growth positive" id="exec-cliente-participacao">0%</div>
+                    </div>
+                    
+                    <div class="exec-stat-card target" style="display: none;">
+                        <div class="stat-header">
+                            <span class="stat-icon">🚚</span>
+                            <h4>Veículo + Rentável</h4>
+                        </div>
+                        <div class="stat-value" id="exec-veiculo-top" style="font-size: 18px;">-</div>
+                        <div class="stat-detail" id="exec-veiculo-receita">R$ 0</div>
+                        <div class="stat-growth positive">MVP</div>
+                    </div>
+                    
+                    <div class="exec-stat-card potential" style="display: none;">
+                        <div class="stat-header">
+                            <span class="stat-icon">🎲</span>
+                            <h4>Ticket Médio</h4>
+                        </div>
+                        <div class="stat-value" id="exec-ticket-medio-recebido">R$ 0</div>
+                        <div class="stat-detail">Por Frete</div>
+                        <div class="stat-growth positive">Média</div>
+                    </div>
                 </div>
-                
-                <!-- Tabelas Side by Side -->
-                <div class="tables-row">
-                    <div class="table-half">
+
+                <!-- TOP 5 lado a lado SEM SCROLL ANTES dos filtros como você pediu -->
+                <div class="top5-container">
+                    <div class="top5-section">
                         <div class="insight-card success">
-                            <h4>� Top 5 - Clientes que Mais Faturaram</h4>
+                            <h4>🏆 Top 5 - Clientes que Mais Faturaram</h4>
                             <div class="insight-content">
-                                <div class="table-container">
-                                    <table class="executive-table">
+                                <div class="table-container-no-scroll">
+                                    <table class="executive-table compact">
                                         <thead>
                                             <tr>
                                                 <th>Pos</th>
@@ -233,12 +265,12 @@
                         </div>
                     </div>
                     
-                    <div class="table-half">
+                    <div class="top5-section">
                         <div class="insight-card growth">
                             <h4>🚚 Top 5 - Veículos que Mais Faturaram</h4>
                             <div class="insight-content">
-                                <div class="table-container">
-                                    <table class="executive-table">
+                                <div class="table-container-no-scroll">
+                                    <table class="executive-table compact">
                                         <thead>
                                             <tr>
                                                 <th>Pos</th>
@@ -256,19 +288,61 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Filtros DEPOIS dos Top 5 -->
+                <div class="modal-filters">
+                    <div class="filter-group">
+                        <label>🏢 Filtrar por Cliente:</label>
+                        <input type="text" id="filtro-cliente-modal" placeholder="Digite o nome do cliente..." onkeyup="filtrarTabelaReceita()">
+                    </div>
+                    <div class="filter-group">
+                        <label>🚚 Filtrar por Veículo:</label>
+                        <input type="text" id="filtro-veiculo-modal" placeholder="Digite a placa do veículo..." onkeyup="filtrarTabelaReceita()">
+                    </div>
+                    <div class="filter-group">
+                        <label>📊 Status:</label>
+                        <select id="filtro-status-modal" onchange="filtrarTabelaReceita()">
+                            <option value="">Todos</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-clear-filters" onclick="limparFiltrosReceita()">🗑️ Limpar Filtros</button>
+                    </div>
+                </div>
+
+                <!-- Tabela completa COM TODAS as placas -->
+                <div class="modal-table-container">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>CLIENTE</th>
+                                <th>VEÍCULO</th>
+                                <th>FATURAMENTO</th>
+                                <th>VIAGENS</th>
+                                <th>% DO TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-faturamento-completa">
+                            <tr><td colspan="5">Carregando dados...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Modal de Análise de Despesas (Frete a Pagar) -->
     <div id="modalOperacional" class="modal-overlay" style="display: none;" onclick="fecharModal('modalOperacional')">
-        <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-content-wide" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h2>💸 Análise Executiva - Frete a Pagar</h2>
+                <h2>💸 Despesas - Detalhamento Completo</h2>
                 <button onclick="fecharModal('modalOperacional')" class="btn-close-modal">✕</button>
             </div>
             <div class="modal-body">
-                <div class="executive-stats-grid">
+                <!-- Cards originais no topo -->
+                <div class="executive-stats-grid compact">
                     <div class="exec-stat-card cost">
                         <div class="stat-header">
                             <span class="stat-icon">�</span>
@@ -320,7 +394,7 @@
                                     <thead>
                                         <tr>
                                             <th>Pos</th>
-                                            <th>Beneficiário</th>
+                                            <th>Embarcador</th>
                                             <th>Veículo</th>
                                             <th>Valor Pago</th>
                                             <th>% Total</th>
@@ -973,6 +1047,13 @@ function abrirAnaliseRentabilidade() {
 function abrirModal(modalId) {
     document.getElementById(modalId).style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Previne scroll do body
+    
+    // Carregar dados específicos do modal
+    if (modalId === 'modalReceita') {
+        preencherDadosReceita();
+    } else if (modalId === 'modalOperacional') {
+        preencherDadosOperacional();
+    }
 }
 
 function fecharModal(modalId) {
@@ -994,7 +1075,7 @@ async function preencherDadosReceita() {
             return;
         }
 
-        // Preencher cards principales
+        // Preencher cards principais
         document.getElementById('exec-total-faturado').textContent = formatarMoeda(dados.total_faturado);
         
         if (dados.top_clientes.length > 0) {
@@ -1014,15 +1095,58 @@ async function preencherDadosReceita() {
             dados.total_faturado / dados.top_veiculos.reduce((sum, v) => sum + v.viagens, 0) : 0;
         document.getElementById('exec-ticket-medio-recebido').textContent = formatarMoeda(ticketMedio);
         
-        // Preencher tabela de clientes
-        preencherTabelaTopClientesReais(dados.top_clientes);
+        // Preencher Top 5 tabelas (apenas primeiros 5)
+        preencherTabelaTopClientesReais(dados.top_clientes.slice(0, 5));
+        preencherTabelaTopVeiculosReais(dados.top_veiculos.slice(0, 5));
         
-        // Preencher tabela de veículos
-        preencherTabelaTopVeiculosReais(dados.top_veiculos);
+        // Preencher tabela completa com todos os dados
+        preencherTabelaFaturamentoCompleta(dados.tabela_completa);
         
     } catch (error) {
         console.error('Erro ao carregar dados de receita:', error);
     }
+}
+
+// Variável global para armazenar dados da tabela de faturamento
+let dadosFaturamentoCompletos = [];
+
+function preencherTabelaFaturamentoCompleta(dados) {
+    dadosFaturamentoCompletos = dados; // Armazenar para filtros
+    const tbody = document.getElementById('tabela-faturamento-completa');
+    tbody.innerHTML = '';
+    
+    dados.forEach(row => {
+        const tr = `
+            <tr>
+                <td>${row.cliente}</td>
+                <td>${row.veiculo}</td>
+                <td class="valor-monetario">${formatarMoeda(row.faturamento)}</td>
+                <td>${row.viagens}</td>
+                <td class="percentual">${row.participacao}%</td>
+            </tr>
+        `;
+        tbody.innerHTML += tr;
+    });
+}
+
+function filtrarTabelaReceita() {
+    const filtroCliente = document.getElementById('filtro-cliente-modal').value.toLowerCase();
+    const filtroVeiculo = document.getElementById('filtro-veiculo-modal').value.toLowerCase();
+    
+    const dadosFiltrados = dadosFaturamentoCompletos.filter(row => {
+        const matchCliente = !filtroCliente || row.cliente.toLowerCase().includes(filtroCliente);
+        const matchVeiculo = !filtroVeiculo || row.veiculo.toLowerCase().includes(filtroVeiculo);
+        return matchCliente && matchVeiculo;
+    });
+    
+    preencherTabelaFaturamentoCompleta(dadosFiltrados);
+}
+
+function limparFiltrosReceita() {
+    document.getElementById('filtro-cliente-modal').value = '';
+    document.getElementById('filtro-veiculo-modal').value = '';
+    document.getElementById('filtro-status-modal').value = '';
+    preencherTabelaFaturamentoCompleta(dadosFaturamentoCompletos);
 }
 
 function preencherTabelaTopClientes(totalFaturado) {
@@ -1187,8 +1311,8 @@ function preencherTabelaMaioresPagamentosReais(pagamentos) {
         const row = `
             <tr>
                 <td>${index + 1}°</td>
-                <td>${pagamento.beneficiario}</td>
-                <td>${pagamento.veiculo}</td>
+                <td>${pagamento.embarcador}</td>
+                <td>${pagamento.placa}</td>
                 <td class="valor-monetario">${formatarMoeda(pagamento.valor)}</td>
                 <td class="percentual">${pagamento.participacao}%</td>
             </tr>
