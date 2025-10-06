@@ -349,7 +349,7 @@
                 <div class="executive-stats-grid compact">
                     <div class="exec-stat-card cost">
                         <div class="stat-header">
-                            <span class="stat-icon">�</span>
+                            <span class="stat-icon">💸</span>
                             <h4>Total Pago</h4>
                         </div>
                         <div class="stat-value" id="exec-total-frete-pago">R$ 0</div>
@@ -359,17 +359,17 @@
                     
                     <div class="exec-stat-card efficiency">
                         <div class="stat-header">
-                            <span class="stat-icon">📊</span>
-                            <h4>Maior Pagamento</h4>
+                            <span class="stat-icon">🏆</span>
+                            <h4>Top Embarcador</h4>
                         </div>
-                        <div class="stat-value" id="exec-maior-pagamento">R$ 0</div>
-                        <div class="stat-detail" id="exec-maior-beneficiario">-</div>
+                        <div class="stat-value" id="exec-maior-beneficiario" style="font-size: 18px;">-</div>
+                        <div class="stat-detail" id="exec-maior-pagamento">R$ 0</div>
                         <div class="stat-growth neutral" id="exec-participacao-maior">0%</div>
                     </div>
                     
                     <div class="exec-stat-card benchmark">
                         <div class="stat-header">
-                            <span class="stat-icon">�</span>
+                            <span class="stat-icon">🚚</span>
                             <h4>Veículo + Usado</h4>
                         </div>
                         <div class="stat-value" id="exec-veiculo-mais-usado" style="font-size: 18px;">-</div>
@@ -379,7 +379,7 @@
                     
                     <div class="exec-stat-card savings">
                         <div class="stat-header">
-                            <span class="stat-icon">�</span>
+                            <span class="stat-icon">💰</span>
                             <h4>Ticket Médio Pago</h4>
                         </div>
                         <div class="stat-value" id="exec-ticket-medio-pago">R$ 0</div>
@@ -387,30 +387,99 @@
                         <div class="stat-growth neutral">Média</div>
                     </div>
                 </div>
-                
-                <!-- Tabela Top Pagamentos -->
-                <div class="executive-insights">
-                    <div class="insight-card warning">
-                        <h4>📋 Top 5 - Maiores Pagamentos de Frete</h4>
-                        <div class="insight-content">
-                            <div class="table-container">
-                                <table class="executive-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Pos</th>
-                                            <th>Embarcador</th>
-                                            <th>Veículo</th>
-                                            <th>Valor Pago</th>
-                                            <th>% Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tabela-maiores-pagamentos">
-                                        <tr><td colspan="5">Carregando dados...</td></tr>
-                                    </tbody>
-                                </table>
+
+                <!-- TOP 5 lado a lado SEM SCROLL -->
+                <div class="top5-container">
+                    <div class="top5-section">
+                        <div class="insight-card warning">
+                            <h4>� Top 5 - Embarcadores que Mais Pagamos</h4>
+                            <div class="insight-content">
+                                <div class="table-container-no-scroll">
+                                    <table class="executive-table compact">
+                                        <thead>
+                                            <tr>
+                                                <th>Pos</th>
+                                                <th>Embarcador</th>
+                                                <th>Valor Pago</th>
+                                                <th>%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-top-embarcadores">
+                                            <tr><td colspan="4">Carregando...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="top5-section">
+                        <div class="insight-card info">
+                            <h4>🚚 Top 5 - Veículos que Mais Custaram</h4>
+                            <div class="insight-content">
+                                <div class="table-container-no-scroll">
+                                    <table class="executive-table compact">
+                                        <thead>
+                                            <tr>
+                                                <th>Pos</th>
+                                                <th>Veículo</th>
+                                                <th>Despesas</th>
+                                                <th>Viagens</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-top-veiculos-despesas">
+                                            <tr><td colspan="4">Carregando...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="modal-filters">
+                    <div class="filter-group">
+                        <label>🏢 Filtrar por Embarcador:</label>
+                        <select id="filtro-embarcador-modal" onchange="filtrarTabelaDespesas()">
+                            <option value="">Todos os Embarcadores</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>🚚 Filtrar por Veículo:</label>
+                        <select id="filtro-veiculo-despesas-modal" onchange="filtrarTabelaDespesas()">
+                            <option value="">Todos os Veículos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>📊 Status:</label>
+                        <select id="filtro-status-despesas-modal" onchange="filtrarTabelaDespesas()">
+                            <option value="">Todos</option>
+                            <option value="pago">Pago</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-clear-filters" onclick="limparFiltrosDespesas()">🗑️ Limpar Filtros</button>
+                    </div>
+                </div>
+
+                <!-- Tabela completa COM TODAS as despesas -->
+                <div class="modal-table-container">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>EMBARCADOR</th>
+                                <th>VEÍCULO</th>
+                                <th>VALOR PAGO</th>
+                                <th>VIAGENS</th>
+                                <th>% DO TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-despesas-completa">
+                            <tr><td colspan="5">Carregando dados...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1059,7 +1128,10 @@ function abrirModal(modalId) {
         dadosOriginaisCompletos = [];
         preencherDadosReceita();
     } else if (modalId === 'modalOperacional') {
-        preencherDadosOperacional();
+        console.log('Abrindo modal de despesas...');
+        // Sempre limpar dados anteriores ao abrir o modal
+        dadosOriginaisCompletosDespesas = [];
+        carregarDadosCompletosDespesas();
     }
 }
 
@@ -1338,6 +1410,8 @@ function gerarVeiculoFicticio() {
     return placas[Math.floor(Math.random() * placas.length)];
 }
 
+// FUNÇÃO ANTIGA - COMENTADA PARA USO DA NOVA IMPLEMENTAÇÃO
+/*
 async function preencherDadosOperacional() {
     try {
         // Obter filtros atuais
@@ -1373,6 +1447,7 @@ async function preencherDadosOperacional() {
         console.error('Erro ao carregar dados operacionais:', error);
     }
 }
+*/
 
 function preencherTabelaMaioresPagamentos(totalDespesas, numeroViagens) {
     const pagamentos = [
@@ -1427,6 +1502,266 @@ function gerarMotoristaFicticio() {
         'CARLOS LIMA FRETES'
     ];
     return motoristas[Math.floor(Math.random() * motoristas.length)];
+}
+
+// ==================== NOVAS FUNÇÕES PARA MODAL DE DESPESAS ====================
+
+// Variável global para armazenar dados originais de despesas
+let dadosOriginaisCompletosDespesas = [];
+
+// Função para preencher dados completos de despesas com filtros dropdown
+async function carregarDadosCompletosDespesas() {
+    try {
+        console.log('Carregando dados completos de despesas...');
+        const response = await fetch('/api/painel-frete/detalhes-despesas-completo');
+        const dados = await response.json();
+        
+        if (dados.error) {
+            console.error('Erro ao obter dados:', dados.error);
+            return;
+        }
+        
+        if (!dados.registros || dados.registros.length === 0) {
+            console.error('Nenhum registro encontrado na resposta da API');
+            return;
+        }
+        
+        console.log('Dados de despesas carregados:', dados.registros.length, 'registros');
+        
+        // Armazenar dados originais completos
+        dadosOriginaisCompletosDespesas = dados.registros;
+        
+        // Calcular estatísticas principais
+        let totalPago = 0;
+        const estatisticasEmbarcador = {};
+        const estatisticasVeiculo = {};
+        
+        dados.registros.forEach(item => {
+            const valor = parseFloat(item['Despesas Gerais']) || 0;
+            const embarcador = item['Cliente_Real'] || '';
+            const veiculo = item['Veículo'] || '';
+            
+            totalPago += valor;
+            
+            // Agrupar por embarcador
+            if (!estatisticasEmbarcador[embarcador]) {
+                estatisticasEmbarcador[embarcador] = { valor: 0, viagens: 0 };
+            }
+            estatisticasEmbarcador[embarcador].valor += valor;
+            estatisticasEmbarcador[embarcador].viagens += 1;
+            
+            // Agrupar por veículo
+            if (!estatisticasVeiculo[veiculo]) {
+                estatisticasVeiculo[veiculo] = { valor: 0, viagens: 0 };
+            }
+            estatisticasVeiculo[veiculo].valor += valor;
+            estatisticasVeiculo[veiculo].viagens += 1;
+        });
+        
+        // Encontrar top embarcador e veículo mais usado
+        let topEmbarcador = '';
+        let topEmbarcadorValor = 0;
+        Object.keys(estatisticasEmbarcador).forEach(embarcador => {
+            if (estatisticasEmbarcador[embarcador].valor > topEmbarcadorValor) {
+                topEmbarcadorValor = estatisticasEmbarcador[embarcador].valor;
+                topEmbarcador = embarcador;
+            }
+        });
+        
+        let veiculoMaisUsado = '';
+        let maxViagens = 0;
+        Object.keys(estatisticasVeiculo).forEach(veiculo => {
+            if (estatisticasVeiculo[veiculo].viagens > maxViagens) {
+                maxViagens = estatisticasVeiculo[veiculo].viagens;
+                veiculoMaisUsado = veiculo;
+            }
+        });
+        
+        // Preencher cards principais
+        document.getElementById('exec-total-frete-pago').textContent = `R$ ${totalPago.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('exec-maior-beneficiario').textContent = topEmbarcador || 'N/A';
+        document.getElementById('exec-maior-pagamento').textContent = `R$ ${topEmbarcadorValor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('exec-veiculo-mais-usado').textContent = veiculoMaisUsado || 'N/A';
+        document.getElementById('exec-viagens-veiculo').textContent = `${maxViagens} viagens`;
+        document.getElementById('exec-ticket-medio-pago').textContent = `R$ ${(totalPago / dados.registros.length).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        
+        if (totalPago > 0) {
+            const percentual = (topEmbarcadorValor / totalPago * 100).toFixed(1);
+            document.getElementById('exec-participacao-maior').textContent = `${percentual}%`;
+        }
+        
+        // Preencher Top 5 Embarcadores
+        const topEmbarcadores = Object.keys(estatisticasEmbarcador)
+            .map(embarcador => ({
+                nome: embarcador,
+                valor: estatisticasEmbarcador[embarcador].valor,
+                percentual: (estatisticasEmbarcador[embarcador].valor / totalPago * 100).toFixed(1)
+            }))
+            .sort((a, b) => b.valor - a.valor)
+            .slice(0, 5);
+        
+        const tabelaTopEmbarcadores = document.getElementById('tabela-top-embarcadores');
+        tabelaTopEmbarcadores.innerHTML = topEmbarcadores.map((item, index) => 
+            `<tr>
+                <td>${index + 1}º</td>
+                <td>${item.nome}</td>
+                <td>R$ ${item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${item.percentual}%</td>
+            </tr>`
+        ).join('');
+        
+        // Preencher Top 5 Veículos
+        const topVeiculos = Object.keys(estatisticasVeiculo)
+            .map(veiculo => ({
+                nome: veiculo,
+                valor: estatisticasVeiculo[veiculo].valor,
+                viagens: estatisticasVeiculo[veiculo].viagens
+            }))
+            .sort((a, b) => b.valor - a.valor)
+            .slice(0, 5);
+        
+        const tabelaTopVeiculos = document.getElementById('tabela-top-veiculos-despesas');
+        tabelaTopVeiculos.innerHTML = topVeiculos.map((item, index) => 
+            `<tr>
+                <td>${index + 1}º</td>
+                <td>${item.nome}</td>
+                <td>R$ ${item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${item.viagens}</td>
+            </tr>`
+        ).join('');
+        
+        // Preencher tabela completa e filtros
+        preencherTabelaCompletaDespesas(dados.registros);
+        preencherFiltrosDespesas(dados.registros);
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados completos de despesas:', error);
+        
+        // Mostrar erro na tela
+        document.getElementById('tabela-top-embarcadores').innerHTML = 
+            '<tr><td colspan="4" style="color: red;">Erro ao carregar dados: ' + error.message + '</td></tr>';
+        document.getElementById('tabela-top-veiculos-despesas').innerHTML = 
+            '<tr><td colspan="4" style="color: red;">Erro ao carregar dados: ' + error.message + '</td></tr>';
+        document.getElementById('tabela-despesas-completa').innerHTML = 
+            '<tr><td colspan="5" style="color: red;">Erro ao carregar dados: ' + error.message + '</td></tr>';
+    }
+}
+
+// Função para preencher tabela completa de despesas
+function preencherTabelaCompletaDespesas(dados) {
+    const tabela = document.getElementById('tabela-despesas-completa');
+    const totalGeral = dados.reduce((sum, item) => sum + (parseFloat(item['Despesas Gerais']) || 0), 0);
+    
+    // Agrupar por embarcador + veículo
+    const agrupado = {};
+    dados.forEach(item => {
+        const embarcador = item['Cliente_Real'] || '';
+        const veiculo = item['Veículo'] || '';
+        const valor = parseFloat(item['Despesas Gerais']) || 0;
+        
+        const chave = `${embarcador}|${veiculo}`;
+        if (!agrupado[chave]) {
+            agrupado[chave] = {
+                embarcador,
+                veiculo,
+                valor: 0,
+                viagens: 0
+            };
+        }
+        agrupado[chave].valor += valor;
+        agrupado[chave].viagens += 1;
+    });
+    
+    const linhas = Object.values(agrupado)
+        .sort((a, b) => b.valor - a.valor)
+        .map(item => {
+            const percentual = totalGeral > 0 ? ((item.valor / totalGeral) * 100).toFixed(1) : '0.0';
+            return `<tr>
+                <td>${item.embarcador}</td>
+                <td>${item.veiculo}</td>
+                <td>R$ ${item.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                <td>${item.viagens}</td>
+                <td>${percentual}%</td>
+            </tr>`;
+        });
+    
+    tabela.innerHTML = linhas.join('');
+}
+
+// Função para preencher dropdowns de filtros
+function preencherFiltrosDespesas(dados) {
+    const embarcadores = [...new Set(dados.map(item => item['Cliente_Real']).filter(Boolean))].sort();
+    const veiculos = [...new Set(dados.map(item => item['Veículo']).filter(Boolean))].sort();
+    
+    const selectEmbarcador = document.getElementById('filtro-embarcador-modal');
+    const selectVeiculo = document.getElementById('filtro-veiculo-despesas-modal');
+    
+    if (selectEmbarcador) {
+        selectEmbarcador.innerHTML = '<option value="">Todos os Embarcadores</option>';
+        embarcadores.forEach(embarcador => {
+            selectEmbarcador.innerHTML += `<option value="${embarcador}">${embarcador}</option>`;
+        });
+    }
+    
+    if (selectVeiculo) {
+        selectVeiculo.innerHTML = '<option value="">Todos os Veículos</option>';
+        veiculos.forEach(veiculo => {
+            selectVeiculo.innerHTML += `<option value="${veiculo}">${veiculo}</option>`;
+        });
+    }
+}
+
+// Função para filtrar tabela de despesas
+function filtrarTabelaDespesas() {
+    console.log('Iniciando filtro de despesas...');
+    
+    const filtroEmbarcador = document.getElementById('filtro-embarcador-modal')?.value || '';
+    const filtroVeiculo = document.getElementById('filtro-veiculo-despesas-modal')?.value || '';
+    const filtroStatus = document.getElementById('filtro-status-despesas-modal')?.value || '';
+    
+    console.log('Filtros aplicados:', { filtroEmbarcador, filtroVeiculo, filtroStatus });
+    
+    if (!dadosOriginaisCompletosDespesas || dadosOriginaisCompletosDespesas.length === 0) {
+        console.log('Dados originais não encontrados, recarregando...');
+        carregarDadosCompletosDespesas();
+        return;
+    }
+    
+    let dadosFiltrados = [...dadosOriginaisCompletosDespesas];
+    
+    // Aplicar filtros com comparação simples
+    if (filtroEmbarcador) {
+        dadosFiltrados = dadosFiltrados.filter(item => 
+            (item['Cliente_Real'] || '').toString().toLowerCase().includes(filtroEmbarcador.toLowerCase())
+        );
+    }
+    
+    if (filtroVeiculo) {
+        dadosFiltrados = dadosFiltrados.filter(item => 
+            (item['Veículo'] || '').toString().toLowerCase().includes(filtroVeiculo.toLowerCase())
+        );
+    }
+    
+    console.log(`Dados após filtros: ${dadosFiltrados.length} de ${dadosOriginaisCompletosDespesas.length}`);
+    
+    // Atualizar apenas a tabela completa com dados filtrados
+    preencherTabelaCompletaDespesas(dadosFiltrados);
+}
+
+// Função para limpar filtros de despesas
+function limparFiltrosDespesas() {
+    const selectEmbarcador = document.getElementById('filtro-embarcador-modal');
+    const selectVeiculo = document.getElementById('filtro-veiculo-despesas-modal');
+    const selectStatus = document.getElementById('filtro-status-despesas-modal');
+    
+    if (selectEmbarcador) selectEmbarcador.value = '';
+    if (selectVeiculo) selectVeiculo.value = '';
+    if (selectStatus) selectStatus.value = '';
+    
+    // Restaurar dados originais
+    if (dadosOriginaisCompletosDespesas && dadosOriginaisCompletosDespesas.length > 0) {
+        preencherTabelaCompletaDespesas(dadosOriginaisCompletosDespesas);
+    }
 }
 
 function obterFiltrosAtuais() {

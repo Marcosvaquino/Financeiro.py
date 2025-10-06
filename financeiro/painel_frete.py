@@ -424,3 +424,42 @@ def api_detalhes_despesas():
     except Exception as e:
         print(f"Erro na API detalhes despesas: {e}")
         return jsonify({'error': str(e)}), 500
+
+@painel_frete_bp.route('/api/painel-frete/detalhes-despesas-completo')
+def api_detalhes_despesas_completo():
+    """Retorna todos os registros individuais para o modal de despesas"""
+    try:
+        perfil = request.args.get('perfil')
+        cliente = request.args.get('cliente')
+        veiculo = request.args.get('veiculo')
+        mes = request.args.get('mes')
+        ano = request.args.get('ano')
+        
+        df_filtrado = painel_service.filtrar_dados(perfil, cliente, veiculo, mes, ano)
+        
+        if df_filtrado.empty:
+            return jsonify({'error': 'Nenhum dado encontrado'})
+        
+        # Converter DataFrame para lista de dicionários
+        registros = []
+        for _, row in df_filtrado.iterrows():
+            registro = {}
+            for coluna in df_filtrado.columns:
+                valor = row[coluna]
+                # Converter valores para tipos JSON serializáveis
+                if pd.isna(valor):
+                    registro[coluna] = None
+                elif isinstance(valor, (int, float)):
+                    registro[coluna] = float(valor) if not pd.isna(valor) else 0.0
+                else:
+                    registro[coluna] = str(valor)
+            registros.append(registro)
+        
+        return jsonify({
+            'registros': registros,
+            'total': len(registros)
+        })
+        
+    except Exception as e:
+        print(f"Erro na API detalhes despesas completo: {e}")
+        return jsonify({'error': str(e)}), 500
