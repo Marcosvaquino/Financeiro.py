@@ -7,8 +7,8 @@ from financeiro.veiculo_helper import VeiculoHelper
 from financeiro.cliente_helper import ClienteHelper
 from financeiro.custo_frota import CustoFrotaHelper
 
-arquivo = os.path.join(root, 'financeiro', 'uploads', 'manifestos', 'Manifesto_Frete_09-25.xlsx')
-print('🚛 INTEGRAÇÃO CORRETA - Usando Coluna D (Veículo) e Coluna S (Classificação)')
+arquivo = os.path.join(root, 'financeiro', 'uploads', 'manifestos', 'Manifesto_Frete_07-25.xlsx')
+print('🚛 INTEGRAÇÃO CORRETA - Usando Coluna D (Veículo) e Coluna T (Cliente)')
 
 wb = openpyxl.load_workbook(arquivo, data_only=True)
 ws = wb.active
@@ -70,12 +70,14 @@ for row in range(2, ws.max_row + 1):
         ws.cell(row, 23, '0')
         ws.cell(row, 24, '0')
     
-    # COLUNA S (Classificação) -> Cliente_Real (Col 25)
-    cliente = ws.cell(row, 19).value  # Coluna S = 19
+    # COLUNA T (Cliente) -> Cliente_Real (Col 25)
+    cliente = ws.cell(row, 20).value  # Coluna T = 20
     if cliente and str(cliente).strip():
         cliente_norm = str(cliente).upper().strip()
         cliente_dados = dados_clientes.get(cliente_norm, {})
-        ws.cell(row, 25, cliente_dados.get('nome_real') or '0')  # Cliente_Real
+        # Se encontrou no ClienteHelper, usa nome_real, senão usa o nome original
+        nome_real = cliente_dados.get('nome_real')
+        ws.cell(row, 25, nome_real if nome_real else str(cliente).strip())  # Cliente_Real
     else:
         ws.cell(row, 25, '0')
     
@@ -119,6 +121,6 @@ print(f'📁 Arquivo: Manifesto_Frete_09-25.xlsx')
 print(f'📊 {linhas_processadas} linhas integradas')
 print(f'🚚 Status_Veiculo (Col 23): baseado na Coluna D (Veículo)')
 print(f'🔧 Tipologia (Col 24): baseado na Coluna D (Veículo)')
-print(f'👥 Cliente_Real (Col 25): baseado na Coluna S (Classificação)')
+print(f'👥 Cliente_Real (Col 25): baseado na Coluna T (Cliente)')
 print(f'💰 Custo Frota Fixa (Col 26): calculado para veículos FIXOS usando Tipologia e KM')
 print(f'✅ {len(dados_veiculos)} placas processadas, {len(dados_clientes)} clientes processados')
