@@ -85,17 +85,19 @@ def integrar_dados_manifesto(ws_out):
         if placa and str(placa).strip():
             placas_manifesto.add(str(placa).upper().strip())
         
-        # Coletar clientes
+        # Coletar clientes (manter nome original, não normalizar aqui)
         cliente = ws_out.cell(row, col_classificacao).value
         if cliente and str(cliente).strip():
-            clientes_manifesto.add(str(cliente).upper().strip())
+            clientes_manifesto.add(str(cliente).strip())  # Manter original
     
     # Buscar dados dos veículos e clientes
     print(f"🚚 Buscando dados de {len(placas_manifesto)} veículos...")
     dados_veiculos = VeiculoHelper.buscar_multiplas_placas(list(placas_manifesto))
     
     print(f"👥 Buscando dados de {len(clientes_manifesto)} clientes...")
-    dados_clientes = ClienteHelper.buscar_multiplos_nomes_ajustados(list(clientes_manifesto))
+    dados_clientes = ClienteHelper.buscar_multiplos_nomes_manifesto(list(clientes_manifesto))
+    clientes_encontrados = sum(1 for c in dados_clientes.values() if c.get('encontrado', False))
+    print(f"✅ Clientes encontrados: {clientes_encontrados}/{len(clientes_manifesto)}")
     
     # Processar cada linha do manifesto
     linhas_processadas = 0
@@ -115,12 +117,19 @@ def integrar_dados_manifesto(ws_out):
             ws_out.cell(row, col_status_veiculo, '0')
             ws_out.cell(row, col_tipologia, '0')
         
-        # === 2. DADOS DO CLIENTE ===
+        # === 2. DADOS DO CLIENTE (MAPEAMENTO DIRETO COM NOVA FUNÇÃO) ===
         cliente = ws_out.cell(row, col_classificacao).value
         if cliente and str(cliente).strip():
-            cliente_norm = str(cliente).upper().strip()
-            cliente_dados = dados_clientes.get(cliente_norm, {})
-            ws_out.cell(row, col_cliente_real, cliente_dados.get('nome_real', '0'))
+            cliente_original = str(cliente).strip()
+            
+            # Buscar diretamente no dicionário de dados_clientes (já processado pela nova função)
+            cliente_dados = dados_clientes.get(cliente_original)
+            
+            if cliente_dados and cliente_dados.get('encontrado', False):
+                ws_out.cell(row, col_cliente_real, cliente_dados.get('nome_real', cliente_original))
+            else:
+                # Se não encontrou mapeamento, marcar como não encontrado
+                ws_out.cell(row, col_cliente_real, '0')
         else:
             ws_out.cell(row, col_cliente_real, '0')
         

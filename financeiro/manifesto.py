@@ -496,14 +496,21 @@ def integrar_manifesto_completo(dados_excel):
         veiculos_encontrados = sum(1 for v in dados_veiculos.values() if v.get('encontrado', False))
         print(f"✅ Veículos encontrados: {veiculos_encontrados}/{len(placas)}")
     
-    # Buscar dados dos clientes
+    # Buscar dados dos clientes usando nova função melhorada
     dados_clientes = {}
     clientes_encontrados = 0
     if clientes:
         print(f"👥 Buscando dados de {len(clientes)} clientes...")
-        dados_clientes = ClienteHelper.buscar_multiplos_nomes_ajustados(clientes)
+        dados_clientes = ClienteHelper.buscar_multiplos_nomes_manifesto(clientes)
         clientes_encontrados = sum(1 for c in dados_clientes.values() if c.get('encontrado', False))
         print(f"✅ Clientes encontrados: {clientes_encontrados}/{len(clientes)}")
+        
+        # Debug: mostrar métodos de busca usados
+        metodos = {}
+        for cliente_dados in dados_clientes.values():
+            metodo = cliente_dados.get('metodo', 'unknown')
+            metodos[metodo] = metodos.get(metodo, 0) + 1
+        print(f"📊 Métodos de busca: {metodos}")
     
     # Enriquecer dados
     dados_enriquecidos = []

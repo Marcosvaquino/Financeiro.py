@@ -18,6 +18,27 @@ except ImportError:
     def get_connection():
         return sqlite3.connect('financeiro.db')
 
+def remover_acentos(texto):
+    """Remove acentos de uma string"""
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn')
+
+def normalizar_nome_fuzzy(nome):
+    """
+    Normaliza nome para comparação fuzzy: remove espaços, parênteses, acentos e converte para maiúscula
+    """
+    if not nome:
+        return ""
+    
+    # Converter para string e remover acentos
+    nome_str = str(nome)
+    nome_sem_acento = remover_acentos(nome_str)
+    
+    # Remover caracteres especiais e espaços, converter para maiúscula
+    nome_normalizado = nome_sem_acento.upper().replace(' ', '').replace('(', '').replace(')', '').replace('-', '').replace('_', '')
+    
+    return nome_normalizado
+
 class ClienteHelper:
     """Classe para consultas otimizadas de clientes"""
     
@@ -290,10 +311,6 @@ class ClienteHelper:
                 nomes_encontrados.add(nome_real_original)
             
             # Para nomes não encontrados, tentar busca similaridade (sem acentos)
-            import unicodedata
-            def remover_acentos(texto):
-                return ''.join(c for c in unicodedata.normalize('NFD', str(texto)) 
-                              if unicodedata.category(c) != 'Mn')
             
             nomes_nao_encontrados = [n for n in nomes_normalizados if n not in nomes_encontrados]
             
@@ -398,6 +415,123 @@ class ClienteHelper:
                         mapeamento[nome] = None
         
         return mapeamento
+
+    @staticmethod
+    def buscar_multiplos_nomes_manifesto(nomes_manifesto: List[str]) -> Dict[str, Dict]:
+        """
+        Busca inteligente de clientes para dados do manifesto.
+        Tenta primeiro por nome_real exato, depois por nome_ajustado, depois por busca fuzzy.
+        
+        Args:
+            nomes_manifesto: Lista de nomes como aparecem no manifesto
+            
+        Returns:
+            Dict com dados dos clientes encontrados (chave: nome_original_manifesto)
+        """
+        if not nomes_manifesto:
+            return {}
+        
+        resultado = {}
+        nomes_nao_encontrados = []
+        
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # ETAPA 1: Buscar por nome_real exato (case-insensitive)
+            for nome_manifesto in nomes_manifesto:
+                nome_limpo = str(nome_manifesto).strip()
+                if not nome_limpo:
+                    continue
+                    
+                cursor.execute("""
+                    SELECT nome_real, nome_ajustado, data_cadastro, ativo
+                    FROM clientes_suporte 
+                    WHERE UPPER(nome_real) = UPPER(?) AND ativo = 1
+                """, (nome_limpo,))
+                
+                resultado_db = cursor.fetchone()
+                if resultado_db:
+                    resultado[nome_manifesto] = {
+                        'nome_real': resultado_db[0],
+                        'nome_ajustado': resultado_db[1],
+                        'data_cadastro': resultado_db[2],
+                        'ativo': bool(resultado_db[3]),
+                        'encontrado': True,
+                        'metodo': 'nome_real_exato'
+                    }
+                else:
+                    nomes_nao_encontrados.append(nome_manifesto)
+            
+            # ETAPA 2: Para nomes não encontrados, buscar por nome_ajustado
+            if nomes_nao_encontrados:
+                nomes_ainda_nao_encontrados = []
+                
+                for nome_manifesto in nomes_nao_encontrados:
+                    nome_normalizado = str(nome_manifesto).upper().strip()
+                    
+                    cursor.execute("""
+                        SELECT nome_real, nome_ajustado, data_cadastro, ativo
+                        FROM clientes_suporte 
+                        WHERE UPPER(nome_ajustado) = ? AND ativo = 1
+                    """, (nome_normalizado,))
+                    
+                    resultado_db = cursor.fetchone()
+                    if resultado_db:
+                        resultado[nome_manifesto] = {
+                            'nome_real': resultado_db[0],
+                            'nome_ajustado': resultado_db[1],
+                            'data_cadastro': resultado_db[2],
+                            'ativo': bool(resultado_db[3]),
+                            'encontrado': True,
+                            'metodo': 'nome_ajustado_exato'
+                        }
+                    else:
+                        nomes_ainda_nao_encontrados.append(nome_manifesto)
+                
+                # ETAPA 3: Para nomes ainda não encontrados, buscar fuzzy (removendo espaços, parênteses, etc.)
+                if nomes_ainda_nao_encontrados:
+                    # Buscar todos os clientes para comparação fuzzy
+                    cursor.execute("SELECT nome_real, nome_ajustado FROM clientes_suporte WHERE ativo = 1")
+                    todos_clientes = cursor.fetchall()
+                    
+                    for nome_manifesto in nomes_ainda_nao_encontrados:
+                        nome_fuzzy = normalizar_nome_fuzzy(nome_manifesto)
+                        cliente_encontrado = None
+                        
+                        # Comparar com todos os clientes
+                        for cliente_real, cliente_ajustado in todos_clientes:
+                            if (normalizar_nome_fuzzy(cliente_real) == nome_fuzzy or 
+                                normalizar_nome_fuzzy(cliente_ajustado) == nome_fuzzy):
+                                cliente_encontrado = (cliente_real, cliente_ajustado)
+                                break
+                        
+                        if cliente_encontrado:
+                            resultado[nome_manifesto] = {
+                                'nome_real': cliente_encontrado[0],
+                                'nome_ajustado': cliente_encontrado[1],
+                                'data_cadastro': None,
+                                'ativo': True,
+                                'encontrado': True,
+                                'metodo': 'fuzzy_match'
+                            }
+                        else:
+                            resultado[nome_manifesto] = {
+                                'nome_real': None,
+                                'nome_ajustado': nome_manifesto,
+                                'data_cadastro': None,
+                                'ativo': False,
+                                'encontrado': False,
+                                'metodo': 'nao_encontrado'
+                            }
+            
+            conn.close()
+            return resultado
+            
+        except Exception as e:
+            print(f"❌ Erro ao buscar múltiplos nomes do manifesto: {e}")
+            return {nome: {'nome_real': None, 'nome_ajustado': nome, 'encontrado': False, 'metodo': 'erro'} 
+                   for nome in nomes_manifesto}
 
 # Funções de conveniência para uso direto
 def get_nome_ajustado(nome_real: str) -> Optional[str]:

@@ -554,33 +554,7 @@
                     </div>
                 </div>
 
-                <!-- TOP 5 - Clientes Mais Rentáveis em formato de tabela -->
-                <div class="top5-container">
-                    <div class="top5-section-full">
-                        <div class="insight-card profit">
-                            <h4>💎 Top 5 - Clientes Mais Rentáveis</h4>
-                            <div class="insight-content">
-                                <div class="table-container-no-scroll">
-                                    <table class="executive-table compact">
-                                        <thead>
-                                            <tr>
-                                                <th>Pos</th>
-                                                <th>Cliente</th>
-                                                <th>Margem Líquida</th>
-                                                <th>% Margem</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tabela-top-margem-clientes">
-                                            <tr><td colspan="4">Carregando...</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Filtros DEPOIS dos Top 5 -->
+                <!-- Filtros do Modal -->
                 <div class="modal-filters">
                     <div class="filter-group">
                         <label>🏢 Filtrar por Cliente:</label>
@@ -1014,6 +988,8 @@
     text-align: center;
     white-space: nowrap;
 }
+
+/* CSS do Top 5 removido conforme solicitado */
 </style>
 {% endblock %}
 
@@ -2192,62 +2168,7 @@ function preencherCardsExecutivosMargem(dados) {
         execTicketMedioMargem.textContent = formatarMoeda(ticketMedio);
     }
     
-    // Preencher Top 5 clientes mais rentáveis
-    preencherTop5ClientesMargem(dados.detalhes || []);
-}
-
-// Função para preencher Top 5 clientes mais rentáveis na tabela
-function preencherTop5ClientesMargem(detalhes) {
-    // Agrupar por cliente e calcular margem total
-    const clientesMargem = {};
-    
-    detalhes.forEach(item => {
-        const cliente = item.cliente || 'N/A';
-        if (!clientesMargem[cliente]) {
-            clientesMargem[cliente] = {
-                margem: 0,
-                receita: 0
-            };
-        }
-        clientesMargem[cliente].margem += item.margem || 0;
-        clientesMargem[cliente].receita += item.receita || 0;
-    });
-    
-    // Converter para array e ordenar por margem
-    const top5 = Object.entries(clientesMargem)
-        .map(([nome, dados]) => ({
-            nome,
-            margem: dados.margem,
-            percentual: dados.receita > 0 ? (dados.margem / dados.receita * 100) : 0
-        }))
-        .sort((a, b) => b.margem - a.margem)
-        .slice(0, 5);
-    
-    // Preencher tabela do Top 5
-    const tabelaTopMargem = document.getElementById('tabela-top-margem-clientes');
-    if (tabelaTopMargem) {
-        let html = '';
-        
-        if (top5.length === 0) {
-            html = '<tr><td colspan="4">Nenhum cliente encontrado</td></tr>';
-        } else {
-            top5.forEach((cliente, index) => {
-                const posicao = index + 1;
-                const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : `${posicao}º`;
-                
-                html += `
-                    <tr>
-                        <td>${medalha}</td>
-                        <td>${cliente.nome}</td>
-                        <td>${formatarMoeda(cliente.margem)}</td>
-                        <td><span class="percentage positive">${cliente.percentual.toFixed(1)}%</span></td>
-                    </tr>
-                `;
-            });
-        }
-        
-        tabelaTopMargem.innerHTML = html;
-    }
+    // Top 5 removido conforme solicitado
 }
 
 // Função para preencher tabela completa de margem
