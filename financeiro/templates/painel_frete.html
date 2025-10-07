@@ -1834,7 +1834,13 @@ let dadosOriginaisCompletosMargem = [];
 async function carregarDadosCompletosDespesas() {
     try {
         console.log('Carregando dados completos de despesas...');
-        const response = await fetch('/api/painel-frete/detalhes-despesas-completo');
+        
+        // Obter filtros atuais da página principal
+        const filtros = obterFiltrosAtuais();
+        console.log('Aplicando filtros do painel principal ao modal:', filtros);
+        
+        // Fazer requisição com os filtros aplicados
+        const response = await fetch(`/api/painel-frete/detalhes-despesas-completo?${new URLSearchParams(filtros)}`);
         const dados = await response.json();
         
         if (dados.error) {
@@ -2091,7 +2097,13 @@ function limparFiltrosDespesas() {
 async function carregarDadosCompletosMargem() {
     try {
         console.log('Carregando dados completos de margem líquida...');
-        const response = await fetch('/api/painel-frete/detalhes-margem-completo');
+        
+        // Obter filtros atuais da página principal
+        const filtros = obterFiltrosAtuais();
+        console.log('Aplicando filtros do painel principal ao modal:', filtros);
+        
+        // Fazer requisição com os filtros aplicados
+        const response = await fetch(`/api/painel-frete/detalhes-margem-completo?${new URLSearchParams(filtros)}`);
         const dados = await response.json();
         
         console.log('Dados de margem recebidos:', dados);
