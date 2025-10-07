@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Margem Líquida - FRZ Log</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), #34495e);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-left: 4px solid;
+        }
+
+        .metric-card.positive { border-left-color: var(--success-color); }
+        .metric-card.negative { border-left-color: var(--danger-color); }
+        .metric-card.warning { border-left-color: var(--warning-color); }
+        .metric-card.info { border-left-color: var(--info-color); }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .alert-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid;
+        }
+
+        .alert-critico { 
+            background: #fff5f5; 
+            border-left-color: var(--danger-color); 
+        }
+
+        .alert-atencao { 
+            background: #fffdf0; 
+            border-left-color: var(--warning-color); 
+        }
+
+        .alert-info { 
+            background: #f0f8ff; 
+            border-left-color: var(--info-color); 
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-filter {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+            color: white;
+            transition: all 0.2s ease;
+        }
+
+        .btn-filter:hover {
+            background: #34495e;
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            margin-top: 2rem;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 25px;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+            border: 2px solid transparent;
+        }
+
+        .nav-pills .nav-link.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 2rem 0;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .ranking-item.top { border-left-color: var(--success-color); }
+        .ranking-item.medium { border-left-color: var(--warning-color); }
+        .ranking-item.bottom { border-left-color: var(--danger-color); }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .summary-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .metric-value {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/planejamento">
+                <i class="fas fa-truck me-2"></i>FRZ Log
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="me-3">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Análise de Margem
+                </span>
+                <a href="/planejamento" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Header com Resumo Geral -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-analytics me-2"></i>
+                            Dashboard de Margem Líquida e Rentabilidade
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="resumo-geral" class="row">
+                            <div class="col-md-3">
+                                <div class="metric-card card info">
+                                    <div class="card-body text-center">
+                                        <p class="metric-value text-info" id="receita-total">-</p>
+                                        <p class="metric-label">Receita Total</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card card warning">
+                                    <div class="card-body text-center">
+                                        <p class="metric-value text-warning" id="despesa-total">-</p>
+                                        <p class="metric-label">Despesa Total</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card card positive">
+                                    <div class="card-body text-center">
+                                        <p class="metric-value" id="margem-total">-</p>
+                                        <p class="metric-label">Margem Líquida</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card card info">
+                                    <div class="card-body text-center">
+                                        <p class="metric-value text-primary" id="margem-percentual">-</p>
+                                        <p class="metric-label">Margem %</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros de Análise</h5>
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Tipologia</label>
+                    <select class="form-select" id="filtro-tipologia">
+                        <option value="all">Todas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Destino</label>
+                    <select class="form-select" id="filtro-destino">
+                        <option value="all">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Placa</label>
+                    <select class="form-select" id="filtro-placa">
+                        <option value="all">Todas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mês</label>
+                    <select class="form-select" id="filtro-mes">
+                        <option value="">Todos</option>
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ano</label>
+                    <select class="form-select" id="filtro-ano">
+                        <option value="">Todos</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-filter w-100" onclick="aplicarFiltros()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs de Análise -->
+        <ul class="nav nav-pills justify-content-center mb-4" id="analysisTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tipologia-tab" data-bs-toggle="pill" data-bs-target="#tipologia" type="button" role="tab">
+                    <i class="fas fa-truck me-2"></i>Por Tipologia
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="destino-tab" data-bs-toggle="pill" data-bs-target="#destino" type="button" role="tab">
+                    <i class="fas fa-map-marker-alt me-2"></i>Por Destino
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="placa-tab" data-bs-toggle="pill" data-bs-target="#placa" type="button" role="tab">
+                    <i class="fas fa-id-card me-2"></i>Por Placa
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content" id="analysisTabContent">
+            <!-- Tab Tipologia -->
+            <div class="tab-pane fade show active" id="tipologia" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Margem por Tipologia de Veículo
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="chartTipologia"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-target me-2"></i>
+                                    Metas Sugeridas
+                                </h5>
+                            </div>
+                            <div class="card-body" id="metas-tipologia">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="mt-2">Carregando metas...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Alertas
+                                </h5>
+                            </div>
+                            <div class="card-body" id="alertas-tipologia">
+                                <p class="text-muted">Nenhum alerta no momento</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Destino -->
+            <div class="tab-pane fade" id="destino" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-map me-2"></i>
+                                    Top Destinos por Rentabilidade
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="chartDestinos"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-trophy me-2"></i>
+                                    Ranking de Destinos
+                                </h5>
+                            </div>
+                            <div class="card-body" id="ranking-destinos">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="mt-2">Carregando ranking...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Placa -->
+            <div class="tab-pane fade" id="placa" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Performance por Placa
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="chartPlacas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list-ol me-2"></i>
+                                    Top Placas
+                                </h5>
+                            </div>
+                            <div class="card-body" id="ranking-placas">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <p class="mt-2">Carregando dados...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Variáveis globais
+        let chartTipologia, chartDestinos, chartPlacas;
+        
+        // Utilitários
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+        
+        function formatPercent(value) {
+            return `${value.toFixed(1)}%`;
+        }
+        
+        function showLoading(elementId, message = 'Carregando...') {
+            document.getElementById(elementId).innerHTML = `
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">${message}</p>
+                </div>
+            `;
+        }
+        
+        // Carregamento inicial otimizado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados críticos primeiro
+            Promise.all([
+                carregarDadosGerais(),
+                carregarFiltros()
+            ]).then(() => {
+                // Carregar análises em background
+                setTimeout(() => {
+                    carregarAnalises();
+                }, 100);
+            }).catch(error => {
+                console.error('Erro no carregamento inicial:', error);
+            });
+        });
+        
+        // Carregar dados gerais do resumo
+        async function carregarDadosGerais() {
+            try {
+                console.log('Carregando dados gerais...');
+                const response = await fetch('/api/margem/dados-gerais');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Dados recebidos:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Verificar se os dados existem
+                if (!data.resumo_financeiro) {
+                    throw new Error('Dados financeiros não encontrados');
+                }
+                
+                // Atualizar cards do resumo
+                document.getElementById('receita-total').textContent = formatCurrency(data.resumo_financeiro.receita_total);
+                document.getElementById('despesa-total').textContent = formatCurrency(data.resumo_financeiro.despesa_total);
+                document.getElementById('margem-total').textContent = formatCurrency(data.resumo_financeiro.margem_total);
+                document.getElementById('margem-percentual').textContent = formatPercent(data.resumo_financeiro.margem_percentual_geral);
+                
+                // Atualizar cores baseadas na margem
+                const margemCard = document.getElementById('margem-total').closest('.card');
+                const margemPercentCard = document.getElementById('margem-percentual').closest('.card');
+                
+                if (data.resumo_financeiro.margem_total >= 0) {
+                    margemCard.className = 'metric-card card positive';
+                    document.getElementById('margem-total').className = 'metric-value text-success';
+                } else {
+                    margemCard.className = 'metric-card card negative';
+                    document.getElementById('margem-total').className = 'metric-value text-danger';
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados gerais:', error);
+                document.getElementById('receita-total').textContent = 'Erro ao carregar';
+                document.getElementById('despesa-total').textContent = 'Erro ao carregar';
+                document.getElementById('margem-total').textContent = 'Erro ao carregar';
+                document.getElementById('margem-percentual').textContent = 'Erro ao carregar';
+                
+                // Mostrar erro na tela
+                alert('Erro ao carregar dados: ' + error.message);
+            }
+        }
+        
+        // Carregar opções dos filtros
+        async function carregarFiltros() {
+            try {
+                const response = await fetch('/api/margem/filtros');
+                const data = await response.json();
+                
+                // Preencher filtros
+                preencherSelect('filtro-tipologia', data.tipologias);
+                preencherSelect('filtro-destino', data.destinos);
+                preencherSelect('filtro-placa', data.placas);
+                
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+            }
+        }
+        
+        function preencherSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            const firstOption = select.querySelector('option[value="all"], option[value=""]');
+            
+            // Manter primeira opção e limpar resto
+            select.innerHTML = '';
+            if (firstOption) {
+                select.appendChild(firstOption);
+            }
+            
+            // Adicionar opções
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+        }
+        
+        // Carregar análises de forma escalonada para melhor performance
+        async function carregarAnalises() {
+            // Carregar primeiro a análise ativa (Tipologia)
+            await carregarAnaliseTipologia();
+            
+            // Carregar as outras em background
+            setTimeout(async () => {
+                await carregarAnaliseDestinos();
+            }, 500);
+            
+            setTimeout(async () => {
+                await carregarAnalisePlacas();
+            }, 1000);
+        }
+        
+        // Análise por Tipologia
+        async function carregarAnaliseTipologia() {
+            showLoading('metas-tipologia', 'Calculando metas por tipologia...');
+            
+            try {
+                const response = await fetch('/api/margem/tipologia');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Criar gráfico
+                criarGraficoTipologia(data.analise);
+                
+                // Atualizar metas
+                atualizarMetasTipologia(data.metas_sugeridas);
+                
+            } catch (error) {
+                console.error('Erro ao carregar análise por tipologia:', error);
+            }
+        }
+        
+        function criarGraficoTipologia(analise) {
+            const ctx = document.getElementById('chartTipologia').getContext('2d');
+            
+            if (chartTipologia) {
+                chartTipologia.destroy();
+            }
+            
+            const tipologias = Object.keys(analise.resumo_geral || {});
+            const margens = tipologias.map(tip => analise.resumo_geral[tip].margem_percentual_media);
+            const receitas = tipologias.map(tip => analise.resumo_geral[tip].receita_total);
+            
+            chartTipologia = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tipologias,
+                    datasets: [{
+                        label: 'Margem Percentual (%)',
+                        data: margens,
+                        backgroundColor: margens.map(m => m >= 15 ? '#27ae60' : m >= 10 ? '#f39c12' : '#e74c3c'),
+                        borderColor: margens.map(m => m >= 15 ? '#2ecc71' : m >= 10 ? '#f1c40f' : '#c0392b'),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Margem Percentual por Tipologia'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Margem (%)'
+                            }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const tipologia = tipologias[index];
+                            mostrarDetalhesTipologia(tipologia, analise.resumo_geral[tipologia]);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function atualizarMetasTipologia(metas) {
+            const container = document.getElementById('metas-tipologia');
+            let html = '';
+            
+            Object.entries(metas).forEach(([tipologia, meta]) => {
+                const status = meta.performance_atual >= meta.meta_sugerida ? 'success' : 'warning';
+                const icon = meta.performance_atual >= meta.meta_sugerida ? 'check-circle' : 'exclamation-triangle';
+                
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 border-start border-4 border-${status}">
+                        <div>
+                            <strong>${tipologia}</strong>
+                            <br>
+                            <small class="text-muted">Meta: ${meta.meta_sugerida}% | Atual: ${meta.performance_atual}%</small>
+                        </div>
+                        <i class="fas fa-${icon} text-${status}"></i>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-muted">Nenhuma meta disponível</p>';
+        }
+        
+        // Análise por Destinos
+        async function carregarAnaliseDestinos() {
+            showLoading('ranking-destinos', 'Analisando destinos mais rentáveis...');
+            
+            try {
+                const response = await fetch('/api/margem/destinos');
+                const data = await response.json();
+                
+                criarGraficoDestinos(data);
+                atualizarRankingDestinos(data);
+                
+            } catch (error) {
+                console.error('Erro ao carregar análise por destinos:', error);
+            }
+        }
+        
+        function criarGraficoDestinos(data) {
+            const ctx = document.getElementById('chartDestinos').getContext('2d');
+            
+            if (chartDestinos) {
+                chartDestinos.destroy();
+            }
+            
+            const destinos = Object.keys(data.top_destinos || {}).slice(0, 10);
+            const margens = destinos.map(dest => data.top_destinos[dest].margem_percentual);
+            
+            chartDestinos = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: destinos,
+                    datasets: [{
+                        label: 'Margem %',
+                        data: margens,
+                        backgroundColor: '#3498db',
+                        borderColor: '#2980b9',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Margem (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function atualizarRankingDestinos(data) {
+            const container = document.getElementById('ranking-destinos');
+            let html = '';
+            
+            const destinos = Object.entries(data.top_destinos || {})
+                .sort((a, b) => b[1].margem_percentual - a[1].margem_percentual)
+                .slice(0, 10);
+            
+            destinos.forEach(([destino, dados], index) => {
+                const rankClass = index < 3 ? 'top' : index < 7 ? 'medium' : 'bottom';
+                html += `
+                    <div class="ranking-item ${rankClass}">
+                        <div>
+                            <strong>${destino}</strong>
+                            <br>
+                            <small>${dados.total_entregas} entregas</small>
+                        </div>
+                        <div class="text-end">
+                            <strong>${formatPercent(dados.margem_percentual)}</strong>
+                            <br>
+                            <small>${formatCurrency(dados.margem_total)}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-muted">Nenhum dado disponível</p>';
+        }
+        
+        // Análise por Placas
+        async function carregarAnalisePlacas() {
+            showLoading('ranking-placas', 'Calculando performance das placas...');
+            
+            try {
+                const response = await fetch('/api/margem/placas');
+                const data = await response.json();
+                
+                criarGraficoPlacas(data);
+                atualizarRankingPlacas(data);
+                
+            } catch (error) {
+                console.error('Erro ao carregar análise por placas:', error);
+            }
+        }
+        
+        function criarGraficoPlacas(data) {
+            const ctx = document.getElementById('chartPlacas').getContext('2d');
+            
+            if (chartPlacas) {
+                chartPlacas.destroy();
+            }
+            
+            const placas = Object.keys(data.top_placas || {}).slice(0, 10);
+            const margens = placas.map(placa => data.top_placas[placa].margem_percentual);
+            
+            chartPlacas = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: placas,
+                    datasets: [{
+                        label: 'Margem %',
+                        data: margens,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Margem (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function atualizarRankingPlacas(data) {
+            const container = document.getElementById('ranking-placas');
+            let html = '';
+            
+            const placas = Object.entries(data.top_placas || {})
+                .sort((a, b) => b[1].margem_percentual - a[1].margem_percentual)
+                .slice(0, 10);
+            
+            placas.forEach(([chave, dados], index) => {
+                const rankClass = index < 3 ? 'top' : index < 7 ? 'medium' : 'bottom';
+                html += `
+                    <div class="ranking-item ${rankClass}">
+                        <div>
+                            <strong>${dados.placa}</strong>
+                            <br>
+                            <small>${dados.tipologia} • ${dados.total_viagens} viagens</small>
+                        </div>
+                        <div class="text-end">
+                            <strong>${formatPercent(dados.margem_percentual)}</strong>
+                            <br>
+                            <small>${formatCurrency(dados.margem_total)}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p class="text-muted">Nenhum dado disponível</p>';
+        }
+        
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const filtros = {
+                tipologia: document.getElementById('filtro-tipologia').value,
+                destino: document.getElementById('filtro-destino').value,
+                placa: document.getElementById('filtro-placa').value,
+                mes: document.getElementById('filtro-mes').value,
+                ano: document.getElementById('filtro-ano').value
+            };
+            
+            // Mostrar loading nos elementos do resumo
+            const elementos = ['receita-total', 'despesa-total', 'margem-total', 'margem-percentual'];
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    elemento.textContent = 'Carregando...';
+                }
+            });
+            
+            // Carregar dados filtrados
+            carregarDadosFiltrados(filtros);
+        }
+        
+        async function carregarDadosFiltrados(filtros) {
+            try {
+                const params = new URLSearchParams();
+                Object.entries(filtros).forEach(([key, value]) => {
+                    if (value && value !== 'all' && value !== '') {
+                        params.append(key, value);
+                    }
+                });
+                
+                const response = await fetch(`/api/margem/filtrados?${params}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Atualizar resumo com dados filtrados (verificar se elementos existem)
+                const receitaEl = document.getElementById('receita-total');
+                const despesaEl = document.getElementById('despesa-total');
+                const margemEl = document.getElementById('margem-total');
+                const percentualEl = document.getElementById('margem-percentual');
+                
+                if (receitaEl) receitaEl.textContent = formatCurrency(data.receita_total);
+                if (despesaEl) despesaEl.textContent = formatCurrency(data.despesa_total);
+                if (margemEl) margemEl.textContent = formatCurrency(data.margem_total);
+                if (percentualEl) percentualEl.textContent = formatPercent(data.margem_percentual);
+                
+                // Recarregar análises
+                carregarAnalises();
+                
+            } catch (error) {
+                console.error('Erro ao aplicar filtros:', error);
+                alert('Erro ao aplicar filtros: ' + error.message);
+            }
+        }
+        
+        // Event listeners para tabs
+        document.addEventListener('shown.bs.tab', function (event) {
+            const target = event.target.getAttribute('data-bs-target');
+            
+            // Redimensionar gráficos quando a tab for mostrada
+            setTimeout(() => {
+                if (target === '#tipologia' && chartTipologia) {
+                    chartTipologia.resize();
+                } else if (target === '#destino' && chartDestinos) {
+                    chartDestinos.resize();
+                } else if (target === '#placa' && chartPlacas) {
+                    chartPlacas.resize();
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

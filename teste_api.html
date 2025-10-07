@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Margem</title>
+</head>
+<body>
+    <h1>Teste das APIs de Margem</h1>
+    
+    <div id="resultado"></div>
+    
+    <script>
+        async function testarAPIs() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '<p>Testando APIs...</p>';
+            
+            try {
+                // Testar API de dados gerais
+                const response = await fetch('/api/margem/dados-gerais');
+                const data = await response.json();
+                
+                console.log('Dados da API:', data);
+                
+                resultado.innerHTML = `
+                    <h2>✅ API Funcionando!</h2>
+                    <p><strong>Receita Total:</strong> R$ ${data.resumo_financeiro.receita_total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Despesa Total:</strong> R$ ${data.resumo_financeiro.despesa_total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Margem Total:</strong> R$ ${data.resumo_financeiro.margem_total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Margem %:</strong> ${data.resumo_financeiro.margem_percentual_geral.toFixed(1)}%</p>
+                    <p><strong>Período:</strong> ${data.periodo_analise.data_inicio} a ${data.periodo_analise.data_fim}</p>
+                    <p><strong>Total de Registros:</strong> ${data.periodo_analise.total_registros}</p>
+                `;
+                
+            } catch (error) {
+                resultado.innerHTML = `<h2>❌ Erro</h2><p>${error.message}</p>`;
+                console.error('Erro:', error);
+            }
+        }
+        
+        // Executar quando a página carregar
+        window.onload = testarAPIs;
+    </script>
+</body>
+</html>

@@ -184,6 +184,11 @@ try:
     app.register_blueprint(painel_frete_bp)
 except Exception:
     pass
+try:
+    from .margem_analise import margem_bp
+    app.register_blueprint(margem_bp)
+except Exception:
+    pass
 
 
 
