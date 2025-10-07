@@ -50,11 +50,11 @@
         .metric-card.info { border-left-color: var(--info-color); }
 
         .metric-card .card-body {
-            padding: 1rem;
+            padding: 0.75rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 100px;
+            min-height: 80px;
         }
 
         .metric-value {
@@ -76,11 +76,19 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
+            min-height: 75px;
         }
 
         .kpi-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .kpi-card .card-body {
+            padding: 0.6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .trend-chart {
@@ -344,6 +352,58 @@
             </div>
         </div>
 
+        <!-- Filtros Superiores (Afetam Cards + Gráfico Anual) -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <h6 class="mb-2"><i class="fas fa-sliders-h me-2"></i>Filtros Gerais</h6>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="filtro-geral-tipologia">
+                                    <option value="">Todas Tipologias</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="filtro-geral-placa">
+                                    <option value="">Todas Placas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="filtro-geral-mes">
+                                    <option value="">Todos Meses</option>
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="filtro-geral-ano">
+                                    <option value="">Todos Anos</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-sm w-100" onclick="aplicarFiltrosGerais()">
+                                    <i class="fas fa-filter me-1"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Gráfico Anual Mensal -->
         <div class="row mb-4">
             <div class="col-12">
@@ -365,7 +425,7 @@
 
         <!-- Filtros -->
         <div class="filter-section">
-            <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros de Análise</h5>
+            <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros de Análise (Apenas Gráficos Abaixo)</h5>
             <div class="row">
                 <div class="col-md-2">
                     <label class="form-label">Tipologia</label>
@@ -599,7 +659,8 @@
             // Carregar dados críticos primeiro
             Promise.all([
                 carregarDadosGerais(),
-                carregarFiltros()
+                carregarFiltros(),
+                carregarFiltrosGerais()
             ]).then(() => {
                 // Carregar gráfico de evolução anual (independente dos filtros)
                 setTimeout(() => {
@@ -999,7 +1060,121 @@
             container.innerHTML = html || '<p class="text-muted">Nenhum dado disponível</p>';
         }
         
-        // Aplicar filtros
+        // Carregar filtros gerais (tipologias e placas)
+        async function carregarFiltrosGerais() {
+            try {
+                const response = await fetch('/api/margem/filtros');
+                const data = await response.json();
+                
+                // Popular tipologias
+                const tipologiaSelect = document.getElementById('filtro-geral-tipologia');
+                data.tipologias.forEach(tip => {
+                    const option = document.createElement('option');
+                    option.value = tip;
+                    option.textContent = tip;
+                    tipologiaSelect.appendChild(option);
+                });
+                
+                // Popular placas (apenas top 50 para não sobrecarregar)
+                const placaSelect = document.getElementById('filtro-geral-placa');
+                data.placas.slice(0, 50).forEach(placa => {
+                    const option = document.createElement('option');
+                    option.value = placa;
+                    option.textContent = placa;
+                    placaSelect.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar filtros gerais:', error);
+            }
+        }
+
+        // Aplicar filtros gerais (afeta cards + gráfico anual)
+        function aplicarFiltrosGerais() {
+            const filtros = {
+                tipologia: document.getElementById('filtro-geral-tipologia').value,
+                placa: document.getElementById('filtro-geral-placa').value,
+                mes: document.getElementById('filtro-geral-mes').value,
+                ano: document.getElementById('filtro-geral-ano').value
+            };
+            
+            // Mostrar loading nos cards
+            const elementos = ['receita-total', 'despesa-total', 'margem-total', 'margem-percentual',
+                              'total-operacoes', 'ticket-medio', 'operacoes-lucro', 'operacoes-prejuizo'];
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    elemento.textContent = 'Carregando...';
+                }
+            });
+            
+            // Recarregar dados gerais e gráfico anual
+            carregarDadosGeraisFiltrados(filtros);
+        }
+
+        // Carregar dados gerais com filtros aplicados
+        async function carregarDadosGeraisFiltrados(filtros) {
+            try {
+                const params = new URLSearchParams();
+                Object.entries(filtros).forEach(([key, value]) => {
+                    if (value && value !== '') {
+                        params.append(key, value);
+                    }
+                });
+                
+                const response = await fetch(`/api/margem/dados-gerais?${params}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Atualizar cards do resumo
+                document.getElementById('receita-total').textContent = formatCurrency(data.resumo_financeiro.receita_total);
+                document.getElementById('despesa-total').textContent = formatCurrency(data.resumo_financeiro.despesa_total);
+                document.getElementById('margem-total').textContent = formatCurrency(data.resumo_financeiro.margem_total);
+                document.getElementById('margem-percentual').textContent = formatPercent(data.resumo_financeiro.margem_percentual_geral);
+
+                // Atualizar KPIs adicionais
+                atualizarKPIs(data);
+                
+                // Recarregar gráfico anual com filtros (exceto mês)
+                const filtrosGrafico = { ...filtros };
+                delete filtrosGrafico.mes; // Mês não afeta o gráfico anual
+                carregarEvolucaoAnualFiltrada(filtrosGrafico);
+                
+            } catch (error) {
+                console.error('Erro ao aplicar filtros gerais:', error);
+                alert('Erro ao aplicar filtros: ' + error.message);
+            }
+        }
+
+        // Carregar evolução anual com filtros
+        async function carregarEvolucaoAnualFiltrada(filtros) {
+            try {
+                const params = new URLSearchParams();
+                Object.entries(filtros).forEach(([key, value]) => {
+                    if (value && value !== '') {
+                        params.append(key, value);
+                    }
+                });
+                
+                const response = await fetch(`/api/margem/evolucao-anual?${params}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Erro na API:', data.error);
+                    return;
+                }
+                
+                criarGraficoEvolucaoAnual(data);
+                
+            } catch (error) {
+                console.error('Erro ao carregar evolução anual filtrada:', error);
+            }
+        }
+
+        // Aplicar filtros de análise (só afeta gráficos das tabs)
         function aplicarFiltros() {
             const filtros = {
                 tipologia: document.getElementById('filtro-tipologia').value,
@@ -1009,17 +1184,8 @@
                 ano: document.getElementById('filtro-ano').value
             };
             
-            // Mostrar loading nos elementos do resumo
-            const elementos = ['receita-total', 'despesa-total', 'margem-total', 'margem-percentual'];
-            elementos.forEach(id => {
-                const elemento = document.getElementById(id);
-                if (elemento) {
-                    elemento.textContent = 'Carregando...';
-                }
-            });
-            
-            // Carregar dados filtrados
-            carregarDadosFiltrados(filtros);
+            // Apenas recarregar análises (não afeta cards superiores)
+            carregarAnalises();
         }
         
         async function carregarDadosFiltrados(filtros) {
