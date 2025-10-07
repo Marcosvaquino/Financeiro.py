@@ -50,24 +50,24 @@
         .metric-card.info { border-left-color: var(--info-color); }
 
         .metric-card .card-body {
-            padding: 0.75rem;
+            padding: 0.5rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 80px;
+            min-height: 60px;
         }
 
         .metric-value {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             margin: 0;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .metric-label {
             color: #6c757d;
-            font-size: 0.8rem;
-            margin-top: 0.3rem;
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
             font-weight: 500;
         }
 
@@ -76,7 +76,7 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
-            min-height: 75px;
+            min-height: 55px;
         }
 
         .kpi-card:hover {
@@ -85,7 +85,7 @@
         }
 
         .kpi-card .card-body {
-            padding: 0.6rem;
+            padding: 0.4rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -197,15 +197,20 @@
 
         @media (max-width: 768px) {
             .metric-value {
-                font-size: 1.5rem;
+                font-size: 1.3rem;
+            }
+            
+            .metric-card .card-body {
+                min-height: 50px;
+                padding: 0.4rem;
+            }
+            
+            .kpi-card {
+                min-height: 45px;
             }
             
             .kpi-card .card-body {
-                padding: 0.75rem;
-            }
-            
-            .kpi-card .metric-value {
-                font-size: 1.2rem;
+                padding: 0.3rem;
             }
             
             .chart-container {
@@ -215,16 +220,20 @@
 
         @media (max-width: 576px) {
             .metric-value {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
             }
             
-            .kpi-card .metric-value {
-                font-size: 1rem;
+            .metric-card .card-body {
+                min-height: 45px;
+            }
+            
+            .kpi-card {
+                min-height: 40px;
             }
             
             .metric-label, 
             .kpi-card small {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
         }
     </style>
@@ -298,51 +307,51 @@
 
                         <!-- Cards KPI Adicionais -->
                         <div class="row">
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-dark" id="total-operacoes">-</h6>
-                                        <small class="metric-label">Total Operações</small>
+                                        <div class="metric-value text-dark" id="total-operacoes" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Total Operações</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-primary" id="ticket-medio">-</h6>
-                                        <small class="metric-label">Ticket Médio</small>
+                                        <div class="metric-value text-primary" id="ticket-medio" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Ticket Médio</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-success" id="operacoes-lucro">-</h6>
-                                        <small class="metric-label">Operações Lucro</small>
+                                        <div class="metric-value text-success" id="operacoes-lucro" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Operações Lucro</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-danger" id="operacoes-prejuizo">-</h6>
-                                        <small class="metric-label">Operações Prejuízo</small>
+                                        <div class="metric-value text-danger" id="operacoes-prejuizo" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Operações Prejuízo</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-info" id="melhor-tipologia">-</h6>
-                                        <small class="metric-label">Melhor Tipologia</small>
+                                        <div class="metric-value text-info" id="melhor-tipologia" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Melhor Tipologia</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <h6 class="metric-value text-warning" id="pior-tipologia">-</h6>
-                                        <small class="metric-label">Pior Tipologia</small>
+                                        <div class="metric-value text-warning" id="pior-tipologia" style="font-size: 1.1rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.7rem;">Pior Tipologia</small>
                                     </div>
                                 </div>
                             </div>
@@ -353,11 +362,11 @@
         </div>
 
         <!-- Filtros Superiores (Afetam Cards + Gráfico Anual) -->
-        <div class="row mb-3">
+        <div class="row mb-2">
             <div class="col-12">
                 <div class="card">
                     <div class="card-body py-2">
-                        <h6 class="mb-2"><i class="fas fa-sliders-h me-2"></i>Filtros Gerais</h6>
+                        <h6 class="mb-1"><i class="fas fa-sliders-h me-2"></i>Filtros Gerais</h6>
                         <div class="row g-2">
                             <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="filtro-geral-tipologia">
@@ -405,7 +414,7 @@
         </div>
 
         <!-- Gráfico Anual Mensal -->
-        <div class="row mb-4">
+        <div class="row mb-4" style="margin-top: -0.5rem;">
             <div class="col-12">
                 <div class="card trend-chart">
                     <div class="card-header">
