@@ -49,16 +49,45 @@
         .metric-card.warning { border-left-color: var(--warning-color); }
         .metric-card.info { border-left-color: var(--info-color); }
 
+        .metric-card .card-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100px;
+        }
+
         .metric-value {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             margin: 0;
+            line-height: 1.2;
         }
 
         .metric-label {
             color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .trend-chart {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 15px;
+            margin: 2rem 0;
         }
 
         .alert-item {
@@ -160,11 +189,34 @@
 
         @media (max-width: 768px) {
             .metric-value {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+            
+            .kpi-card .card-body {
+                padding: 0.75rem;
+            }
+            
+            .kpi-card .metric-value {
+                font-size: 1.2rem;
             }
             
             .chart-container {
                 height: 300px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .metric-value {
+                font-size: 1.3rem;
+            }
+            
+            .kpi-card .metric-value {
+                font-size: 1rem;
+            }
+            
+            .metric-label, 
+            .kpi-card small {
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -200,8 +252,9 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <div id="resumo-geral" class="row">
-                            <div class="col-md-3">
+                        <!-- Cards Principais -->
+                        <div id="resumo-geral" class="row mb-4">
+                            <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="metric-card card info">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-info" id="receita-total">-</p>
@@ -209,7 +262,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="metric-card card warning">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-warning" id="despesa-total">-</p>
@@ -217,15 +270,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="metric-card card positive">
                                     <div class="card-body text-center">
-                                        <p class="metric-value" id="margem-total">-</p>
+                                        <p class="metric-value text-success" id="margem-total">-</p>
                                         <p class="metric-label">Margem Líquida</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="metric-card card info">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-primary" id="margem-percentual">-</p>
@@ -233,6 +286,77 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Cards KPI Adicionais -->
+                        <div class="row">
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-dark" id="total-operacoes">-</h6>
+                                        <small class="metric-label">Total Operações</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-primary" id="ticket-medio">-</h6>
+                                        <small class="metric-label">Ticket Médio</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-success" id="operacoes-lucro">-</h6>
+                                        <small class="metric-label">Operações Lucro</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-danger" id="operacoes-prejuizo">-</h6>
+                                        <small class="metric-label">Operações Prejuízo</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-info" id="melhor-tipologia">-</h6>
+                                        <small class="metric-label">Melhor Tipologia</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                <div class="kpi-card card">
+                                    <div class="card-body text-center">
+                                        <h6 class="metric-value text-warning" id="pior-tipologia">-</h6>
+                                        <small class="metric-label">Pior Tipologia</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico Anual Mensal -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card trend-chart">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Evolução da Rentabilidade Anual (Mês a Mês)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="chartEvolucaoAnual"></canvas>
                         </div>
                     </div>
                 </div>
@@ -447,7 +571,7 @@
     
     <script>
         // Variáveis globais
-        let chartTipologia, chartDestinos, chartPlacas;
+        let chartTipologia, chartDestinos, chartPlacas, chartEvolucaoAnual;
         
         // Utilitários
         function formatCurrency(value) {
@@ -477,6 +601,11 @@
                 carregarDadosGerais(),
                 carregarFiltros()
             ]).then(() => {
+                // Carregar gráfico de evolução anual (independente dos filtros)
+                setTimeout(() => {
+                    carregarEvolucaoAnual();
+                }, 50);
+                
                 // Carregar análises em background
                 setTimeout(() => {
                     carregarAnalises();
@@ -514,6 +643,9 @@
                 document.getElementById('despesa-total').textContent = formatCurrency(data.resumo_financeiro.despesa_total);
                 document.getElementById('margem-total').textContent = formatCurrency(data.resumo_financeiro.margem_total);
                 document.getElementById('margem-percentual').textContent = formatPercent(data.resumo_financeiro.margem_percentual_geral);
+
+                // Atualizar KPIs adicionais
+                atualizarKPIs(data);
                 
                 // Atualizar cores baseadas na margem
                 const margemCard = document.getElementById('margem-total').closest('.card');
@@ -926,6 +1058,142 @@
             }
         }
         
+        // Função para atualizar KPIs adicionais
+        function atualizarKPIs(data) {
+            try {
+                const kpis = data.kpis || {};
+                
+                // Atualizar elementos se existirem
+                const updateElement = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = value;
+                };
+                
+                updateElement('total-operacoes', kpis.total_operacoes || '0');
+                updateElement('ticket-medio', formatCurrency(kpis.ticket_medio || 0));
+                updateElement('operacoes-lucro', kpis.operacoes_lucro || '0');
+                updateElement('operacoes-prejuizo', kpis.operacoes_prejuizo || '0');
+                updateElement('melhor-tipologia', kpis.melhor_tipologia || '-');
+                updateElement('pior-tipologia', kpis.pior_tipologia || '-');
+                
+            } catch (error) {
+                console.error('Erro ao atualizar KPIs:', error);
+            }
+        }
+        
+        // Função para carregar evolução anual
+        async function carregarEvolucaoAnual() {
+            try {
+                const response = await fetch('/api/margem/evolucao-anual');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Erro na API:', data.error);
+                    return;
+                }
+                
+                criarGraficoEvolucaoAnual(data);
+                
+            } catch (error) {
+                console.error('Erro ao carregar evolução anual:', error);
+            }
+        }
+        
+        // Função para criar gráfico de evolução anual
+        function criarGraficoEvolucaoAnual(data) {
+            const ctx = document.getElementById('chartEvolucaoAnual').getContext('2d');
+            
+            if (chartEvolucaoAnual) {
+                chartEvolucaoAnual.destroy();
+            }
+            
+            const meses = data.meses || [];
+            const margens = data.margens_percentuais || [];
+            const receitas = data.receitas || [];
+            
+            chartEvolucaoAnual = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Margem %',
+                        data: margens,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Receita',
+                        data: receitas,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Margem (%)',
+                                color: '#ffffff'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Receita (R$)',
+                                color: '#ffffff'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function(value) {
+                                    return 'R$ ' + (value / 1000).toFixed(0) + 'k';
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // Event listeners para tabs
         document.addEventListener('shown.bs.tab', function (event) {
             const target = event.target.getAttribute('data-bs-target');

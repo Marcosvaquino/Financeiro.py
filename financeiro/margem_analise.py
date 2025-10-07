@@ -401,6 +401,14 @@ def api_dados_gerais():
                 'margem_total': margem_total,
                 'margem_percentual_geral': margem_percentual_geral
             },
+            'kpis': {
+                'total_operacoes': len(df),
+                'ticket_medio': float(df['frete_receber'].mean()) if not df.empty else 0,
+                'operacoes_lucro': len(df[df['margem_liquida'] > 0]),
+                'operacoes_prejuizo': len(df[df['margem_liquida'] < 0]),
+                'melhor_tipologia': df.groupby('Tipologia')['margem_percentual'].mean().idxmax() if not df.empty else '-',
+                'pior_tipologia': df.groupby('Tipologia')['margem_percentual'].mean().idxmin() if not df.empty else '-'
+            },
             'alertas': {
                 'operacoes_prejuizo': int(len(df[df['margem_liquida'] < 0])),
                 'operacoes_margem_baixa': int(len(df[(df['margem_percentual'] > 0) & (df['margem_percentual'] < 10)])),
@@ -474,6 +482,46 @@ def api_limpar_cache():
         margem_service.limpar_cache()
         return jsonify({'status': 'success', 'message': 'Cache limpo com sucesso'})
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@margem_bp.route('/api/margem/evolucao-anual')
+def api_evolucao_anual():
+    """API para evolução anual mês a mês (independente dos filtros)"""
+    try:
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Agrupar por mês/ano
+        df_mensal = df.groupby(['ano', 'mes']).agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum',
+            'margem_liquida': 'sum',
+            'margem_percentual': 'mean'
+        }).round(2)
+        
+        # Preparar dados para o gráfico
+        meses = []
+        margens_percentuais = []
+        receitas = []
+        
+        for (ano, mes), dados in df_mensal.iterrows():
+            meses.append(f'{mes:02d}/{ano}')
+            margens_percentuais.append(float(dados['margem_percentual']))
+            receitas.append(float(dados['frete_receber']))
+        
+        resultado = {
+            'meses': meses,
+            'margens_percentuais': margens_percentuais,
+            'receitas': receitas,
+            'total_meses': len(meses)
+        }
+        
+        return jsonify(resultado)
+        
+    except Exception as e:
+        print(f"Erro na evolução anual: {e}")
         return jsonify({'error': str(e)}), 500
 
 @margem_bp.route('/api/margem/filtrados')
