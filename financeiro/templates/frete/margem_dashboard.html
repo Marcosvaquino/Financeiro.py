@@ -388,6 +388,16 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
+        .ranking-filters {
+            padding: 0 1rem;
+        }
+
+        .ranking-filters select {
+            font-size: 0.8rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
         .ranking-empty {
             text-align: center;
             padding: 3rem 2rem;
@@ -801,6 +811,11 @@
                                     <i class="fas fa-trophy"></i>
                                 </div>
                                 <h5>Top 5 Melhores Rentabilidades</h5>
+                                <div class="ranking-filters mt-2">
+                                    <select class="form-select form-select-sm" id="filtro-tipologia-melhores">
+                                        <option value="">Todas Tipologias</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="card-body" id="ranking-melhores">
                                 <div class="loading text-center">
@@ -819,6 +834,11 @@
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <h5>Top 5 Piores Rentabilidades</h5>
+                                <div class="ranking-filters mt-2">
+                                    <select class="form-select form-select-sm" id="filtro-tipologia-piores">
+                                        <option value="">Todas Tipologias</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="card-body" id="ranking-piores">
                                 <div class="loading text-center">
@@ -980,12 +1000,28 @@
 
             // Event listeners para filtros específicos dos Top 5
             const filtroPerfilTop5 = document.getElementById('filtro-perfil-top5');
+            const filtroTipologiaMelhores = document.getElementById('filtro-tipologia-melhores');
+            const filtroTipologiaPiores = document.getElementById('filtro-tipologia-piores');
             const tipoAnalise = document.getElementById('tipo-analise');
             
             if (filtroPerfilTop5) {
                 filtroPerfilTop5.addEventListener('change', function() {
                     console.log('Mudança no perfil Top 5:', this.value);
                     carregarRankings();
+                });
+            }
+
+            if (filtroTipologiaMelhores) {
+                filtroTipologiaMelhores.addEventListener('change', function() {
+                    console.log('Mudança no filtro tipologia melhores:', this.value);
+                    carregarRankingMelhores();
+                });
+            }
+
+            if (filtroTipologiaPiores) {
+                filtroTipologiaPiores.addEventListener('change', function() {
+                    console.log('Mudança no filtro tipologia piores:', this.value);
+                    carregarRankingPiores();
                 });
             }
             
@@ -1399,11 +1435,28 @@
                 
                 // Filtro específico dos Top 5
                 const selectPerfilTop5 = document.getElementById('filtro-perfil-top5');
+                const selectTipologiaMelhores = document.getElementById('filtro-tipologia-melhores');
+                const selectTipologiaPiores = document.getElementById('filtro-tipologia-piores');
                 
                 if (data.tipologias && selectTipologia) {
                     selectTipologia.innerHTML = '<option value="">Todas Tipologias</option>';
                     data.tipologias.forEach(tipologia => {
                         selectTipologia.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
+                    });
+                }
+
+                // Preencher filtros específicos dos Top 5
+                if (data.tipologias && selectTipologiaMelhores) {
+                    selectTipologiaMelhores.innerHTML = '<option value="">Todas Tipologias</option>';
+                    data.tipologias.forEach(tipologia => {
+                        selectTipologiaMelhores.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
+                    });
+                }
+
+                if (data.tipologias && selectTipologiaPiores) {
+                    selectTipologiaPiores.innerHTML = '<option value="">Todas Tipologias</option>';
+                    data.tipologias.forEach(tipologia => {
+                        selectTipologiaPiores.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
                     });
                 }
                 
@@ -1769,13 +1822,18 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.getElementById('tipo-analise')?.value || 'tipologia';
+                const tipoAnaliseRadio = document.querySelector('input[name="tipo-analise"]:checked');
+                const tipoAnalise = tipoAnaliseRadio ? tipoAnaliseRadio.value : 'tipologia';
                 const perfilTop5 = document.getElementById('filtro-perfil-top5')?.value || '';
+                const tipologiaFiltro = document.getElementById('filtro-tipologia-melhores')?.value || '';
+                
+                console.log('Carregando ranking melhores para tipo:', tipoAnalise);
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
                 if (perfilTop5) params.append('perfil_filter', perfilTop5);
+                if (tipologiaFiltro) params.append('tipologia_filter', tipologiaFiltro);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-melhores?${params}`);
@@ -1794,13 +1852,18 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.getElementById('tipo-analise')?.value || 'tipologia';
+                const tipoAnaliseRadio = document.querySelector('input[name="tipo-analise"]:checked');
+                const tipoAnalise = tipoAnaliseRadio ? tipoAnaliseRadio.value : 'tipologia';
                 const perfilTop5 = document.getElementById('filtro-perfil-top5')?.value || '';
+                const tipologiaFiltro = document.getElementById('filtro-tipologia-piores')?.value || '';
+                
+                console.log('Carregando ranking piores para tipo:', tipoAnalise);
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
                 if (perfilTop5) params.append('perfil_filter', perfilTop5);
+                if (tipologiaFiltro) params.append('tipologia_filter', tipologiaFiltro);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-piores?${params}`);

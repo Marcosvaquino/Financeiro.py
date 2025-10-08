@@ -25,6 +25,14 @@ class MargemAnaliseService:
         self._last_modified = None  # Timestamp do último arquivo carregado
         self._df_cache = None  # Cache do DataFrame principal
         
+    def filtrar_dados_validos(self, df_resultado):
+        """Filtra dados para remover casos extremos que distorcem a análise"""
+        return df_resultado[
+            (df_resultado['frete_receber'] >= 100) &      # Receita mínima R$ 100
+            (df_resultado['Percentual'] >= -100) &        # Margem não menor que -100%
+            (df_resultado['Percentual'] <= 200)           # Margem não maior que 200%
+        ]
+        
     def get_connection(self):
         """Conexão com o banco de dados"""
         return sqlite3.connect(self.db_path)
@@ -316,7 +324,11 @@ def api_ranking_melhores():
             resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
             
             # Filtrar apenas valores válidos
-            resultado = resultado[resultado['frete_receber'] > 0]
+            resultado = resultado[
+                (resultado['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado.empty:
                 return jsonify([])
@@ -350,7 +362,11 @@ def api_ranking_melhores():
             resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
             
             # Filtrar apenas valores válidos
-            resultado = resultado[resultado['frete_receber'] > 0]
+            resultado = resultado[
+                (resultado['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado.empty:
                 return jsonify([])
@@ -383,8 +399,12 @@ def api_ranking_melhores():
             resultado_placas['Margem'] = resultado_placas['frete_receber'] - resultado_placas['frete_pagar']
             resultado_placas['Percentual'] = (resultado_placas['Margem'] / resultado_placas['frete_receber'] * 100).round(2)
             
-            # Filtrar apenas valores válidos
-            resultado_placas = resultado_placas[resultado_placas['frete_receber'] > 0]
+            # Filtrar dados válidos (remove casos extremos que distorcem análise)
+            resultado_placas = resultado_placas[
+                (resultado_placas['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado_placas['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado_placas['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado_placas.empty:
                 return jsonify([])
@@ -396,7 +416,7 @@ def api_ranking_melhores():
             ranking = []
             tipologias_usadas = set()
             
-            # Primeira passada: uma placa por tipologia
+            # Primeira passada: uma placa por tipologia (a melhor de cada tipo)
             for _, row in resultado_placas.iterrows():
                 if len(ranking) >= 5:
                     break
@@ -414,23 +434,9 @@ def api_ranking_melhores():
                         'placa': row['Placa']
                     })
             
-            # Segunda passada: se ainda não temos 5, pegar as próximas melhores
-            if len(ranking) < 5:
-                placas_usadas = {item['placa'] for item in ranking}
-                
-                for _, row in resultado_placas.iterrows():
-                    if len(ranking) >= 5:
-                        break
-                        
-                    if row['Placa'] not in placas_usadas:
-                        ranking.append({
-                            'nome': f"{row['Tipologia']} - Placa {row['Placa']}",
-                            'margem': f"R$ {row['Margem']:,.2f}",
-                            'percentual': f"{row['Percentual']:.1f}%",
-                            'receita': f"R$ {row['frete_receber']:,.2f}",
-                            'tipologia': row['Tipologia'],
-                            'placa': row['Placa']
-                        })
+            # Segunda passada: NÃO adicionar mais placas - manter apenas 1 por tipologia
+            # Completar com placeholders vazios se necessário
+            # (Removida a lógica que permitia repetição de tipologias)
         
         # Garantir exatamente 5 posições
         while len(ranking) < 5:
@@ -494,7 +500,11 @@ def api_ranking_piores():
             resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
             
             # Filtrar apenas valores válidos
-            resultado = resultado[resultado['frete_receber'] > 0]
+            resultado = resultado[
+                (resultado['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado.empty:
                 return jsonify([])
@@ -528,7 +538,11 @@ def api_ranking_piores():
             resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
             
             # Filtrar apenas valores válidos
-            resultado = resultado[resultado['frete_receber'] > 0]
+            resultado = resultado[
+                (resultado['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado.empty:
                 return jsonify([])
@@ -561,8 +575,12 @@ def api_ranking_piores():
             resultado_placas['Margem'] = resultado_placas['frete_receber'] - resultado_placas['frete_pagar']
             resultado_placas['Percentual'] = (resultado_placas['Margem'] / resultado_placas['frete_receber'] * 100).round(2)
             
-            # Filtrar apenas valores válidos
-            resultado_placas = resultado_placas[resultado_placas['frete_receber'] > 0]
+            # Filtrar dados válidos (remove casos extremos que distorcem análise)
+            resultado_placas = resultado_placas[
+                (resultado_placas['frete_receber'] >= 100) &      # Receita mínima R$ 100
+                (resultado_placas['Percentual'] >= -100) &        # Margem não menor que -100%
+                (resultado_placas['Percentual'] <= 200)           # Margem não maior que 200%
+            ]
             
             if resultado_placas.empty:
                 return jsonify([])
@@ -592,23 +610,9 @@ def api_ranking_piores():
                         'placa': row['Placa']
                     })
             
-            # Segunda passada: se ainda não temos 5, pegar as próximas piores
-            if len(ranking) < 5:
-                placas_usadas = {item['placa'] for item in ranking}
-                
-                for _, row in resultado_placas.iterrows():
-                    if len(ranking) >= 5:
-                        break
-                        
-                    if row['Placa'] not in placas_usadas:
-                        ranking.append({
-                            'nome': f"{row['Tipologia']} - Placa {row['Placa']}",
-                            'margem': f"R$ {row['Margem']:,.2f}",
-                            'percentual': f"{row['Percentual']:.1f}%",
-                            'receita': f"R$ {row['frete_receber']:,.2f}",
-                            'tipologia': row['Tipologia'],
-                            'placa': row['Placa']
-                        })
+            # Segunda passada: NÃO adicionar mais placas - manter apenas 1 por tipologia
+            # Completar com placeholders vazios se necessário
+            # (Removida a lógica que permitia repetição de tipologias)
         
         # Garantir exatamente 5 posições
         while len(ranking) < 5:
@@ -626,6 +630,187 @@ def api_ranking_piores():
     except Exception as e:
         print(f"Erro no ranking piores: {e}")
         return jsonify([])
+
+@margem_bp.route('/api/margem/tipologia')
+def api_analise_tipologia():
+    """API para análise por tipologia com gráficos"""
+    try:
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Agrupar por tipologia
+        analise = df.groupby('Tipologia').agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum',
+            'margem_liquida': 'sum'
+        }).round(2)
+        
+        # Calcular margem percentual correta
+        analise['margem_percentual'] = np.where(
+            analise['frete_receber'] > 0,
+            (analise['margem_liquida'] / analise['frete_receber']) * 100,
+            0
+        )
+        
+        # Contar operações
+        operacoes = df.groupby('Tipologia').size()
+        analise['total_operacoes'] = operacoes
+        
+        # Converter para dicionário
+        resultado = {}
+        for tipologia, dados in analise.iterrows():
+            resultado[tipologia] = {
+                'receita_total': float(dados['frete_receber']),
+                'despesa_total': float(dados['frete_pagar']),
+                'margem_total': float(dados['margem_liquida']),
+                'margem_percentual': float(dados['margem_percentual']),
+                'total_operacoes': int(dados['total_operacoes'])
+            }
+        
+        return jsonify({
+            'analise': {'resumo_geral': resultado},
+            'metas_sugeridas': {}  # Implementar se necessário
+        })
+        
+    except Exception as e:
+        print(f"Erro na análise por tipologia: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@margem_bp.route('/api/margem/destinos')
+def api_analise_destinos():
+    """API para análise por destinos com gráficos"""
+    try:
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Agrupar por destino
+        analise = df.groupby('DESTINO').agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum',
+            'margem_liquida': 'sum'
+        }).round(2)
+        
+        # Calcular margem percentual correta
+        analise['margem_percentual'] = np.where(
+            analise['frete_receber'] > 0,
+            (analise['margem_liquida'] / analise['frete_receber']) * 100,
+            0
+        )
+        
+        # Contar operações
+        operacoes = df.groupby('DESTINO').size()
+        analise['total_operacoes'] = operacoes
+        
+        # Ordenar por margem percentual (melhor primeiro)
+        analise = analise.sort_values('margem_percentual', ascending=False)
+        
+        # Top 10 destinos
+        top_destinos = {}
+        for destino, dados in analise.head(10).iterrows():
+            top_destinos[destino] = {
+                'receita_total': float(dados['frete_receber']),
+                'despesa_total': float(dados['frete_pagar']),
+                'margem_total': float(dados['margem_liquida']),
+                'margem_percentual': float(dados['margem_percentual']),
+                'total_operacoes': int(dados['total_operacoes'])
+            }
+        
+        return jsonify({
+            'top_destinos': top_destinos,
+            'total_destinos': len(analise)
+        })
+        
+    except Exception as e:
+        print(f"Erro na análise por destinos: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@margem_bp.route('/api/margem/placas')
+def api_analise_placas():
+    """API para análise por placas com gráficos"""
+    try:
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Agrupar por placa e tipologia
+        analise = df.groupby(['Placa', 'Tipologia']).agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum',
+            'margem_liquida': 'sum'
+        }).round(2)
+        
+        # Calcular margem percentual correta
+        analise['margem_percentual'] = np.where(
+            analise['frete_receber'] > 0,
+            (analise['margem_liquida'] / analise['frete_receber']) * 100,
+            0
+        )
+        
+        # Contar operações
+        operacoes = df.groupby(['Placa', 'Tipologia']).size()
+        analise['total_operacoes'] = operacoes
+        
+        # Ordenar por margem percentual (melhor primeiro)
+        analise = analise.sort_values('margem_percentual', ascending=False)
+        
+        # Top 15 placas
+        top_placas = {}
+        for (placa, tipologia), dados in analise.head(15).iterrows():
+            chave = f"{placa}"
+            top_placas[chave] = {
+                'placa': placa,
+                'tipologia': tipologia,
+                'receita_total': float(dados['frete_receber']),
+                'despesa_total': float(dados['frete_pagar']),
+                'margem_total': float(dados['margem_liquida']),
+                'margem_percentual': float(dados['margem_percentual']),
+                'total_viagens': int(dados['total_operacoes'])
+            }
+        
+        return jsonify({
+            'top_placas': top_placas,
+            'total_placas': len(analise)
+        })
+        
+    except Exception as e:
+        print(f"Erro na análise por placas: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@margem_bp.route('/api/margem/filtros')
+def api_filtros():
+    """API para obter filtros disponíveis"""
+    try:
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify({
+                'tipologias': [],
+                'destinos': [],
+                'placas': [],
+                'perfis': [],
+                'meses': [],
+                'anos': []
+            })
+        
+        filtros = {
+            'tipologias': sorted(df['Tipologia'].dropna().unique().tolist()),
+            'destinos': sorted(df['DESTINO'].dropna().unique().tolist()[:50]),  # Limitar a 50
+            'placas': sorted(df['Placa'].dropna().unique().tolist()[:50]),      # Limitar a 50
+            'perfis': sorted(df['perfil'].dropna().unique().tolist()),
+            'meses': sorted(df['mes'].dropna().unique().tolist()),
+            'anos': sorted(df['ano'].dropna().unique().tolist())
+        }
+        
+        return jsonify(filtros)
+        
+    except Exception as e:
+        print(f"Erro ao obter filtros: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @margem_bp.route('/api/margem/limpar-cache', methods=['POST'])
 def api_limpar_cache():
