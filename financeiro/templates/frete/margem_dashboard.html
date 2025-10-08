@@ -117,76 +117,22 @@
         }
 
         .filter-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .filter-title {
-            color: #495057;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
-
-        .filter-tab {
-            background: white;
-            color: #6c757d;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            margin: 0.2rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.9rem;
-        }
-
-        .filter-tab:hover {
             background: #f8f9fa;
-            color: #495057;
-            border-color: #adb5bd;
-        }
-
-        .filter-tab.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
         }
 
         .filter-control {
-            background: white;
             border: 1px solid #ced4da;
-            border-radius: 6px;
-            color: #495057;
+            border-radius: 4px;
+            font-size: 0.875rem;
         }
 
         .filter-control:focus {
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
             border-color: #80bdff;
-        }
-
-        .btn-filter {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            border: none;
-            border-radius: 8px;
-            padding: 0.6rem 1.5rem;
-            color: white;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .btn-filter:hover {
-            background: linear-gradient(135deg, #0056b3, #004085);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
-            color: white;
         }
 
         .tab-content {
@@ -215,13 +161,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            background: white;
-            border-radius: 8px;
+            padding: 1.2rem;
+            margin: 0.8rem 0;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
             border: 1px solid #e9ecef;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .ranking-item::before {
@@ -230,74 +177,175 @@
             left: 0;
             top: 0;
             bottom: 0;
-            width: 3px;
-            border-radius: 0 2px 2px 0;
+            width: 4px;
+            border-radius: 3px 0 0 3px;
         }
 
         .ranking-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
 
         .ranking-item.top::before { 
-            background: #28a745;
+            background: linear-gradient(45deg, #28a745, #20c997);
         }
         
         .ranking-item.medium::before { 
-            background: #ffc107;
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
         }
         
         .ranking-item.bottom::before { 
-            background: #dc3545;
+            background: linear-gradient(45deg, #dc3545, #e83e8c);
+        }
+
+        .ranking-position {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Medalhas especiais para os 3 primeiros no ranking top */
+        .ranking-item.top:nth-child(1) .ranking-position {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #b8860b;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+
+        .ranking-item.top:nth-child(2) .ranking-position {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #696969;
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(192, 192, 192, 0.4);
+        }
+
+        .ranking-item.top:nth-child(3) .ranking-position {
+            background: linear-gradient(135deg, #cd7f32, #daa520);
+            color: #8b4513;
+            transform: scale(1.05);
+            box-shadow: 0 3px 8px rgba(205, 127, 50, 0.4);
+        }
+
+        .ranking-info {
+            flex-grow: 1;
         }
 
         .ranking-name {
             font-weight: 600;
             color: #495057;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .ranking-subtitle {
+            color: #6c757d;
+            font-size: 0.85rem;
         }
 
         .ranking-values {
             text-align: right;
+            flex-shrink: 0;
         }
 
         .ranking-percentage {
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1.3rem;
             margin-bottom: 0.1rem;
         }
 
-        .ranking-values small {
+        .ranking-percentage.positive {
+            color: #28a745;
+        }
+
+        .ranking-percentage.negative {
+            color: #dc3545;
+        }
+
+        .ranking-margin {
             color: #6c757d;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .ranking-header {
             background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
             color: white;
-            padding: 1rem 1.25rem;
-            border-radius: 8px 8px 0 0;
+            padding: 1.2rem 1.5rem;
+            border-radius: 10px 10px 0 0;
             margin: -1px -1px 0 -1px;
+            position: relative;
         }
 
         .ranking-header h5 {
             margin: 0;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .ranking-header .icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Estilo para o filtro dentro do header */
+        .ranking-header .form-select {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #495057;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .ranking-header .form-select:focus {
+            background: white;
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
         }
 
         .ranking-card {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             border: 1px solid #e9ecef;
             overflow: hidden;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .ranking-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .ranking-empty {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+
+        .ranking-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
 
         .loading {
@@ -622,59 +670,63 @@
 
         <!-- Filtros e Navegação -->
         <div class="filter-section">
-            <h5 class="filter-title"><i class="fas fa-filter me-2"></i>Filtros de Análise</h5>
-            <div class="row align-items-end">
-                <!-- Botões de Análise (movidos para cá) -->
-                <div class="col-md-2">
-                    <label class="form-label small text-muted">Análise por:</label>
-                    <div class="filter-tab active" data-tipo="tipologia">
-                        <i class="fas fa-truck"></i>Por Tipologia
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted mb-1">Análise por:</label>
+                    <div class="btn-group btn-group-sm w-100" role="group">
+                        <input type="radio" class="btn-check" name="tipo-analise" id="tipologia-radio" value="tipologia" checked>
+                        <label class="btn btn-outline-primary" for="tipologia-radio">
+                            <i class="fas fa-truck me-1"></i>Tipologia
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="tipo-analise" id="destino-radio" value="destino">
+                        <label class="btn btn-outline-primary" for="destino-radio">
+                            <i class="fas fa-map-marker-alt me-1"></i>Destino
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="tipo-analise" id="placa-radio" value="placa">
+                        <label class="btn btn-outline-primary" for="placa-radio">
+                            <i class="fas fa-id-card me-1"></i>Placa
+                        </label>
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small text-muted">&nbsp;</label>
-                    <div class="filter-tab" data-tipo="destino">
-                        <i class="fas fa-map-marker-alt"></i>Por Destino
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-muted">&nbsp;</label>
-                    <div class="filter-tab" data-tipo="placa">
-                        <i class="fas fa-id-card"></i>Por Placa
-                    </div>
-                </div>
-                <!-- Filtros mantidos -->
-                <div class="col-md-2">
-                    <label class="form-label small text-muted">Mês</label>
-                    <select class="form-select filter-control" id="filtro-mes">
+                    <label class="form-label small text-muted mb-1">Mês:</label>
+                    <select class="form-select form-select-sm filter-control" id="filtro-mes">
                         <option value="todos">Todos</option>
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
+                        <option value="1">Jan</option>
+                        <option value="2">Fev</option>
+                        <option value="3">Mar</option>
+                        <option value="4">Abr</option>
+                        <option value="5">Mai</option>
+                        <option value="6">Jun</option>
+                        <option value="7">Jul</option>
+                        <option value="8">Ago</option>
+                        <option value="9">Set</option>
+                        <option value="10">Out</option>
+                        <option value="11">Nov</option>
+                        <option value="12">Dez</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small text-muted">Ano</label>
-                    <select class="form-select filter-control" id="filtro-ano">
+                    <label class="form-label small text-muted mb-1">Ano:</label>
+                    <select class="form-select form-select-sm filter-control" id="filtro-ano">
                         <option value="todos">Todos</option>
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small text-muted">&nbsp;</label>
-                    <button class="btn btn-filter w-100" id="btn-filtrar">
-                        <i class="fas fa-search me-1"></i>Filtrar
+                    <label class="form-label small text-muted mb-1">&nbsp;</label>
+                    <button class="btn btn-primary btn-sm w-100" id="btn-filtrar">
+                        <i class="fas fa-filter me-1"></i>Filtrar
                     </button>
+                </div>
+                <div class="col-md-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Filtros aplicados apenas aos rankings abaixo
+                    </small>
                 </div>
             </div>
         </div>
@@ -688,10 +740,16 @@
                     <div class="col-md-6">
                         <div class="ranking-card">
                             <div class="ranking-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-trophy me-2"></i>
-                                    Top 5 Melhores Rentabilidades
-                                </h5>
+                                <div class="icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <h5>Top 5 Melhores Rentabilidades</h5>
+                                <!-- Filtro por Tipologia dentro do Top 5 -->
+                                <div class="mt-2 mb-2">
+                                    <select class="form-select form-select-sm" id="filtro-tipologia-top5" style="max-width: 200px;">
+                                        <option value="">Todas as Tipologias</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="card-body" id="ranking-melhores">
                                 <div class="loading text-center">
@@ -706,10 +764,16 @@
                     <div class="col-md-6">
                         <div class="ranking-card">
                             <div class="ranking-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Top 5 Piores Rentabilidades
-                                </h5>
+                                <div class="icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h5>Top 5 Piores Rentabilidades</h5>
+                                <!-- Filtro por Tipologia dentro do Top 5 -->
+                                <div class="mt-2 mb-2">
+                                    <select class="form-select form-select-sm" id="filtro-tipologia-top5-piores" style="max-width: 200px;">
+                                        <option value="">Todas as Tipologias</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="card-body" id="ranking-piores">
                                 <div class="loading text-center">
@@ -1188,26 +1252,46 @@
                 const response = await fetch('/api/margem/filtros');
                 const data = await response.json();
                 
-                // Popular tipologias
-                const tipologiaSelect = document.getElementById('filtro-geral-tipologia');
-                data.tipologias.forEach(tip => {
-                    const option = document.createElement('option');
-                    option.value = tip;
-                    option.textContent = tip;
-                    tipologiaSelect.appendChild(option);
-                });
+                // Filtros gerais (topo da página)
+                const selectTipologia = document.getElementById('filtro-geral-tipologia');
+                const selectPlaca = document.getElementById('filtro-geral-placa');
                 
-                // Popular placas (apenas top 50 para não sobrecarregar)
-                const placaSelect = document.getElementById('filtro-geral-placa');
-                data.placas.slice(0, 50).forEach(placa => {
-                    const option = document.createElement('option');
-                    option.value = placa;
-                    option.textContent = placa;
-                    placaSelect.appendChild(option);
-                });
+                // Filtros específicos do Top 5
+                const selectTipologiaTop5 = document.getElementById('filtro-tipologia-top5');
+                const selectTipologiaTop5Piores = document.getElementById('filtro-tipologia-top5-piores');
+                
+                if (data.tipologias && selectTipologia) {
+                    selectTipologia.innerHTML = '<option value="">Todas Tipologias</option>';
+                    data.tipologias.forEach(tipologia => {
+                        selectTipologia.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
+                    });
+                }
+                
+                if (data.placas && selectPlaca) {
+                    selectPlaca.innerHTML = '<option value="">Todas Placas</option>';
+                    // Limitar a 50 placas para não sobrecarregar
+                    data.placas.slice(0, 50).forEach(placa => {
+                        selectPlaca.innerHTML += `<option value="${placa}">${placa}</option>`;
+                    });
+                }
+                
+                // Carregar tipologias para os filtros específicos do Top 5
+                if (data.tipologias && selectTipologiaTop5) {
+                    selectTipologiaTop5.innerHTML = '<option value="">Todas as Tipologias</option>';
+                    data.tipologias.forEach(tipologia => {
+                        selectTipologiaTop5.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
+                    });
+                }
+                
+                if (data.tipologias && selectTipologiaTop5Piores) {
+                    selectTipologiaTop5Piores.innerHTML = '<option value="">Todas as Tipologias</option>';
+                    data.tipologias.forEach(tipologia => {
+                        selectTipologiaTop5Piores.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
+                    });
+                }
                 
             } catch (error) {
-                console.error('Erro ao carregar filtros gerais:', error);
+                console.error('Erro ao carregar filtros:', error);
             }
         }
 
@@ -1513,11 +1597,13 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.querySelector('.filter-tab.active')?.dataset?.tipo || 'tipologia';
+                const tipoAnalise = document.querySelector('input[name="tipo-analise"]:checked')?.value || 'tipologia';
+                const tipologiaTop5 = document.getElementById('filtro-tipologia-top5')?.value || '';
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
+                if (tipologiaTop5) params.append('tipologia_filter', tipologiaTop5);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-melhores?${params}`);
@@ -1536,11 +1622,13 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.querySelector('.filter-tab.active')?.dataset?.tipo || 'tipologia';
+                const tipoAnalise = document.querySelector('input[name="tipo-analise"]:checked')?.value || 'tipologia';
+                const tipologiaTop5 = document.getElementById('filtro-tipologia-top5-piores')?.value || '';
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
+                if (tipologiaTop5) params.append('tipologia_filter', tipologiaTop5);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-piores?${params}`);
@@ -1560,24 +1648,71 @@
             let html = '';
             
             if (!data || !data.length) {
-                html = '<p class="text-muted text-center">Nenhum dado disponível</p>';
+                html = `
+                    <div class="ranking-empty">
+                        <i class="fas fa-inbox"></i>
+                        <h6>Nenhum dado disponível</h6>
+                        <p class="small">Tente ajustar os filtros ou verificar os dados.</p>
+                    </div>
+                `;
             } else {
-                data.forEach((item, index) => {
+                // Garantir exatamente 5 posições
+                const rankingData = [...data];
+                while (rankingData.length < 5) {
+                    rankingData.push({
+                        nome: `-- Posição ${rankingData.length + 1} --`,
+                        percentual: '0.0%',
+                        margem: 'R$ 0,00',
+                        receita: 'R$ 0,00',
+                        tipologia: '-'
+                    });
+                }
+                
+                rankingData.slice(0, 5).forEach((item, index) => {
                     const posicao = index + 1;
+                    const percentual = parseFloat(item.percentual?.replace('%', '') || 0);
+                    const percentualClass = percentual >= 0 ? 'positive' : 'negative';
+                    const isEmptyRow = item.nome?.includes('-- Posição');
+                    
+                    // Determinar subtítulo baseado no valor e tipologia
+                    let subtitle = '';
+                    if (isEmptyRow) {
+                        subtitle = 'Sem dados suficientes';
+                    } else if (item.tipologia && item.tipologia !== '-') {
+                        subtitle = `${item.tipologia} • `;
+                        if (percentual > 40) subtitle += 'Excelente rentabilidade';
+                        else if (percentual > 20) subtitle += 'Boa rentabilidade';
+                        else if (percentual > 0) subtitle += 'Rentabilidade positiva';
+                        else subtitle += 'Necessita atenção';
+                    } else {
+                        if (percentual > 40) subtitle = 'Excelente rentabilidade';
+                        else if (percentual > 20) subtitle = 'Boa rentabilidade';
+                        else if (percentual > 0) subtitle = 'Rentabilidade positiva';
+                        else subtitle = 'Necessita atenção';
+                    }
+                    
+                    // Ícones de medalha para os 3 primeiros
+                    let medalIcon = '';
+                    if (!isEmptyRow) {
+                        if (posicao === 1) medalIcon = '<i class="fas fa-medal text-warning me-2"></i>';
+                        else if (posicao === 2) medalIcon = '<i class="fas fa-medal text-secondary me-2"></i>';
+                        else if (posicao === 3) medalIcon = '<i class="fas fa-medal text-warning me-2" style="opacity: 0.7;"></i>';
+                    }
+                    
+                    const opacityClass = isEmptyRow ? 'opacity-50' : '';
                     
                     html += `
-                        <div class="ranking-item ${tipo}">
-                            <div class="d-flex align-items-center">
-                                <div class="ranking-posicao me-3">#${posicao}</div>
-                                <div>
-                                    <div class="ranking-name">${item.nome || 'N/A'}</div>
-                                </div>
+                        <div class="ranking-item ${tipo} ${opacityClass}" ${isEmptyRow ? 'style="background: #f8f9fa; border-style: dashed;"' : ''}>
+                            <div class="ranking-position">${medalIcon}${posicao}</div>
+                            <div class="ranking-info">
+                                <div class="ranking-name" ${isEmptyRow ? 'style="color: #adb5bd; font-style: italic;"' : ''}>${item.nome || 'N/A'}</div>
+                                <div class="ranking-subtitle" ${isEmptyRow ? 'style="color: #adb5bd;"' : ''}>${subtitle}</div>
                             </div>
                             <div class="ranking-values">
-                                <div class="ranking-percentage">
+                                <div class="ranking-percentage ${percentualClass}" ${isEmptyRow ? 'style="color: #adb5bd;"' : ''}>
                                     ${item.percentual || '0.0%'}
                                 </div>
-                                <small>${item.margem || 'R$ 0,00'}</small>
+                                <div class="ranking-margin" ${isEmptyRow ? 'style="color: #adb5bd;"' : ''}>${item.margem || 'R$ 0,00'}</div>
                             </div>
                         </div>
                     `;
@@ -1592,25 +1727,33 @@
             carregarRankings();
         });
 
-        // Gerenciar botões de navegação no filtro
+        // Auto-carregar quando mudar tipo de análise
         document.addEventListener('DOMContentLoaded', function() {
-            // Event listeners para os botões de tab no filtro
-            const tabButtons = document.querySelectorAll('.filter-tab');
+            const radioButtons = document.querySelectorAll('input[name="tipo-analise"]');
             
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remover active de todos os botões
-                    tabButtons.forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    
-                    // Adicionar active ao botão clicado
-                    this.classList.add('active');
-                    
-                    // Recarregar rankings com novo tipo
-                    carregarRankings();
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        carregarRankings();
+                    }
                 });
             });
+
+            // Event listeners para filtros específicos do Top 5
+            const filtroTipologiaTop5 = document.getElementById('filtro-tipologia-top5');
+            const filtroTipologiaTop5Piores = document.getElementById('filtro-tipologia-top5-piores');
+            
+            if (filtroTipologiaTop5) {
+                filtroTipologiaTop5.addEventListener('change', function() {
+                    carregarRankingMelhores();
+                });
+            }
+            
+            if (filtroTipologiaTop5Piores) {
+                filtroTipologiaTop5Piores.addEventListener('change', function() {
+                    carregarRankingPiores();
+                });
+            }
 
             // Carregar rankings na inicialização
             setTimeout(() => {

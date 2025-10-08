@@ -267,6 +267,7 @@ def api_ranking_melhores():
         tipo_analise = request.args.get('tipo', 'tipologia')
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
+        tipologia_filter = request.args.get('tipologia_filter', '')  # Novo filtro específico
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -279,6 +280,10 @@ def api_ranking_melhores():
         
         if ano and ano != 'todos':
             df = df[df['ano'] == int(ano)]
+        
+        # Aplicar filtro específico de tipologia para o Top 5
+        if tipologia_filter and tipologia_filter.strip():
+            df = df[df['Tipologia'] == tipologia_filter]
         
         if df.empty:
             return jsonify([])
@@ -309,7 +314,14 @@ def api_ranking_melhores():
         # Filtrar apenas valores válidos
         resultado = resultado[resultado['frete_receber'] > 0]
         
-        # Top 5 melhores
+        # Garantir exatamente 5 resultados (completar com dados vazios se necessário)
+        if len(resultado) < 5:
+            # Preencher com registros vazios para garantir 5 posições
+            for i in range(len(resultado), 5):
+                nova_linha = {grupo_col: f"-- Posição {i+1} --", 'frete_receber': 0, 'frete_pagar': 0, 'Margem': 0, 'Percentual': 0}
+                resultado = pd.concat([resultado, pd.DataFrame([nova_linha])], ignore_index=True)
+        
+        # Top 5 melhores (sempre 5 resultados)
         top_5 = resultado.nlargest(5, 'Percentual')
         
         # Formatar dados
@@ -319,7 +331,8 @@ def api_ranking_melhores():
                 'nome': row[grupo_col],
                 'margem': f"R$ {row['Margem']:,.2f}",
                 'percentual': f"{row['Percentual']:.1f}%",
-                'receita': f"R$ {row['frete_receber']:,.2f}"
+                'receita': f"R$ {row['frete_receber']:,.2f}",
+                'tipologia': row.get('Tipologia', '-') if grupo_col != 'Tipologia' else row[grupo_col]
             })
         
         return jsonify(ranking)
@@ -335,6 +348,7 @@ def api_ranking_piores():
         tipo_analise = request.args.get('tipo', 'tipologia')
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
+        tipologia_filter = request.args.get('tipologia_filter', '')  # Novo filtro específico
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -347,6 +361,10 @@ def api_ranking_piores():
         
         if ano and ano != 'todos':
             df = df[df['ano'] == int(ano)]
+        
+        # Aplicar filtro específico de tipologia para o Top 5
+        if tipologia_filter and tipologia_filter.strip():
+            df = df[df['Tipologia'] == tipologia_filter]
         
         if df.empty:
             return jsonify([])
@@ -377,7 +395,14 @@ def api_ranking_piores():
         # Filtrar apenas valores válidos
         resultado = resultado[resultado['frete_receber'] > 0]
         
-        # Top 5 piores
+        # Garantir exatamente 5 resultados (completar com dados vazios se necessário)
+        if len(resultado) < 5:
+            # Preencher com registros vazios para garantir 5 posições
+            for i in range(len(resultado), 5):
+                nova_linha = {grupo_col: f"-- Posição {i+1} --", 'frete_receber': 0, 'frete_pagar': 0, 'Margem': 0, 'Percentual': 0}
+                resultado = pd.concat([resultado, pd.DataFrame([nova_linha])], ignore_index=True)
+        
+        # Top 5 piores (sempre 5 resultados)
         top_5 = resultado.nsmallest(5, 'Percentual')
         
         # Formatar dados
@@ -387,7 +412,8 @@ def api_ranking_piores():
                 'nome': row[grupo_col],
                 'margem': f"R$ {row['Margem']:,.2f}",
                 'percentual': f"{row['Percentual']:.1f}%",
-                'receita': f"R$ {row['frete_receber']:,.2f}"
+                'receita': f"R$ {row['frete_receber']:,.2f}",
+                'tipologia': row.get('Tipologia', '-') if grupo_col != 'Tipologia' else row[grupo_col]
             })
         
         return jsonify(ranking)
