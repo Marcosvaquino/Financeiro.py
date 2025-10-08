@@ -41,9 +41,9 @@ body {
 
 /* ===== Sidebar ===== */
 .sidebar {
-    /* Largura mais estreita para ajustar ao conteúdo */
-    width: 220px;
-    max-width: 280px;
+    /* Largura ajustada para acomodar "Análise de Margem" */
+    width: 250px;
+    max-width: 300px;
     background: #434343 !important;
     min-height: 100vh;
     height: 100vh;
