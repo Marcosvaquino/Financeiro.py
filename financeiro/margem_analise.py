@@ -260,6 +260,142 @@ def api_evolucao_anual():
         print(f"Erro na evolução anual: {e}")
         return jsonify({'error': str(e)}), 500
 
+@margem_bp.route('/api/margem/ranking-melhores')
+def api_ranking_melhores():
+    """API para Top 5 melhores rentabilidades"""
+    try:
+        tipo_analise = request.args.get('tipo', 'tipologia')
+        mes = request.args.get('mes', '')
+        ano = request.args.get('ano', '')
+        
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify([])
+        
+        # Aplicar filtros se fornecidos
+        if mes and mes != 'todos':
+            df = df[df['mes'] == int(mes)]
+        
+        if ano and ano != 'todos':
+            df = df[df['ano'] == int(ano)]
+        
+        if df.empty:
+            return jsonify([])
+        
+        # Definir agrupamento baseado no tipo de análise
+        if tipo_analise == 'tipologia':
+            grupo_col = 'Tipologia'
+        elif tipo_analise == 'destino':
+            grupo_col = 'DESTINO'
+        elif tipo_analise == 'placa':
+            grupo_col = 'Placa'
+        else:
+            grupo_col = 'Tipologia'
+        
+        # Verificar se a coluna existe
+        if grupo_col not in df.columns:
+            return jsonify([])
+        
+        # Calcular margem por grupo
+        resultado = df.groupby(grupo_col).agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum'
+        }).reset_index()
+        
+        resultado['Margem'] = resultado['frete_receber'] - resultado['frete_pagar']
+        resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
+        
+        # Filtrar apenas valores válidos
+        resultado = resultado[resultado['frete_receber'] > 0]
+        
+        # Top 5 melhores
+        top_5 = resultado.nlargest(5, 'Percentual')
+        
+        # Formatar dados
+        ranking = []
+        for _, row in top_5.iterrows():
+            ranking.append({
+                'nome': row[grupo_col],
+                'margem': f"R$ {row['Margem']:,.2f}",
+                'percentual': f"{row['Percentual']:.1f}%",
+                'receita': f"R$ {row['frete_receber']:,.2f}"
+            })
+        
+        return jsonify(ranking)
+        
+    except Exception as e:
+        print(f"Erro no ranking melhores: {e}")
+        return jsonify([])
+
+@margem_bp.route('/api/margem/ranking-piores')
+def api_ranking_piores():
+    """API para Top 5 piores rentabilidades"""
+    try:
+        tipo_analise = request.args.get('tipo', 'tipologia')
+        mes = request.args.get('mes', '')
+        ano = request.args.get('ano', '')
+        
+        df = margem_service.carregar_dados_manifesto()
+        
+        if df.empty:
+            return jsonify([])
+        
+        # Aplicar filtros se fornecidos
+        if mes and mes != 'todos':
+            df = df[df['mes'] == int(mes)]
+        
+        if ano and ano != 'todos':
+            df = df[df['ano'] == int(ano)]
+        
+        if df.empty:
+            return jsonify([])
+        
+        # Definir agrupamento baseado no tipo de análise
+        if tipo_analise == 'tipologia':
+            grupo_col = 'Tipologia'
+        elif tipo_analise == 'destino':
+            grupo_col = 'DESTINO'
+        elif tipo_analise == 'placa':
+            grupo_col = 'Placa'
+        else:
+            grupo_col = 'Tipologia'
+        
+        # Verificar se a coluna existe
+        if grupo_col not in df.columns:
+            return jsonify([])
+        
+        # Calcular margem por grupo
+        resultado = df.groupby(grupo_col).agg({
+            'frete_receber': 'sum',
+            'frete_pagar': 'sum'
+        }).reset_index()
+        
+        resultado['Margem'] = resultado['frete_receber'] - resultado['frete_pagar']
+        resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
+        
+        # Filtrar apenas valores válidos
+        resultado = resultado[resultado['frete_receber'] > 0]
+        
+        # Top 5 piores
+        top_5 = resultado.nsmallest(5, 'Percentual')
+        
+        # Formatar dados
+        ranking = []
+        for _, row in top_5.iterrows():
+            ranking.append({
+                'nome': row[grupo_col],
+                'margem': f"R$ {row['Margem']:,.2f}",
+                'percentual': f"{row['Percentual']:.1f}%",
+                'receita': f"R$ {row['frete_receber']:,.2f}"
+            })
+        
+        return jsonify(ranking)
+        
+    except Exception as e:
+        print(f"Erro no ranking piores: {e}")
+        return jsonify([])
+
 @margem_bp.route('/api/margem/limpar-cache', methods=['POST'])
 def api_limpar_cache():
     """Limpar cache do serviço"""

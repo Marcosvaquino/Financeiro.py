@@ -117,24 +117,76 @@
         }
 
         .filter-section {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .filter-tab {
+            background: white;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin: 0.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .filter-tab:hover {
+            background: #f8f9fa;
+            color: #495057;
+            border-color: #adb5bd;
+        }
+
+        .filter-tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .filter-control {
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            color: #495057;
+        }
+
+        .filter-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+            border-color: #80bdff;
         }
 
         .btn-filter {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #007bff, #0056b3);
             border: none;
             border-radius: 8px;
-            padding: 0.5rem 1.5rem;
+            padding: 0.6rem 1.5rem;
             color: white;
+            font-weight: 500;
             transition: all 0.2s ease;
         }
 
         .btn-filter:hover {
-            background: #34495e;
+            background: linear-gradient(135deg, #0056b3, #004085);
             transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+            color: white;
         }
 
         .tab-content {
@@ -165,14 +217,88 @@
             align-items: center;
             padding: 1rem;
             margin: 0.5rem 0;
-            background: #f8f9fa;
+            background: white;
             border-radius: 8px;
-            border-left: 4px solid;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        .ranking-item.top { border-left-color: var(--success-color); }
-        .ranking-item.medium { border-left-color: var(--warning-color); }
-        .ranking-item.bottom { border-left-color: var(--danger-color); }
+        .ranking-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .ranking-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .ranking-item.top::before { 
+            background: #28a745;
+        }
+        
+        .ranking-item.medium::before { 
+            background: #ffc107;
+        }
+        
+        .ranking-item.bottom::before { 
+            background: #dc3545;
+        }
+
+        .ranking-name {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        .ranking-values {
+            text-align: right;
+        }
+
+        .ranking-percentage {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .ranking-values small {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .ranking-header {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            color: white;
+            padding: 1rem 1.25rem;
+            border-radius: 8px 8px 0 0;
+            margin: -1px -1px 0 -1px;
+        }
+
+        .ranking-header h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .ranking-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .ranking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
 
         .loading {
             text-align: center;
@@ -231,6 +357,91 @@
             .kpi-card small {
                 font-size: 0.65rem;
             }
+        }
+
+        /* Estilos para Rankings */
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            transition: transform 0.2s ease;
+        }
+
+        .ranking-item:hover {
+            transform: translateX(5px);
+        }
+
+        .ranking-item.melhor {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f8fff9, #e8f5e8);
+        }
+
+        .ranking-item.pior {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #fff8f8, #f5e8e8);
+        }
+
+        .ranking-posicao {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #6c757d;
+            min-width: 30px;
+        }
+
+        .ranking-placa {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .ranking-tipologia {
+            font-size: 0.8rem;
+            color: #6c757d;
+            background: rgba(108, 117, 125, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+        }
+
+        .ranking-valor {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .ranking-valor.positivo {
+            color: #28a745;
+        }
+
+        .ranking-valor.negativo {
+            color: #dc3545;
+        }
+
+        /* Estilos para botões de navegação no filtro */
+        .nav-link.btn {
+            border: 2px solid #dee2e6;
+            margin-bottom: 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.btn.active {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+        .nav-link.btn:hover {
+            background-color: #f8f9fa;
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        .nav-link.btn.active:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
         }
     </style>
 
@@ -409,32 +620,34 @@
             </div>
         </div>
 
-        <!-- Filtros -->
+        <!-- Filtros e Navegação -->
         <div class="filter-section">
-            <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros de Análise (Apenas Gráficos Abaixo)</h5>
-            <div class="row">
+            <h5 class="filter-title"><i class="fas fa-filter me-2"></i>Filtros de Análise</h5>
+            <div class="row align-items-end">
+                <!-- Botões de Análise (movidos para cá) -->
                 <div class="col-md-2">
-                    <label class="form-label">Tipologia</label>
-                    <select class="form-select" id="filtro-tipologia">
-                        <option value="all">Todas</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Destino</label>
-                    <select class="form-select" id="filtro-destino">
-                        <option value="all">Todos</option>
-                    </select>
+                    <label class="form-label small text-muted">Análise por:</label>
+                    <div class="filter-tab active" data-tipo="tipologia">
+                        <i class="fas fa-truck"></i>Por Tipologia
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Placa</label>
-                    <select class="form-select" id="filtro-placa">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label class="form-label small text-muted">&nbsp;</label>
+                    <div class="filter-tab" data-tipo="destino">
+                        <i class="fas fa-map-marker-alt"></i>Por Destino
+                    </div>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Mês</label>
-                    <select class="form-select" id="filtro-mes">
-                        <option value="">Todos</option>
+                    <label class="form-label small text-muted">&nbsp;</label>
+                    <div class="filter-tab" data-tipo="placa">
+                        <i class="fas fa-id-card"></i>Por Placa
+                    </div>
+                </div>
+                <!-- Filtros mantidos -->
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Mês</label>
+                    <select class="form-select filter-control" id="filtro-mes">
+                        <option value="todos">Todos</option>
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
                         <option value="3">Março</option>
@@ -450,122 +663,58 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Ano</label>
-                    <select class="form-select" id="filtro-ano">
-                        <option value="">Todos</option>
+                    <label class="form-label small text-muted">Ano</label>
+                    <select class="form-select filter-control" id="filtro-ano">
+                        <option value="todos">Todos</option>
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                     </select>
                 </div>
-                <div class="col-md-1">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-filter w-100" onclick="aplicarFiltros()">
-                        <i class="fas fa-search"></i>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">&nbsp;</label>
+                    <button class="btn btn-filter w-100" id="btn-filtrar">
+                        <i class="fas fa-search me-1"></i>Filtrar
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs de Análise -->
-        <ul class="nav nav-pills justify-content-center mb-4" id="analysisTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tipologia-tab" data-bs-toggle="pill" data-bs-target="#tipologia" type="button" role="tab">
-                    <i class="fas fa-truck me-2"></i>Por Tipologia
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="destino-tab" data-bs-toggle="pill" data-bs-target="#destino" type="button" role="tab">
-                    <i class="fas fa-map-marker-alt me-2"></i>Por Destino
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="placa-tab" data-bs-toggle="pill" data-bs-target="#placa" type="button" role="tab">
-                    <i class="fas fa-id-card me-2"></i>Por Placa
-                </button>
-            </li>
-        </ul>
-
         <!-- Conteúdo das Tabs -->
         <div class="tab-content" id="analysisTabContent">
-            <!-- Tab Tipologia -->
+            <!-- Tab Tipologia - Rankings de Rentabilidade -->
             <div class="tab-pane fade show active" id="tipologia" role="tabpanel">
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-chart-bar me-2"></i>
-                                    Margem por Tipologia de Veículo
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="chartTipologia"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-target me-2"></i>
-                                    Metas Sugeridas
-                                </h5>
-                            </div>
-                            <div class="card-body" id="metas-tipologia">
-                                <div class="loading">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                    <p class="mt-2">Carregando metas...</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card mt-3">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Alertas
-                                </h5>
-                            </div>
-                            <div class="card-body" id="alertas-tipologia">
-                                <p class="text-muted">Nenhum alerta no momento</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Destino -->
-            <div class="tab-pane fade" id="destino" role="tabpanel">
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-map me-2"></i>
-                                    Top Destinos por Rentabilidade
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="chartDestinos"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header">
+                    <!-- Top 5 Melhores -->
+                    <div class="col-md-6">
+                        <div class="ranking-card">
+                            <div class="ranking-header">
                                 <h5 class="mb-0">
                                     <i class="fas fa-trophy me-2"></i>
-                                    Ranking de Destinos
+                                    Top 5 Melhores Rentabilidades
                                 </h5>
                             </div>
-                            <div class="card-body" id="ranking-destinos">
-                                <div class="loading">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                    <p class="mt-2">Carregando ranking...</p>
+                            <div class="card-body" id="ranking-melhores">
+                                <div class="loading text-center">
+                                    <div class="spinner-border text-success" role="status"></div>
+                                    <p class="mt-2">Carregando melhores...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top 5 Piores -->
+                    <div class="col-md-6">
+                        <div class="ranking-card">
+                            <div class="ranking-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Top 5 Piores Rentabilidades
+                                </h5>
+                            </div>
+                            <div class="card-body" id="ranking-piores">
+                                <div class="loading text-center">
+                                    <div class="spinner-border text-danger" role="status"></div>
+                                    <p class="mt-2">Carregando piores...</p>
                                 </div>
                             </div>
                         </div>
@@ -573,38 +722,25 @@
                 </div>
             </div>
 
-            <!-- Tab Placa -->
-            <div class="tab-pane fade" id="placa" role="tabpanel">
+            <!-- Tab Destino - Removido por solicitação -->
+            <div class="tab-pane fade" id="destino" role="tabpanel">
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-chart-line me-2"></i>
-                                    Performance por Placa
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="chartPlacas"></canvas>
-                                </div>
-                            </div>
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seção de análise por destino removida para otimizar o layout
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-list-ol me-2"></i>
-                                    Top Placas
-                                </h5>
-                            </div>
-                            <div class="card-body" id="ranking-placas">
-                                <div class="loading">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                    <p class="mt-2">Carregando dados...</p>
-                                </div>
-                            </div>
+                </div>
+            </div>
+
+            <!-- Tab Placa - Removido por solicitação -->
+            <div class="tab-pane fade" id="placa" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seção de análise por placa removida para otimizar o layout
                         </div>
                     </div>
                 </div>
@@ -1350,6 +1486,11 @@
         document.addEventListener('shown.bs.tab', function (event) {
             const target = event.target.getAttribute('data-bs-target');
             
+            // Carregar rankings quando a tab tipologia for mostrada
+            if (target === '#tipologia') {
+                carregarRankings();
+            }
+            
             // Redimensionar gráficos quando a tab for mostrada
             setTimeout(() => {
                 if (target === '#tipologia' && chartTipologia) {
@@ -1360,6 +1501,121 @@
                     chartPlacas.resize();
                 }
             }, 100);
+        });
+
+        // Funções para Rankings por Tipologia
+        async function carregarRankings() {
+            carregarRankingMelhores();
+            carregarRankingPiores();
+        }
+
+        async function carregarRankingMelhores() {
+            try {
+                const mes = document.getElementById('filtro-mes').value;
+                const ano = document.getElementById('filtro-ano').value;
+                const tipoAnalise = document.querySelector('.filter-tab.active')?.dataset?.tipo || 'tipologia';
+                
+                const params = new URLSearchParams();
+                if (mes && mes !== 'todos') params.append('mes', mes);
+                if (ano && ano !== 'todos') params.append('ano', ano);
+                params.append('tipo', tipoAnalise);
+                
+                const response = await fetch(`/api/margem/ranking-melhores?${params}`);
+                const data = await response.json();
+                
+                renderizarRanking(data, 'ranking-melhores', 'top');
+                
+            } catch (error) {
+                console.error('Erro ao carregar ranking melhores:', error);
+                document.getElementById('ranking-melhores').innerHTML = 
+                    '<p class="text-muted text-center">Erro ao carregar dados</p>';
+            }
+        }
+
+        async function carregarRankingPiores() {
+            try {
+                const mes = document.getElementById('filtro-mes').value;
+                const ano = document.getElementById('filtro-ano').value;
+                const tipoAnalise = document.querySelector('.filter-tab.active')?.dataset?.tipo || 'tipologia';
+                
+                const params = new URLSearchParams();
+                if (mes && mes !== 'todos') params.append('mes', mes);
+                if (ano && ano !== 'todos') params.append('ano', ano);
+                params.append('tipo', tipoAnalise);
+                
+                const response = await fetch(`/api/margem/ranking-piores?${params}`);
+                const data = await response.json();
+                
+                renderizarRanking(data, 'ranking-piores', 'bottom');
+                
+            } catch (error) {
+                console.error('Erro ao carregar ranking piores:', error);
+                document.getElementById('ranking-piores').innerHTML = 
+                    '<p class="text-muted text-center">Erro ao carregar dados</p>';
+            }
+        }
+
+        function renderizarRanking(data, containerId, tipo) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            
+            if (!data || !data.length) {
+                html = '<p class="text-muted text-center">Nenhum dado disponível</p>';
+            } else {
+                data.forEach((item, index) => {
+                    const posicao = index + 1;
+                    
+                    html += `
+                        <div class="ranking-item ${tipo}">
+                            <div class="d-flex align-items-center">
+                                <div class="ranking-posicao me-3">#${posicao}</div>
+                                <div>
+                                    <div class="ranking-name">${item.nome || 'N/A'}</div>
+                                </div>
+                            </div>
+                            <div class="ranking-values">
+                                <div class="ranking-percentage">
+                                    ${item.percentual || '0.0%'}
+                                </div>
+                                <small>${item.margem || 'R$ 0,00'}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Event listeners para filtros
+        document.getElementById('btn-filtrar').addEventListener('click', function() {
+            carregarRankings();
+        });
+
+        // Gerenciar botões de navegação no filtro
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listeners para os botões de tab no filtro
+            const tabButtons = document.querySelectorAll('.filter-tab');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover active de todos os botões
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Adicionar active ao botão clicado
+                    this.classList.add('active');
+                    
+                    // Recarregar rankings com novo tipo
+                    carregarRankings();
+                });
+            });
+
+            // Carregar rankings na inicialização
+            setTimeout(() => {
+                carregarRankings();
+            }, 500);
         });
     </script>
 </div>
