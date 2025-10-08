@@ -46,15 +46,15 @@
         .metric-card.info { border-left-color: var(--info-color); }
 
         .metric-card .card-body {
-            padding: 0.25rem; /* reduzido de 0.5rem para 0.25rem */
+            padding: 0.4rem; /* aumentado de 0.25rem para 0.4rem para acomodar as fontes maiores */
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 30px; /* reduzido de 60px para 30px */
+            min-height: 45px; /* aumentado de 30px para 45px */
         }
 
         .metric-value {
-            font-size: 0.75rem; /* reduzido de 1.5rem para 0.75rem */
+            font-size: 1.6rem; /* aumentado de 1.1rem para 1.6rem para melhor destaque */
             font-weight: bold;
             margin: 0;
             line-height: 1.1;
@@ -62,8 +62,8 @@
 
         .metric-label {
             color: #6c757d;
-            font-size: 0.375rem; /* reduzido de 0.75rem para 0.375rem */
-            margin-top: 0.1rem; /* reduzido de 0.2rem para 0.1rem */
+            font-size: 0.8rem; /* aumentado de 0.65rem para 0.8rem para melhor legibilidade */
+            margin-top: 0.1rem;
             font-weight: 500;
         }
 
@@ -234,9 +234,9 @@
         }
     </style>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-1">
         <!-- Header com Resumo Geral -->
-        <div class="row mb-4">
+        <div class="row mb-1">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
@@ -287,48 +287,48 @@
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-dark" id="total-operacoes" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Total Operações</small>
+                                        <div class="metric-value text-dark" id="total-operacoes" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Total Operações</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-primary" id="ticket-medio" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Ticket Médio</small>
+                                        <div class="metric-value text-primary" id="ticket-medio" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Ticket Médio</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-success" id="operacoes-lucro" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Operações Lucro</small>
+                                        <div class="metric-value text-success" id="operacoes-lucro" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Operações Lucro</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-danger" id="operacoes-prejuizo" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Operações Prejuízo</small>
+                                        <div class="metric-value text-danger" id="operacoes-prejuizo" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Operações Prejuízo</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-info" id="melhor-tipologia" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Melhor Tipologia</small>
+                                        <div class="metric-value text-info" id="melhor-tipologia" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Melhor Tipologia</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <div class="kpi-card card">
                                     <div class="card-body text-center">
-                                        <div class="metric-value text-warning" id="pior-tipologia" style="font-size: 1.1rem;">-</div>
-                                        <small class="metric-label" style="font-size: 0.7rem;">Pior Tipologia</small>
+                                        <div class="metric-value text-warning" id="pior-tipologia" style="font-size: 1.3rem;">-</div>
+                                        <small class="metric-label" style="font-size: 0.8rem;">Pior Tipologia</small>
                                     </div>
                                 </div>
                             </div>
