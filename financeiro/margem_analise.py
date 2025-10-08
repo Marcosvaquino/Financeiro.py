@@ -89,13 +89,10 @@ class MargemAnaliseService:
             df['ano'] = df['Data'].dt.year
             df['mes_ano'] = df['Data'].dt.strftime('%Y-%m')
             
-            # Limpeza rigorosa de dados
+            # Limpeza básica de dados (manter consistência com painel_frete.py)
             df = df.dropna(subset=['Data'])
-            df = df[df['frete_receber'] > 10]  # Remove registros com receita muito baixa (< R$ 10)
-            
-            # Filtrar margens extremas (evitar distorções)
-            df = df[df['margem_percentual'] >= -200]  # Remover margens abaixo de -200%
-            df = df[df['margem_percentual'] <= 300]   # Remover margens acima de 300%
+            # REMOVIDO: Filtros que causavam discrepância com o painel principal
+            # Manter todos os dados para consistência entre dashboards
             
             # Salvar no cache
             self._df_cache = df
