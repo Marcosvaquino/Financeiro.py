@@ -46,15 +46,15 @@
         .metric-card.info { border-left-color: var(--info-color); }
 
         .metric-card .card-body {
-            padding: 0.5rem;
+            padding: 0.25rem; /* reduzido de 0.5rem para 0.25rem */
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 60px;
+            min-height: 30px; /* reduzido de 60px para 30px */
         }
 
         .metric-value {
-            font-size: 1.5rem;
+            font-size: 0.75rem; /* reduzido de 1.5rem para 0.75rem */
             font-weight: bold;
             margin: 0;
             line-height: 1.1;
@@ -62,8 +62,8 @@
 
         .metric-label {
             color: #6c757d;
-            font-size: 0.75rem;
-            margin-top: 0.2rem;
+            font-size: 0.375rem; /* reduzido de 0.75rem para 0.375rem */
+            margin-top: 0.1rem; /* reduzido de 0.2rem para 0.1rem */
             font-weight: 500;
         }
 
@@ -247,8 +247,8 @@
                     </div>
                     <div class="card-body">
                         <!-- Cards Principais -->
-                        <div id="resumo-geral" class="row mb-4">
-                            <div class="col-lg-3 col-md-6 mb-3">
+                        <div id="resumo-geral" class="row mb-1">
+                            <div class="col-lg-3 col-md-6 mb-1">
                                 <div class="metric-card card info">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-info" id="receita-total">-</p>
@@ -256,7 +256,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="col-lg-3 col-md-6 mb-1">
                                 <div class="metric-card card warning">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-warning" id="despesa-total">-</p>
@@ -264,7 +264,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="col-lg-3 col-md-6 mb-1">
                                 <div class="metric-card card positive">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-success" id="margem-total">-</p>
@@ -272,7 +272,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="col-lg-3 col-md-6 mb-1">
                                 <div class="metric-card card info">
                                     <div class="card-body text-center">
                                         <p class="metric-value text-primary" id="margem-percentual">-</p>

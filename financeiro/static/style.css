@@ -451,12 +451,13 @@ body {
 .card {
     background: #ffffff; /* cards continuam em branco para destacar conteúdo */
     border-radius: var(--border-radius-large);
-    padding: 30px;
+    padding: 8px; /* reduzido de 15px para 8px (metade novamente) */
     box-shadow: 0 4px 15px rgba(67, 67, 67, 0.1);
     transition: var(--transition);
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(67, 67, 67, 0.1);
+    min-height: 40px; /* altura mínima reduzida para 40px */
 }
 
 /* Importação - drop zone e tabela */
@@ -511,11 +512,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 5px; /* reduzido de 10px para 5px */
 }
 
 .card-title {
-    font-size: 20px;
+    font-size: 12px; /* reduzido de 16px para 12px */
     font-weight: 600;
     color: #1e293b;
 }
@@ -532,29 +533,29 @@ body {
 }
 
 .card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 20px; /* reduzido de 32px para 20px */
+    height: 20px; /* reduzido de 32px para 20px */
+    border-radius: 4px; /* reduzido de 8px para 4px */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 12px; /* reduzido de 18px para 12px */
     background: var(--primary-gradient);
     color: white;
     box-shadow: var(--shadow-light);
 }
 
 .card-value {
-    font-size: 32px;
+    font-size: 16px; /* reduzido de 24px para 16px */
     font-weight: 700;
     color: #1e293b;
-    margin-bottom: 8px;
+    margin-bottom: 2px; /* reduzido de 4px para 2px */
 }
 
 .card-subtitle {
     color: #64748b;
-    font-size: 14px;
-    margin-bottom: 15px;
+    font-size: 10px; /* reduzido de 12px para 10px */
+    margin-bottom: 4px; /* reduzido de 8px para 4px */
 }
 
 .card-progress {
