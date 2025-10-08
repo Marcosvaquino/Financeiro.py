@@ -256,14 +256,14 @@ class PainelFreteService:
                 dados_clientes['Frete Correto'] * 100
             ).fillna(0)
             
-            # Ordenar por rentabilidade e pegar top 10
-            dados_clientes = dados_clientes.sort_values('rentabilidade_pct', ascending=False).head(10)
+            # Ordenar por receita (do menor para o maior) e pegar top 10
+            dados_clientes = dados_clientes.sort_values('Frete Correto', ascending=True).head(10)
             
             return {
                 'clientes': dados_clientes['Cliente_Real'].tolist(),
                 'receita': dados_clientes['Frete Correto'].round(2).tolist(),
                 'despesa': dados_clientes['Despesas Gerais'].round(2).tolist(),
-                'rentabilidade_pct': dados_clientes['rentabilidade_pct'].round(2).tolist()
+                'rentabilidade_pct': dados_clientes['rentabilidade_pct'].round(1).tolist()
             }
         except Exception as e:
             print(f"Erro ao calcular gráfico de clientes: {e}")

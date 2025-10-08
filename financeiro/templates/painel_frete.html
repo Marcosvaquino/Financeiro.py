@@ -165,8 +165,8 @@
             <div class="chart-container-half">
                 <div class="chart-card">
                     <div class="chart-header">
-                        <h3>🎯 Top 10 Clientes</h3>
-                        <p class="chart-subtitle">Receita, despesa e % rentabilidade por cliente</p>
+                        <h3>📊 10 Menores Clientes por Receita</h3>
+                        <p class="chart-subtitle">Receita, despesa e % rentabilidade (menor para maior)</p>
                     </div>
                     <div class="chart-content">
                         <canvas id="graficoClientes"></canvas>
@@ -1403,9 +1403,74 @@ function atualizarGraficos(dados) {
             plugins: {
                 legend: {
                     position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            const rentabilidade = dados.grafico_clientes.rentabilidade_pct[index];
+                            return `Rentabilidade: ${rentabilidade ? rentabilidade.toFixed(1) : '0.0'}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            },
+            // Plugin personalizado para mostrar rentabilidade nas barras
+            onHover: function(event, activeElements) {
+                if (activeElements.length > 0) {
+                    const index = activeElements[0].index;
+                    const rentabilidade = dados.grafico_clientes.rentabilidade_pct[index];
+                    const canvas = event.chart.canvas;
+                    canvas.title = `Rentabilidade: ${rentabilidade ? rentabilidade.toFixed(1) : '0.0'}%`;
+                } else {
+                    event.chart.canvas.title = '';
                 }
             }
-        }
+        },
+        plugins: [{
+            afterDatasetsDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    if (dataset.label === 'Receita') {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            const rentabilidade = dados.grafico_clientes.rentabilidade_pct[index];
+                            if (rentabilidade !== undefined) {
+                                ctx.save();
+                                ctx.fillStyle = '#333';
+                                ctx.font = 'bold 11px Arial';
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = 'middle';
+                                
+                                // Posicionar o texto de rentabilidade ao lado direito da barra de receita
+                                const x = bar.x + 5;
+                                const y = bar.y;
+                                const texto = `${rentabilidade.toFixed(1)}%`;
+                                
+                                // Fundo branco para o texto
+                                const textWidth = ctx.measureText(texto).width;
+                                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                                ctx.fillRect(x - 2, y - 8, textWidth + 4, 16);
+                                
+                                // Texto de rentabilidade
+                                ctx.fillStyle = rentabilidade >= 0 ? '#28a745' : '#dc3545';
+                                ctx.fillText(texto, x, y);
+                                ctx.restore();
+                            }
+                        });
+                    }
+                });
+            }
+        }]
     });
 }
 

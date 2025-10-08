@@ -54,7 +54,7 @@ class MargemAnaliseService:
             # Carregar apenas as colunas necessárias para melhor performance
             colunas_necessarias = [
                 'Data', 'Tipologia', 'Veículo', 'Destino', 'Cliente_Real',
-                'Frete Correto', 'Despesas Gerais'
+                'Frete Correto', 'Despesas Gerais', 'Status_Veiculo'
             ]
             
             df = pd.read_excel(manifesto_path, usecols=colunas_necessarias)
@@ -67,6 +67,7 @@ class MargemAnaliseService:
                 'Tipologia': 'Tipologia',
                 'Veículo': 'Placa',                  # Usar Veículo como Placa
                 'Cliente_Real': 'Cliente_Real',
+                'Status_Veiculo': 'perfil',          # FIXO/SPOT
                 'Data': 'Data'
             }
             
@@ -128,12 +129,15 @@ def api_dados_gerais():
         
         # Aplicar filtros se fornecidos
         tipologia = request.args.get('tipologia')
+        perfil = request.args.get('perfil')
         placa = request.args.get('placa')
         mes = request.args.get('mes', type=int)
         ano = request.args.get('ano', type=int)
         
         if tipologia:
             df = df[df['Tipologia'] == tipologia]
+        if perfil:
+            df = df[df['perfil'] == perfil]
         if placa:
             df = df[df['Placa'] == placa]
         if mes:
@@ -196,6 +200,7 @@ def api_filtros():
             'tipologias': sorted(df['Tipologia'].dropna().unique().tolist()),
             'destinos': sorted(df['DESTINO'].dropna().unique().tolist()),
             'placas': sorted(df['Placa'].dropna().unique().tolist()),
+            'perfis': sorted(df['perfil'].dropna().unique().tolist()),
             'anos': sorted(df['ano'].dropna().unique().tolist()),
             'meses': list(range(1, 13))
         }
@@ -216,11 +221,14 @@ def api_evolucao_anual():
         
         # Aplicar filtros se fornecidos (exceto mês)
         tipologia = request.args.get('tipologia')
+        perfil = request.args.get('perfil')
         placa = request.args.get('placa')
         ano = request.args.get('ano', type=int)
         
         if tipologia:
             df = df[df['Tipologia'] == tipologia]
+        if perfil:
+            df = df[df['perfil'] == perfil]
         if placa:
             df = df[df['Placa'] == placa]
         if ano:
@@ -268,6 +276,7 @@ def api_ranking_melhores():
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
         tipologia_filter = request.args.get('tipologia_filter', '')  # Filtro específico
+        perfil_filter = request.args.get('perfil_filter', '')  # Filtro específico de perfil
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -284,6 +293,10 @@ def api_ranking_melhores():
         # Aplicar filtro específico de tipologia para o Top 5
         if tipologia_filter and tipologia_filter.strip():
             df = df[df['Tipologia'] == tipologia_filter]
+        
+        # Aplicar filtro específico de perfil (FIXO/SPOT) para o Top 5
+        if perfil_filter and perfil_filter.strip():
+            df = df[df['perfil'] == perfil_filter]
         
         if df.empty:
             return jsonify([])
@@ -441,6 +454,7 @@ def api_ranking_piores():
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
         tipologia_filter = request.args.get('tipologia_filter', '')  # Filtro específico
+        perfil_filter = request.args.get('perfil_filter', '')  # Filtro específico de perfil
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -457,6 +471,10 @@ def api_ranking_piores():
         # Aplicar filtro específico de tipologia para o Top 5
         if tipologia_filter and tipologia_filter.strip():
             df = df[df['Tipologia'] == tipologia_filter]
+        
+        # Aplicar filtro específico de perfil (FIXO/SPOT) para o Top 5
+        if perfil_filter and perfil_filter.strip():
+            df = df[df['perfil'] == perfil_filter]
         
         if df.empty:
             return jsonify([])

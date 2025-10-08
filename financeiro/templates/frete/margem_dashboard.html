@@ -656,12 +656,17 @@
                     <div class="card-body py-2">
                         <h6 class="mb-1"><i class="fas fa-sliders-h me-2"></i>Filtros Gerais</h6>
                         <div class="row g-2">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="filtro-geral-tipologia">
                                     <option value="">Todas Tipologias</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="filtro-geral-perfil">
+                                    <option value="">Todos Perfis</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="filtro-geral-placa">
                                     <option value="">Todas Placas</option>
                                 </select>
@@ -723,7 +728,13 @@
         <!-- Filtros e Navegação -->
         <div class="filter-section">
             <div class="row align-items-center">
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Perfil:</label>
+                    <select class="form-select form-select-sm filter-control" id="filtro-perfil-top5">
+                        <option value="">Todos Perfis</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">Análise por:</label>
                     <div class="d-flex gap-2">
                         <input type="radio" class="btn-check" name="tipo-analise" id="tipologia-radio" value="tipologia" checked>
@@ -790,12 +801,6 @@
                                     <i class="fas fa-trophy"></i>
                                 </div>
                                 <h5>Top 5 Melhores Rentabilidades</h5>
-                                <!-- Filtro por Tipologia dentro do Top 5 -->
-                                <div class="mt-2 mb-2">
-                                    <select class="form-select form-select-sm" id="filtro-tipologia-top5" style="max-width: 200px;">
-                                        <option value="">Todas as Tipologias</option>
-                                    </select>
-                                </div>
                             </div>
                             <div class="card-body" id="ranking-melhores">
                                 <div class="loading text-center">
@@ -814,12 +819,6 @@
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <h5>Top 5 Piores Rentabilidades</h5>
-                                <!-- Filtro por Tipologia dentro do Top 5 -->
-                                <div class="mt-2 mb-2">
-                                    <select class="form-select form-select-sm" id="filtro-tipologia-top5-piores" style="max-width: 200px;">
-                                        <option value="">Todas as Tipologias</option>
-                                    </select>
-                                </div>
                             </div>
                             <div class="card-body" id="ranking-piores">
                                 <div class="loading text-center">
@@ -939,6 +938,7 @@
 
             // Auto-filtro para os filtros gerais (cards + gráfico)
             const filtroGeralTipologia = document.getElementById('filtro-geral-tipologia');
+            const filtroGeralPerfil = document.getElementById('filtro-geral-perfil');
             const filtroGeralPlaca = document.getElementById('filtro-geral-placa');
             const filtroGeralMes = document.getElementById('filtro-geral-mes');
             const filtroGeralAno = document.getElementById('filtro-geral-ano');
@@ -946,6 +946,13 @@
             if (filtroGeralTipologia) {
                 filtroGeralTipologia.addEventListener('change', function() {
                     console.log('Mudança na tipologia geral:', this.value);
+                    aplicarFiltrosGerais();
+                });
+            }
+            
+            if (filtroGeralPerfil) {
+                filtroGeralPerfil.addEventListener('change', function() {
+                    console.log('Mudança no perfil geral:', this.value);
                     aplicarFiltrosGerais();
                 });
             }
@@ -971,21 +978,21 @@
                 });
             }
 
-            // Event listeners para filtros específicos do Top 5
-            const filtroTipologiaTop5 = document.getElementById('filtro-tipologia-top5');
-            const filtroTipologiaTop5Piores = document.getElementById('filtro-tipologia-top5-piores');
+            // Event listeners para filtros específicos dos Top 5
+            const filtroPerfilTop5 = document.getElementById('filtro-perfil-top5');
+            const tipoAnalise = document.getElementById('tipo-analise');
             
-            if (filtroTipologiaTop5) {
-                filtroTipologiaTop5.addEventListener('change', function() {
-                    console.log('Mudança no filtro Top 5 melhores:', this.value);
-                    carregarRankingMelhores();
+            if (filtroPerfilTop5) {
+                filtroPerfilTop5.addEventListener('change', function() {
+                    console.log('Mudança no perfil Top 5:', this.value);
+                    carregarRankings();
                 });
             }
             
-            if (filtroTipologiaTop5Piores) {
-                filtroTipologiaTop5Piores.addEventListener('change', function() {
-                    console.log('Mudança no filtro Top 5 piores:', this.value);
-                    carregarRankingPiores();
+            if (tipoAnalise) {
+                tipoAnalise.addEventListener('change', function() {
+                    console.log('Mudança no tipo de análise:', this.value);
+                    carregarRankings();
                 });
             }
 
@@ -1387,11 +1394,11 @@
                 
                 // Filtros gerais (topo da página)
                 const selectTipologia = document.getElementById('filtro-geral-tipologia');
+                const selectPerfil = document.getElementById('filtro-geral-perfil');
                 const selectPlaca = document.getElementById('filtro-geral-placa');
                 
-                // Filtros específicos do Top 5
-                const selectTipologiaTop5 = document.getElementById('filtro-tipologia-top5');
-                const selectTipologiaTop5Piores = document.getElementById('filtro-tipologia-top5-piores');
+                // Filtro específico dos Top 5
+                const selectPerfilTop5 = document.getElementById('filtro-perfil-top5');
                 
                 if (data.tipologias && selectTipologia) {
                     selectTipologia.innerHTML = '<option value="">Todas Tipologias</option>';
@@ -1400,26 +1407,25 @@
                     });
                 }
                 
+                if (data.perfis && selectPerfil) {
+                    selectPerfil.innerHTML = '<option value="">Todos Perfis</option>';
+                    data.perfis.forEach(perfil => {
+                        selectPerfil.innerHTML += `<option value="${perfil}">${perfil}</option>`;
+                    });
+                }
+                
+                if (data.perfis && selectPerfilTop5) {
+                    selectPerfilTop5.innerHTML = '<option value="">Todos Perfis</option>';
+                    data.perfis.forEach(perfil => {
+                        selectPerfilTop5.innerHTML += `<option value="${perfil}">${perfil}</option>`;
+                    });
+                }
+                
                 if (data.placas && selectPlaca) {
                     selectPlaca.innerHTML = '<option value="">Todas Placas</option>';
                     // Limitar a 50 placas para não sobrecarregar
                     data.placas.slice(0, 50).forEach(placa => {
                         selectPlaca.innerHTML += `<option value="${placa}">${placa}</option>`;
-                    });
-                }
-                
-                // Carregar tipologias para os filtros específicos do Top 5
-                if (data.tipologias && selectTipologiaTop5) {
-                    selectTipologiaTop5.innerHTML = '<option value="">Todas as Tipologias</option>';
-                    data.tipologias.forEach(tipologia => {
-                        selectTipologiaTop5.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
-                    });
-                }
-                
-                if (data.tipologias && selectTipologiaTop5Piores) {
-                    selectTipologiaTop5Piores.innerHTML = '<option value="">Todas as Tipologias</option>';
-                    data.tipologias.forEach(tipologia => {
-                        selectTipologiaTop5Piores.innerHTML += `<option value="${tipologia}">${tipologia}</option>`;
                     });
                 }
                 
@@ -1432,6 +1438,7 @@
         function aplicarFiltrosGerais() {
             const filtros = {
                 tipologia: document.getElementById('filtro-geral-tipologia').value,
+                perfil: document.getElementById('filtro-geral-perfil').value,
                 placa: document.getElementById('filtro-geral-placa').value,
                 mes: document.getElementById('filtro-geral-mes').value,
                 ano: document.getElementById('filtro-geral-ano').value
@@ -1447,8 +1454,9 @@
                 }
             });
             
-            // Recarregar dados gerais e gráfico anual
+            // Recarregar apenas dados gerais e gráfico anual
             carregarDadosGeraisFiltrados(filtros);
+            // Os rankings são controlados pelo filtro específico dos Top 5
         }
 
         // Carregar dados gerais com filtros aplicados
@@ -1730,13 +1738,13 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.querySelector('input[name="tipo-analise"]:checked')?.value || 'tipologia';
-                const tipologiaTop5 = document.getElementById('filtro-tipologia-top5')?.value || '';
+                const tipoAnalise = document.getElementById('tipo-analise')?.value || 'tipologia';
+                const perfilTop5 = document.getElementById('filtro-perfil-top5')?.value || '';
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
-                if (tipologiaTop5) params.append('tipologia_filter', tipologiaTop5);
+                if (perfilTop5) params.append('perfil_filter', perfilTop5);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-melhores?${params}`);
@@ -1755,13 +1763,13 @@
             try {
                 const mes = document.getElementById('filtro-mes').value;
                 const ano = document.getElementById('filtro-ano').value;
-                const tipoAnalise = document.querySelector('input[name="tipo-analise"]:checked')?.value || 'tipologia';
-                const tipologiaTop5 = document.getElementById('filtro-tipologia-top5-piores')?.value || '';
+                const tipoAnalise = document.getElementById('tipo-analise')?.value || 'tipologia';
+                const perfilTop5 = document.getElementById('filtro-perfil-top5')?.value || '';
                 
                 const params = new URLSearchParams();
                 if (mes && mes !== 'todos') params.append('mes', mes);
                 if (ano && ano !== 'todos') params.append('ano', ano);
-                if (tipologiaTop5) params.append('tipologia_filter', tipologiaTop5);
+                if (perfilTop5) params.append('perfil_filter', perfilTop5);
                 params.append('tipo', tipoAnalise);
                 
                 const response = await fetch(`/api/margem/ranking-piores?${params}`);
