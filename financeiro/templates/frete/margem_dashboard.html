@@ -691,8 +691,8 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <button class="btn btn-primary btn-sm w-100" onclick="aplicarFiltrosGerais()">
-                                    <i class="fas fa-filter me-1"></i>Filtrar
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-check me-1"></i>Auto-Filtro
                                 </button>
                             </div>
                         </div>
@@ -919,21 +919,55 @@
                 });
             });
 
-            // Auto-filtro para os selects principais
+            // Auto-filtro para os selects principais (rankings)
             const filtroMes = document.getElementById('filtro-mes');
             const filtroAno = document.getElementById('filtro-ano');
             
             if (filtroMes) {
                 filtroMes.addEventListener('change', function() {
-                    console.log('Mudança no mês:', this.value);
+                    console.log('Mudança no mês (rankings):', this.value);
                     carregarRankings();
                 });
             }
             
             if (filtroAno) {
                 filtroAno.addEventListener('change', function() {
-                    console.log('Mudança no ano:', this.value);
+                    console.log('Mudança no ano (rankings):', this.value);
                     carregarRankings();
+                });
+            }
+
+            // Auto-filtro para os filtros gerais (cards + gráfico)
+            const filtroGeralTipologia = document.getElementById('filtro-geral-tipologia');
+            const filtroGeralPlaca = document.getElementById('filtro-geral-placa');
+            const filtroGeralMes = document.getElementById('filtro-geral-mes');
+            const filtroGeralAno = document.getElementById('filtro-geral-ano');
+            
+            if (filtroGeralTipologia) {
+                filtroGeralTipologia.addEventListener('change', function() {
+                    console.log('Mudança na tipologia geral:', this.value);
+                    aplicarFiltrosGerais();
+                });
+            }
+            
+            if (filtroGeralPlaca) {
+                filtroGeralPlaca.addEventListener('change', function() {
+                    console.log('Mudança na placa geral:', this.value);
+                    aplicarFiltrosGerais();
+                });
+            }
+            
+            if (filtroGeralMes) {
+                filtroGeralMes.addEventListener('change', function() {
+                    console.log('Mudança no mês geral:', this.value);
+                    aplicarFiltrosGerais();
+                });
+            }
+            
+            if (filtroGeralAno) {
+                filtroGeralAno.addEventListener('change', function() {
+                    console.log('Mudança no ano geral:', this.value);
+                    aplicarFiltrosGerais();
                 });
             }
 
