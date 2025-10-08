@@ -1678,32 +1678,46 @@
                     let subtitle = '';
                     if (isEmptyRow) {
                         subtitle = 'Sem dados suficientes';
-                    } else if (item.tipologia && item.tipologia !== '-') {
-                        subtitle = `${item.tipologia} • `;
-                        if (percentual > 40) subtitle += 'Excelente rentabilidade';
-                        else if (percentual > 20) subtitle += 'Boa rentabilidade';
-                        else if (percentual > 0) subtitle += 'Rentabilidade positiva';
-                        else subtitle += 'Necessita atenção';
                     } else {
-                        if (percentual > 40) subtitle = 'Excelente rentabilidade';
-                        else if (percentual > 20) subtitle = 'Boa rentabilidade';
-                        else if (percentual > 0) subtitle = 'Rentabilidade positiva';
-                        else subtitle = 'Necessita atenção';
+                        // Extrair tipologia e placa do nome (formato: "TRUCK - Placa ABC1234")
+                        const partesNome = item.nome.split(' - ');
+                        if (partesNome.length >= 2) {
+                            const tipologia = partesNome[0];
+                            const placaInfo = partesNome[1];
+                            
+                            if (percentual > 40) subtitle = `${tipologia} • ${placaInfo} • Excelente rentabilidade`;
+                            else if (percentual > 20) subtitle = `${tipologia} • ${placaInfo} • Boa rentabilidade`;
+                            else if (percentual > 0) subtitle = `${tipologia} • ${placaInfo} • Rentabilidade positiva`;
+                            else subtitle = `${tipologia} • ${placaInfo} • Necessita atenção`;
+                        } else {
+                            // Fallback para formato antigo
+                            if (percentual > 40) subtitle = 'Excelente rentabilidade';
+                            else if (percentual > 20) subtitle = 'Boa rentabilidade';
+                            else if (percentual > 0) subtitle = 'Rentabilidade positiva';
+                            else subtitle = 'Necessita atenção';
+                        }
                     }
                     
-                    // Ícones de medalha para os 3 primeiros
+                    // Ícones de medalha apenas para os melhores (tipo 'top')
                     let medalIcon = '';
-                    if (!isEmptyRow) {
+                    if (!isEmptyRow && tipo === 'top') {
                         if (posicao === 1) medalIcon = '<i class="fas fa-medal text-warning me-2"></i>';
                         else if (posicao === 2) medalIcon = '<i class="fas fa-medal text-secondary me-2"></i>';
                         else if (posicao === 3) medalIcon = '<i class="fas fa-medal text-warning me-2" style="opacity: 0.7;"></i>';
+                    }
+                    
+                    // Para os piores, usar ícones de alerta
+                    if (!isEmptyRow && tipo === 'bottom') {
+                        if (posicao === 1) medalIcon = '<i class="fas fa-exclamation-triangle text-danger me-2"></i>';
+                        else if (posicao === 2) medalIcon = '<i class="fas fa-exclamation-circle text-warning me-2"></i>';
+                        else if (posicao === 3) medalIcon = '<i class="fas fa-info-circle text-info me-2"></i>';
                     }
                     
                     const opacityClass = isEmptyRow ? 'opacity-50' : '';
                     
                     html += `
                         <div class="ranking-item ${tipo} ${opacityClass}" ${isEmptyRow ? 'style="background: #f8f9fa; border-style: dashed;"' : ''}>
-                            <div class="ranking-position">${medalIcon}${posicao}</div>
+                            <div class="ranking-position">${medalIcon}${posicao}º</div>
                             <div class="ranking-info">
                                 <div class="ranking-name" ${isEmptyRow ? 'style="color: #adb5bd; font-style: italic;"' : ''}>${item.nome || 'N/A'}</div>
                                 <div class="ranking-subtitle" ${isEmptyRow ? 'style="color: #adb5bd;"' : ''}>${subtitle}</div>

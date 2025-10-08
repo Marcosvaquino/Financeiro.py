@@ -262,12 +262,12 @@ def api_evolucao_anual():
 
 @margem_bp.route('/api/margem/ranking-melhores')
 def api_ranking_melhores():
-    """API para Top 5 melhores rentabilidades"""
+    """API para Top 5 melhores rentabilidades - Uma placa por tipologia"""
     try:
         tipo_analise = request.args.get('tipo', 'tipologia')
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
-        tipologia_filter = request.args.get('tipologia_filter', '')  # Novo filtro específico
+        tipologia_filter = request.args.get('tipologia_filter', '')  # Filtro específico
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -288,54 +288,77 @@ def api_ranking_melhores():
         if df.empty:
             return jsonify([])
         
-        # Definir agrupamento baseado no tipo de análise
-        if tipo_analise == 'tipologia':
-            grupo_col = 'Tipologia'
-        elif tipo_analise == 'destino':
-            grupo_col = 'DESTINO'
-        elif tipo_analise == 'placa':
-            grupo_col = 'Placa'
-        else:
-            grupo_col = 'Tipologia'
-        
-        # Verificar se a coluna existe
-        if grupo_col not in df.columns:
-            return jsonify([])
-        
-        # Calcular margem por grupo
-        resultado = df.groupby(grupo_col).agg({
+        # Sempre trabalhar com placas para ter detalhes específicos
+        # Calcular margem por placa
+        resultado_placas = df.groupby(['Placa', 'Tipologia']).agg({
             'frete_receber': 'sum',
             'frete_pagar': 'sum'
         }).reset_index()
         
-        resultado['Margem'] = resultado['frete_receber'] - resultado['frete_pagar']
-        resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
+        resultado_placas['Margem'] = resultado_placas['frete_receber'] - resultado_placas['frete_pagar']
+        resultado_placas['Percentual'] = (resultado_placas['Margem'] / resultado_placas['frete_receber'] * 100).round(2)
         
         # Filtrar apenas valores válidos
-        resultado = resultado[resultado['frete_receber'] > 0]
+        resultado_placas = resultado_placas[resultado_placas['frete_receber'] > 0]
         
-        # Garantir exatamente 5 resultados (completar com dados vazios se necessário)
-        if len(resultado) < 5:
-            # Preencher com registros vazios para garantir 5 posições
-            for i in range(len(resultado), 5):
-                nova_linha = {grupo_col: f"-- Posição {i+1} --", 'frete_receber': 0, 'frete_pagar': 0, 'Margem': 0, 'Percentual': 0}
-                resultado = pd.concat([resultado, pd.DataFrame([nova_linha])], ignore_index=True)
+        if resultado_placas.empty:
+            return jsonify([])
         
-        # Top 5 melhores (sempre 5 resultados)
-        top_5 = resultado.nlargest(5, 'Percentual')
+        # Ordenar por percentual (melhor primeiro)
+        resultado_placas = resultado_placas.sort_values('Percentual', ascending=False)
         
-        # Formatar dados
+        # Estratégia: 1 placa por tipologia primeiro, depois completar com as melhores restantes
         ranking = []
-        for _, row in top_5.iterrows():
+        tipologias_usadas = set()
+        
+        # Primeira passada: uma placa por tipologia
+        for _, row in resultado_placas.iterrows():
+            if len(ranking) >= 5:
+                break
+                
+            tipologia = row['Tipologia']
+            if tipologia not in tipologias_usadas:
+                tipologias_usadas.add(tipologia)
+                
+                ranking.append({
+                    'nome': f"{tipologia} - Placa {row['Placa']}",
+                    'margem': f"R$ {row['Margem']:,.2f}",
+                    'percentual': f"{row['Percentual']:.1f}%",
+                    'receita': f"R$ {row['frete_receber']:,.2f}",
+                    'tipologia': tipologia,
+                    'placa': row['Placa']
+                })
+        
+        # Segunda passada: se ainda não temos 5, pegar as próximas melhores (independente da tipologia)
+        if len(ranking) < 5:
+            placas_usadas = {item['placa'] for item in ranking}
+            
+            for _, row in resultado_placas.iterrows():
+                if len(ranking) >= 5:
+                    break
+                    
+                if row['Placa'] not in placas_usadas:
+                    ranking.append({
+                        'nome': f"{row['Tipologia']} - Placa {row['Placa']}",
+                        'margem': f"R$ {row['Margem']:,.2f}",
+                        'percentual': f"{row['Percentual']:.1f}%",
+                        'receita': f"R$ {row['frete_receber']:,.2f}",
+                        'tipologia': row['Tipologia'],
+                        'placa': row['Placa']
+                    })
+        
+        # Garantir exatamente 5 posições
+        while len(ranking) < 5:
             ranking.append({
-                'nome': row[grupo_col],
-                'margem': f"R$ {row['Margem']:,.2f}",
-                'percentual': f"{row['Percentual']:.1f}%",
-                'receita': f"R$ {row['frete_receber']:,.2f}",
-                'tipologia': row.get('Tipologia', '-') if grupo_col != 'Tipologia' else row[grupo_col]
+                'nome': f"-- Posição {len(ranking) + 1} --",
+                'margem': 'R$ 0,00',
+                'percentual': '0.0%',
+                'receita': 'R$ 0,00',
+                'tipologia': '-',
+                'placa': '-'
             })
         
-        return jsonify(ranking)
+        return jsonify(ranking[:5])
         
     except Exception as e:
         print(f"Erro no ranking melhores: {e}")
@@ -343,12 +366,12 @@ def api_ranking_melhores():
 
 @margem_bp.route('/api/margem/ranking-piores')
 def api_ranking_piores():
-    """API para Top 5 piores rentabilidades"""
+    """API para Top 5 piores rentabilidades - Uma placa por tipologia"""
     try:
         tipo_analise = request.args.get('tipo', 'tipologia')
         mes = request.args.get('mes', '')
         ano = request.args.get('ano', '')
-        tipologia_filter = request.args.get('tipologia_filter', '')  # Novo filtro específico
+        tipologia_filter = request.args.get('tipologia_filter', '')  # Filtro específico
         
         df = margem_service.carregar_dados_manifesto()
         
@@ -369,54 +392,77 @@ def api_ranking_piores():
         if df.empty:
             return jsonify([])
         
-        # Definir agrupamento baseado no tipo de análise
-        if tipo_analise == 'tipologia':
-            grupo_col = 'Tipologia'
-        elif tipo_analise == 'destino':
-            grupo_col = 'DESTINO'
-        elif tipo_analise == 'placa':
-            grupo_col = 'Placa'
-        else:
-            grupo_col = 'Tipologia'
-        
-        # Verificar se a coluna existe
-        if grupo_col not in df.columns:
-            return jsonify([])
-        
-        # Calcular margem por grupo
-        resultado = df.groupby(grupo_col).agg({
+        # Sempre trabalhar com placas para ter detalhes específicos
+        # Calcular margem por placa
+        resultado_placas = df.groupby(['Placa', 'Tipologia']).agg({
             'frete_receber': 'sum',
             'frete_pagar': 'sum'
         }).reset_index()
         
-        resultado['Margem'] = resultado['frete_receber'] - resultado['frete_pagar']
-        resultado['Percentual'] = (resultado['Margem'] / resultado['frete_receber'] * 100).round(2)
+        resultado_placas['Margem'] = resultado_placas['frete_receber'] - resultado_placas['frete_pagar']
+        resultado_placas['Percentual'] = (resultado_placas['Margem'] / resultado_placas['frete_receber'] * 100).round(2)
         
         # Filtrar apenas valores válidos
-        resultado = resultado[resultado['frete_receber'] > 0]
+        resultado_placas = resultado_placas[resultado_placas['frete_receber'] > 0]
         
-        # Garantir exatamente 5 resultados (completar com dados vazios se necessário)
-        if len(resultado) < 5:
-            # Preencher com registros vazios para garantir 5 posições
-            for i in range(len(resultado), 5):
-                nova_linha = {grupo_col: f"-- Posição {i+1} --", 'frete_receber': 0, 'frete_pagar': 0, 'Margem': 0, 'Percentual': 0}
-                resultado = pd.concat([resultado, pd.DataFrame([nova_linha])], ignore_index=True)
+        if resultado_placas.empty:
+            return jsonify([])
         
-        # Top 5 piores (sempre 5 resultados)
-        top_5 = resultado.nsmallest(5, 'Percentual')
+        # Ordenar por percentual (pior primeiro)
+        resultado_placas = resultado_placas.sort_values('Percentual', ascending=True)
         
-        # Formatar dados
+        # Estratégia: 1 placa por tipologia primeiro, depois completar com as piores restantes
         ranking = []
-        for _, row in top_5.iterrows():
+        tipologias_usadas = set()
+        
+        # Primeira passada: uma placa por tipologia (a pior de cada tipo)
+        for _, row in resultado_placas.iterrows():
+            if len(ranking) >= 5:
+                break
+                
+            tipologia = row['Tipologia']
+            if tipologia not in tipologias_usadas:
+                tipologias_usadas.add(tipologia)
+                
+                ranking.append({
+                    'nome': f"{tipologia} - Placa {row['Placa']}",
+                    'margem': f"R$ {row['Margem']:,.2f}",
+                    'percentual': f"{row['Percentual']:.1f}%",
+                    'receita': f"R$ {row['frete_receber']:,.2f}",
+                    'tipologia': tipologia,
+                    'placa': row['Placa']
+                })
+        
+        # Segunda passada: se ainda não temos 5, pegar as próximas piores (independente da tipologia)
+        if len(ranking) < 5:
+            placas_usadas = {item['placa'] for item in ranking}
+            
+            for _, row in resultado_placas.iterrows():
+                if len(ranking) >= 5:
+                    break
+                    
+                if row['Placa'] not in placas_usadas:
+                    ranking.append({
+                        'nome': f"{row['Tipologia']} - Placa {row['Placa']}",
+                        'margem': f"R$ {row['Margem']:,.2f}",
+                        'percentual': f"{row['Percentual']:.1f}%",
+                        'receita': f"R$ {row['frete_receber']:,.2f}",
+                        'tipologia': row['Tipologia'],
+                        'placa': row['Placa']
+                    })
+        
+        # Garantir exatamente 5 posições
+        while len(ranking) < 5:
             ranking.append({
-                'nome': row[grupo_col],
-                'margem': f"R$ {row['Margem']:,.2f}",
-                'percentual': f"{row['Percentual']:.1f}%",
-                'receita': f"R$ {row['frete_receber']:,.2f}",
-                'tipologia': row.get('Tipologia', '-') if grupo_col != 'Tipologia' else row[grupo_col]
+                'nome': f"-- Posição {len(ranking) + 1} --",
+                'margem': 'R$ 0,00',
+                'percentual': '0.0%',
+                'receita': 'R$ 0,00',
+                'tipologia': '-',
+                'placa': '-'
             })
         
-        return jsonify(ranking)
+        return jsonify(ranking[:5])
         
     except Exception as e:
         print(f"Erro no ranking piores: {e}")
