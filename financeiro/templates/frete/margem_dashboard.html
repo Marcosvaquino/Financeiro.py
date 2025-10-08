@@ -1703,7 +1703,38 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'margemLabels',
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        const datasets = chart.data.datasets;
+                        
+                        // Encontrar o dataset da margem (primeiro dataset)
+                        const margemDataset = datasets[0];
+                        if (!margemDataset || margemDataset.label !== 'Margem %') return;
+                        
+                        const meta = chart.getDatasetMeta(0);
+                        
+                        ctx.save();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 11px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        meta.data.forEach((point, index) => {
+                            const value = margemDataset.data[index];
+                            if (value !== null && value !== undefined) {
+                                const label = value.toFixed(2) + '%';
+                                
+                                // Posicionar o texto acima do ponto
+                                ctx.fillText(label, point.x, point.y - 8);
+                            }
+                        });
+                        
+                        ctx.restore();
+                    }
+                }]
             });
         }
 

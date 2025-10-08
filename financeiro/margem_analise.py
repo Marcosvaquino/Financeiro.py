@@ -237,10 +237,16 @@ def api_evolucao_anual():
         # Agrupar por mês/ano
         df_mensal = df.groupby(['ano', 'mes']).agg({
             'frete_receber': 'sum',
-            'frete_pagar': 'sum',
-            'margem_liquida': 'sum',
-            'margem_percentual': 'mean'
+            'frete_pagar': 'sum'
         }).round(2)
+        
+        # Calcular margem percentual correta (total mensal)
+        df_mensal['margem_liquida'] = df_mensal['frete_receber'] - df_mensal['frete_pagar']
+        df_mensal['margem_percentual'] = np.where(
+            df_mensal['frete_receber'] > 0,
+            (df_mensal['margem_liquida'] / df_mensal['frete_receber']) * 100,
+            0
+        )
         
         # Preparar dados para o gráfico
         meses = []
