@@ -19,6 +19,75 @@ def get_db_path():
     """Retorna o caminho para o banco de dados"""
     return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'financeiro.db')
 
+def get_veiculo_info(placa):
+    """Busca informações completas do veículo no banco de dados local"""
+    try:
+        conn = sqlite3.connect(get_db_path())
+        cursor = conn.cursor()
+        
+        # Buscar tipologia e perfil (status) da placa na tabela veiculos_suporte
+        cursor.execute('''
+            SELECT tipologia, status FROM veiculos_suporte 
+            WHERE placa = ? AND ativo = 1
+        ''', (placa,))
+        
+        resultado = cursor.fetchone()
+        conn.close()
+        
+        if resultado:
+            return {
+                'tipologia': resultado[0],
+                'perfil': resultado[1]
+            }
+        else:
+            return {
+                'tipologia': None,
+                'perfil': None
+            }
+            
+    except Exception as e:
+        print(f"❌ Erro ao buscar informações da placa {placa}: {e}")
+        return {
+            'tipologia': None,
+            'perfil': None
+        }
+
+def enrich_data_with_tipologia(data):
+    """Enriquece os dados da planilha com tipologia e perfil do banco local"""
+    encontrados = 0
+    total_processados = 0
+    
+    for item in data:
+        placa = item.get('Placa', '').strip()
+        total_processados += 1
+        
+        if placa and placa != 'N/A' and placa != '' and placa != 'None':
+            # Buscar informações completas do veículo
+            veiculo_info = get_veiculo_info(placa)
+            
+            # Debug para primeira placa
+            if total_processados == 1:
+                print(f"🔍 DEBUG: Primeira placa '{placa}' -> Info: {veiculo_info}")
+            
+            # Adicionar tipologia
+            if veiculo_info['tipologia']:
+                item['Tipologia'] = veiculo_info['tipologia']
+                encontrados += 1
+            else:
+                item['Tipologia'] = 'Não cadastrado'
+            
+            # Adicionar perfil
+            if veiculo_info['perfil']:
+                item['Perfil'] = veiculo_info['perfil']
+            else:
+                item['Perfil'] = 'Não cadastrado'
+        else:
+            item['Tipologia'] = 'Sem placa'
+            item['Perfil'] = 'Sem placa'
+    
+    print(f"✅ Enriquecimento concluído: {encontrados}/{total_processados} placas encontradas no banco")
+    return data
+
 def init_monitoring_db():
     """Inicializa a tabela de monitoramento se não existir"""
     conn = sqlite3.connect(get_db_path())
@@ -39,21 +108,19 @@ def init_monitoring_db():
 def fetch_google_sheets_data():
     """Busca dados do Google Sheets"""
     try:
+        import csv
+        from io import StringIO
+        
         response = requests.get(GOOGLE_SHEET_URL, timeout=30)
         response.raise_for_status()
         
-        # Processa os dados CSV
-        lines = response.text.strip().split('\n')
-        if len(lines) < 2:
-            return None
-            
-        headers = lines[0].split(',')
-        data = []
+        # Usar csv.DictReader para parsing correto
+        csv_data = StringIO(response.text)
+        reader = csv.DictReader(csv_data)
         
-        for line in lines[1:]:
-            row = line.split(',')
-            if len(row) >= len(headers):
-                data.append(dict(zip(headers, row)))
+        data = []
+        for row in reader:
+            data.append(row)
         
         return data
         
@@ -88,6 +155,10 @@ def monitoring_worker():
             data = fetch_google_sheets_data()
             
             if data:
+                # Enriquecer dados com tipologia do banco local
+                print("🔄 Enriquecendo dados com tipologia do banco de veículos...")
+                data = enrich_data_with_tipologia(data)
+                
                 monitoring_data = {
                     'timestamp': datetime.now().isoformat(),
                     'data': data,

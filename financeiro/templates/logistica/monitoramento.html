@@ -303,7 +303,7 @@
         <!-- Filtros -->
         <div class="filter-section">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <label class="form-label text-white">
                         <i class="fas fa-layer-group"></i> Tipologia
                     </label>
@@ -311,43 +311,12 @@
                         <option value="">Todas</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <label class="form-label text-white">
                         <i class="fas fa-user-tag"></i> Perfil
                     </label>
                     <select class="form-select" id="filtroPerfil">
                         <option value="">Todos</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-white">
-                        <i class="fas fa-calendar-alt"></i> Mês
-                    </label>
-                    <select class="form-select" id="filtroMes">
-                        <option value="">Todos</option>
-                        <option value="01">Janeiro</option>
-                        <option value="02">Fevereiro</option>
-                        <option value="03">Março</option>
-                        <option value="04">Abril</option>
-                        <option value="05">Maio</option>
-                        <option value="06">Junho</option>
-                        <option value="07">Julho</option>
-                        <option value="08">Agosto</option>
-                        <option value="09">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-white">
-                        <i class="fas fa-calendar"></i> Ano
-                    </label>
-                    <select class="form-select" id="filtroAno">
-                        <option value="">Todos</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
                     </select>
                 </div>
             </div>
@@ -577,20 +546,20 @@
 
         // Função para inicializar filtros
         function inicializarFiltros() {
-            // Tipologia
-            const tipologias = [...new Set(dados.map(item => item['Tipo veículo'] || 'Não informado').filter(t => t))];
+            // Tipologia (agora vem do banco de veículos)
+            const tipologias = [...new Set(dados.map(item => item['Tipologia'] || 'Não informado').filter(t => t))];
             const selectTipologia = document.getElementById('filtroTipologia');
             selectTipologia.innerHTML = '<option value="">Todas</option>' + 
                 tipologias.map(t => `<option value="${t}">${t}</option>`).join('');
 
-            // Perfil (usando Embarcador)
-            const perfis = [...new Set(dados.map(item => item['Embarcador'] || 'Não informado').filter(p => p))];
+            // Perfil (agora vem do banco de veículos)
+            const perfis = [...new Set(dados.map(item => item['Perfil'] || 'Não informado').filter(p => p))];
             const selectPerfil = document.getElementById('filtroPerfil');
             selectPerfil.innerHTML = '<option value="">Todos</option>' + 
                 perfis.map(p => `<option value="${p}">${p}</option>`).join('');
 
             // Eventos de filtro
-            ['filtroTipologia', 'filtroPerfil', 'filtroMes', 'filtroAno'].forEach(id => {
+            ['filtroTipologia', 'filtroPerfil'].forEach(id => {
                 document.getElementById(id).addEventListener('change', aplicarFiltros);
             });
         }
@@ -599,18 +568,10 @@
         function aplicarFiltros() {
             const tipologia = document.getElementById('filtroTipologia').value;
             const perfil = document.getElementById('filtroPerfil').value;
-            const mes = document.getElementById('filtroMes').value;
-            const ano = document.getElementById('filtroAno').value;
 
             dadosFiltrados = dados.filter(item => {
-                if (tipologia && item['Tipo veículo'] !== tipologia) return false;
-                if (perfil && item['Embarcador'] !== perfil) return false;
-                
-                if (mes || ano) {
-                    const dataStr = item['Atualizado em: 2025-10-09 08:56:36\\r'] || '';
-                    if (mes && !dataStr.includes(`-${mes}-`)) return false;
-                    if (ano && !dataStr.includes(`${ano}-`)) return false;
-                }
+                if (tipologia && item['Tipologia'] !== tipologia) return false;
+                if (perfil && item['Perfil'] !== perfil) return false;
                 
                 return true;
             });
