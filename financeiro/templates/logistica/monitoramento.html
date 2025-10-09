@@ -47,22 +47,27 @@
         .metric-card {
             text-align: center;
             cursor: pointer;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px;
         }
 
         .metric-icon {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
         }
 
         .metric-value {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .metric-label {
             color: #6c757d;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -77,6 +82,79 @@
             height: 400px;
             border-radius: 15px;
             overflow: hidden;
+        }
+
+        .custom-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .custom-pin-simple {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .pin-simple {
+            animation: pinBounce 1.5s ease-in-out infinite;
+        }
+
+        .pin-simple:hover {
+            animation-play-state: paused;
+            transform: scale(1.1);
+        }
+
+        @keyframes pinBounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .custom-pin-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .pin-marker {
+            animation: gentleBounce 3s ease-in-out infinite;
+        }
+
+        .pin-head {
+            transition: all 0.3s ease;
+        }
+
+        .pin-marker:hover .pin-head {
+            transform: rotate(-45deg) scale(1.15);
+            filter: brightness(1.2);
+        }
+
+        @keyframes gentleBounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-5px);
+            }
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .filter-section {
@@ -590,8 +668,11 @@
             
             mapa = L.map('mapa').setView([-23.5505, -46.6333], 8); // São Paulo como centro
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            // Usar mapa limpo e minimalista
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
             }).addTo(mapa);
         }
 
@@ -603,71 +684,215 @@
 
             // Limpar marcadores existentes
             mapa.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
+                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
                     mapa.removeLayer(layer);
                 }
             });
 
-            // Agrupar por cidade com coordenadas válidas
-            const cidadeCoords = {};
+            // Agrupar por cidade apenas pelo nome
+            const cidadesOperacao = {};
+            console.log('🏙️ Processando cidades dos dados:', dadosFiltrados.length, 'registros');
+            
             dadosFiltrados.forEach(item => {
                 const cidade = item['Cidade'];
-                let lat = item['Latitude ReferÃªncia'] || item['Latitude Referência'];
-                let lng = item['Longitude ReferÃªncia'] || item['Longitude Referência'];
                 
-                // Limpar e converter coordenadas
-                if (lat && lng) {
-                    lat = parseFloat(lat.toString().replace(/["\s]/g, '').replace(',', '.'));
-                    lng = parseFloat(lng.toString().replace(/["\s]/g, '').replace(',', '.'));
+                if (cidade && cidade.trim() !== '' && cidade !== 'N/A') {
+                    const cidadeLimpa = cidade.trim().toUpperCase();
                     
-                    if (cidade && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-                        if (!cidadeCoords[cidade]) {
-                            cidadeCoords[cidade] = { lat, lng, count: 0, entregas: [] };
-                        }
-                        cidadeCoords[cidade].count++;
-                        cidadeCoords[cidade].entregas.push({
-                            cliente: item['Cliente'] || 'N/A',
-                            status: item['Status viagem'] || 'N/A',
-                            placa: item['Placa'] || 'N/A'
-                        });
+                    if (!cidadesOperacao[cidadeLimpa]) {
+                        cidadesOperacao[cidadeLimpa] = {
+                            nome: cidade.trim(),
+                            count: 0,
+                            entregas: [],
+                            tipologias: {},
+                            status: {},
+                            placas: new Set()
+                        };
+                    }
+                    
+                    cidadesOperacao[cidadeLimpa].count++;
+                    cidadesOperacao[cidadeLimpa].entregas.push({
+                        cliente: item['Cliente'] || item['Empresa'] || 'N/A',
+                        status: item['Status viagem'] || item['Status NF'] || 'N/A',
+                        placa: item['Placa'] || 'N/A',
+                        tipologia: item['Tipologia'] || 'N/A'
+                    });
+                    
+                    // Contar tipologias
+                    const tipologia = item['Tipologia'] || 'Outros';
+                    cidadesOperacao[cidadeLimpa].tipologias[tipologia] = (cidadesOperacao[cidadeLimpa].tipologias[tipologia] || 0) + 1;
+                    
+                    // Contar status
+                    const status = item['Status viagem'] || item['Status NF'] || 'N/A';
+                    cidadesOperacao[cidadeLimpa].status[status] = (cidadesOperacao[cidadeLimpa].status[status] || 0) + 1;
+                    
+                    // Coletar placas únicas
+                    if (item['Placa'] && item['Placa'] !== 'N/A') {
+                        cidadesOperacao[cidadeLimpa].placas.add(item['Placa']);
                     }
                 }
             });
 
-            console.log('Cidades encontradas:', Object.keys(cidadeCoords).length);
+            console.log('🎯 Cidades encontradas:', Object.keys(cidadesOperacao).length);
+            console.log('📋 Lista de cidades:', Object.keys(cidadesOperacao));
 
-            // Adicionar marcadores para cada cidade
-            Object.entries(cidadeCoords).forEach(([cidade, data]) => {
-                const marker = L.marker([data.lat, data.lng]).addTo(mapa);
+            // Geocoding das cidades brasileiras (coordenadas aproximadas)
+            const coordenadasCidades = {
+                'SÃO PAULO': [-23.5505, -46.6333],
+                'TAUBATÉ': [-23.0205, -45.5555],
+                'RIO DE JANEIRO': [-22.9068, -43.1729],
+                'BELO HORIZONTE': [-19.9167, -43.9345],
+                'BRASÍLIA': [-15.7942, -47.8822],
+                'SALVADOR': [-12.9714, -38.5014],
+                'FORTALEZA': [-3.7319, -38.5267],
+                'RECIFE': [-8.0476, -34.8770],
+                'PORTO ALEGRE': [-30.0346, -51.2177],
+                'CURITIBA': [-25.4244, -49.2654],
+                'CAMPINAS': [-22.9056, -47.0608],
+                'SANTOS': [-23.9618, -46.3322],
+                'SÃO JOSÉ DOS CAMPOS': [-23.2237, -45.9009],
+                'SOROCABA': [-23.5015, -47.4526],
+                'RIBEIRÃO PRETO': [-21.1775, -47.8208],
+                'SÃO BERNARDO DO CAMPO': [-23.6914, -46.5646],
+                'GUARULHOS': [-23.4538, -46.5333],
+                'OSASCO': [-23.5329, -46.7918],
+                'SÃO CAETANO DO SUL': [-23.6186, -46.5553],
+                'DIADEMA': [-23.6861, -46.6208],
+                'MAUÁ': [-23.6700, -46.4611],
+                'SUZANO': [-23.5426, -46.3116],
+                'JACAREÍ': [-23.3056, -45.9658],
+                'CAÇAPAVA': [-23.1058, -45.7058],
+                'SÃO SEBASTIÃO': [-23.8129, -45.4044],
+                'CARAGUATATUBA': [-23.6204, -45.4130],
+                'UBATUBA': [-23.4336, -45.0838],
+                'GUARATINGUETÁ': [-22.8161, -45.1931],
+                'APARECIDA': [-22.8458, -45.2306],
+                'LORENA': [-22.7309, -45.1173],
+                'CACHOEIRA PAULISTA': [-22.6658, -45.0058],
+                'CRUZEIRO': [-22.5761, -44.9633],
+                'QUELUZ': [-22.5286, -44.7758],
+                'LAVRINHAS': [-22.5658, -44.9058],
+                'SÃO LUIZ DO PARAITINGA': [-23.2206, -45.3081]
+            };
+
+            // Marcar cidades no mapa
+            let cidadesMarcadas = 0;
+            Object.entries(cidadesOperacao).forEach(([cidadeKey, data]) => {
+                const coordenadas = coordenadasCidades[cidadeKey];
                 
-                // Criar popup com informações detalhadas
-                const popupContent = `
-                    <div style="max-width: 250px;">
-                        <h6><strong>${cidade}</strong></h6>
-                        <p><strong>Total de entregas:</strong> ${data.count}</p>
-                        <p><strong>Últimas entregas:</strong></p>
-                        <ul style="font-size: 12px; margin: 0; padding-left: 15px;">
-                            ${data.entregas.slice(0, 3).map(e => 
-                                `<li>${e.cliente.substring(0, 25)} - ${e.status}</li>`
-                            ).join('')}
-                            ${data.entregas.length > 3 ? `<li>... e mais ${data.entregas.length - 3}</li>` : ''}
-                        </ul>
-                    </div>
-                `;
-                
-                marker.bindPopup(popupContent);
+                if (coordenadas) {
+                    const [lat, lng] = coordenadas;
+                    
+                    // Definir cor baseada na quantidade de entregas  
+                    let color = '#007BFF';  // Azul padrão
+                    
+                    if (data.count >= 50) color = '#DC3545';         // Vermelho
+                    else if (data.count >= 20) color = '#FD7E14';    // Laranja  
+                    else if (data.count >= 10) color = '#28A745';    // Verde
+                    else color = '#007BFF';                           // Azul
+
+                    // Criar ícone de pin simples sem números
+                    const customIcon = L.divIcon({
+                        className: 'custom-pin-simple',
+                        html: `
+                            <div class="pin-simple" style="
+                                position: relative;
+                                width: 24px;
+                                height: 30px;
+                            ">
+                                <div class="pin-head" style="
+                                    background: ${color};
+                                    border: 2px solid white;
+                                    border-radius: 50% 50% 50% 0;
+                                    width: 20px;
+                                    height: 20px;
+                                    transform: rotate(-45deg);
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                                    position: absolute;
+                                    top: 2px;
+                                    left: 2px;
+                                ">
+                                </div>
+                            </div>
+                        `,
+                        iconSize: [24, 30],
+                        iconAnchor: [12, 30]
+                    });
+
+                    const marker = L.marker([lat, lng], { icon: customIcon }).addTo(mapa);
+                    
+                    // Adicionar contorno pontilhado da área da cidade
+                    const raioArea = Math.max(500, data.count * 50); // Raio baseado no volume
+                    const circle = L.circle([lat, lng], {
+                        radius: raioArea,
+                        color: color,
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: color,
+                        fillOpacity: 0.1,
+                        dashArray: '5, 10' // Linha pontilhada
+                    }).addTo(mapa);
+                    
+                    // Criar popup com informações detalhadas
+                    const topTipologias = Object.entries(data.tipologias)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 3);
+                        
+                    const topStatus = Object.entries(data.status)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 3);
+
+                    const popupContent = `
+                        <div style="max-width: 300px; font-family: Arial, sans-serif;">
+                            <h6 style="margin: 0 0 10px 0; color: ${color}; font-size: 16px;">
+                                <strong>📍 ${data.nome}</strong>
+                            </h6>
+                            
+                            <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                                <p style="margin: 0; font-size: 14px;"><strong>📦 Total:</strong> ${data.count} entregas</p>
+                                <p style="margin: 0; font-size: 14px;"><strong>🚛 Placas ativas:</strong> ${data.placas.size}</p>
+                            </div>
+                            
+                            ${topTipologias.length > 0 ? `
+                            <p style="margin: 5px 0 3px 0; font-size: 13px; font-weight: bold;">🏷️ Principais tipologias:</p>
+                            <ul style="font-size: 12px; margin: 0 0 10px 0; padding-left: 18px;">
+                                ${topTipologias.map(([tip, count]) => 
+                                    `<li><strong>${tip}:</strong> ${count} ${count === 1 ? 'entrega' : 'entregas'}</li>`
+                                ).join('')}
+                            </ul>
+                            ` : ''}
+                            
+                            <p style="margin: 5px 0 3px 0; font-size: 13px; font-weight: bold;">� Status das entregas:</p>
+                            <ul style="font-size: 12px; margin: 0 0 10px 0; padding-left: 18px;">
+                                ${topStatus.map(([status, count]) => 
+                                    `<li><strong>${status}:</strong> ${count}</li>`
+                                ).join('')}
+                            </ul>
+                            
+                            <p style="margin: 5px 0 3px 0; font-size: 13px; font-weight: bold;">🚛 Últimas placas:</p>
+                            <ul style="font-size: 11px; margin: 0; padding-left: 18px;">
+                                ${data.entregas.slice(-4).map(e => 
+                                    `<li><strong>${e.placa}</strong> - ${e.cliente.substring(0, 25)}${e.cliente.length > 25 ? '...' : ''}</li>`
+                                ).join('')}
+                                ${data.entregas.length > 4 ? `<li style="font-style: italic;">... e mais ${data.entregas.length - 4} entregas</li>` : ''}
+                            </ul>
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent);
+                    cidadesMarcadas++;
+                } else {
+                    console.log('❌ Coordenadas não encontradas para:', data.nome);
+                }
             });
 
-            // Ajustar view se houver marcadores
-            if (Object.keys(cidadeCoords).length > 0) {
-                const markers = Object.values(cidadeCoords).map(data => 
-                    L.marker([data.lat, data.lng])
-                );
-                const group = new L.featureGroup(markers);
-                mapa.fitBounds(group.getBounds().pad(0.1));
+            // Ajustar view para mostrar todas as cidades
+            if (cidadesMarcadas > 0) {
+                console.log('✅ Marcadas', cidadesMarcadas, 'cidades no mapa');
+                // Foco na região de São Paulo/Vale do Paraíba onde você opera mais
+                mapa.setView([-23.2, -45.5], 8);
             } else {
-                console.log('Nenhuma coordenada válida encontrada');
-                // Manter foco no Brasil se não houver dados
+                console.log('⚠️ Nenhuma cidade foi marcada no mapa');
                 mapa.setView([-15.7942, -47.8822], 5);
             }
         }
