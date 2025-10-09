@@ -1,22 +1,20 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Logístico</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
+{% extends "base.html" %}
+
+{% block title %}Dashboard Logístico{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
         body {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-top: 20px;
         }
 
         .main-container {
-            padding: 0 20px 20px;
+            padding: 20px;
             min-height: 100vh;
         }
 
@@ -274,8 +272,7 @@
             background-color: rgba(0, 0, 0, 0.02);
         }
     </style>
-</head>
-<body>
+
     <div class="main-container">
         <!-- Header -->
         <div class="dashboard-header">
@@ -422,6 +419,7 @@
                             <i class="fas fa-trophy text-warning"></i> 
                             Top 5 Placas - Melhores
                         </h5>
+                      
                     </div>
                     <div class="card-body" id="rankingMelhores">
                         <div class="loading">
@@ -1084,9 +1082,9 @@
                     percentual: stats.total > 0 ? (stats.entregues / stats.total * 100) : 0
                 }));
 
-            // Melhores (maior percentual de sucesso) - EXCLUIR placas com 0%
+            // Melhores (maior percentual de sucesso) - EXCLUIR placas com 0% e 100%
             const melhores = placasComPercentual
-                .filter(placa => placa.percentual > 0) // Só mostrar placas com percentual > 0
+                .filter(placa => placa.percentual > 0 && placa.percentual < 100) // Excluir placas com 0% e 100%
                 .sort((a, b) => b.percentual - a.percentual || b.total - a.total)
                 .slice(0, 5);
 
@@ -1338,5 +1336,4 @@
             setInterval(buscarDados, 120000);
         });
     </script>
-</body>
-</html>
+{% endblock %}
