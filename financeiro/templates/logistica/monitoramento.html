@@ -3,67 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento Logístico</title>
+    <title>Dashboard Logístico</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 20px;
         }
 
         .main-container {
-            padding: 20px;
+            padding: 0 20px 20px;
             min-height: 100vh;
         }
 
         .dashboard-header {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
         }
 
         .card {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+            border-radius: 15px;
             border: none;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
         }
 
         .metric-card {
             text-align: center;
-            transition: all 0.3s ease;
             cursor: pointer;
         }
 
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
-        }
-
         .metric-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
         }
 
         .metric-value {
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .metric-label {
             color: #6c757d;
-            font-size: 1rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            padding: 20px;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .ranking-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .ranking-position {
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .text-gold { color: #ffd700; }
+        .text-silver { color: #c0c0c0; }
+        .text-bronze { color: #cd7f32; }
 
         .status-indicator {
             width: 12px;
@@ -88,6 +130,7 @@
             font-size: 0.9rem;
             color: #666;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
         }
 
         .loading {
@@ -98,13 +141,35 @@
         }
 
         .spinner-border {
-            color: #667eea;
+            color: #2a5298;
         }
 
-        .chart-container {
-            position: relative;
-            height: 400px;
-            padding: 20px;
+        .progress-custom {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar-custom {
+            border-radius: 10px;
+        }
+
+        .text-primary { color: #2a5298 !important; }
+        .text-success { color: #28a745 !important; }
+        .text-warning { color: #ffc107 !important; }
+        .text-info { color: #17a2b8 !important; }
+        .text-danger { color: #dc3545 !important; }
+
+        .form-select, .form-control {
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
         }
 
         .table-responsive {
@@ -112,17 +177,13 @@
             overflow: hidden;
         }
 
-        .table {
-            margin-bottom: 0;
-        }
-
         .table th {
-            background-color: #f8f9fa;
+            background-color: #2a5298;
+            color: white;
             border: none;
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.85rem;
-            letter-spacing: 0.5px;
         }
 
         .table td {
@@ -134,12 +195,6 @@
         .table tbody tr:nth-child(even) {
             background-color: rgba(0, 0, 0, 0.02);
         }
-
-        .text-primary { color: #667eea !important; }
-        .text-success { color: #28a745 !important; }
-        .text-warning { color: #ffc107 !important; }
-        .text-info { color: #17a2b8 !important; }
-        .text-danger { color: #dc3545 !important; }
     </style>
 </head>
 <body>
@@ -149,10 +204,10 @@
             <div class="row align-items-center">
                 <div class="col">
                     <h1 class="mb-0">
-                        <i class="fas fa-truck text-primary"></i>
-                        Monitoramento Logístico
+                        <i class="fas fa-map-marked-alt text-primary"></i>
+                        Dashboard Logístico
                     </h1>
-                    <p class="mb-0 text-muted">Dashboard em tempo real - Atualização automática a cada 2 minutos</p>
+                    <p class="mb-0 text-muted">Monitoramento completo de operações - Atualização automática</p>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" onclick="atualizarDados()">
@@ -167,20 +222,73 @@
             <i class="fas fa-clock"></i> Carregando...
         </div>
 
-        <!-- Métricas principais -->
+        <!-- Filtros -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label text-white">
+                        <i class="fas fa-layer-group"></i> Tipologia
+                    </label>
+                    <select class="form-select" id="filtroTipologia">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">
+                        <i class="fas fa-user-tag"></i> Perfil
+                    </label>
+                    <select class="form-select" id="filtroPerfil">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">
+                        <i class="fas fa-calendar-alt"></i> Mês
+                    </label>
+                    <select class="form-select" id="filtroMes">
+                        <option value="">Todos</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-white">
+                        <i class="fas fa-calendar"></i> Ano
+                    </label>
+                    <select class="form-select" id="filtroAno">
+                        <option value="">Todos</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Resumo -->
         <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                 <div class="card metric-card">
                     <div class="card-body">
                         <div class="metric-icon text-primary">
-                            <i class="fas fa-boxes"></i>
+                            <i class="fas fa-truck"></i>
                         </div>
-                        <div class="metric-value text-primary" id="totalRegistros">0</div>
-                        <div class="metric-label">Total de Entregas</div>
+                        <div class="metric-value text-primary" id="totalEntregas">0</div>
+                        <div class="metric-label">Total Entregas</div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                 <div class="card metric-card">
                     <div class="card-body">
                         <div class="metric-icon text-success">
@@ -191,18 +299,40 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                 <div class="card metric-card">
                     <div class="card-body">
                         <div class="metric-icon text-warning">
                             <i class="fas fa-clock"></i>
                         </div>
-                        <div class="metric-value text-warning" id="totalEntrega">0</div>
-                        <div class="metric-label">Em Entrega</div>
+                        <div class="metric-value text-warning" id="totalTransito">0</div>
+                        <div class="metric-label">Em Trânsito</div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-info">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <div class="metric-value text-info" id="totalCidades">0</div>
+                        <div class="metric-label">Cidades</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-secondary">
+                            <i class="fas fa-truck-loading"></i>
+                        </div>
+                        <div class="metric-value text-secondary" id="totalVeiculos">0</div>
+                        <div class="metric-label">Veículos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
                 <div class="card metric-card">
                     <div class="card-body">
                         <div class="metric-icon text-danger">
@@ -215,12 +345,77 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
+        <!-- Mapa e Rankings -->
         <div class="row mb-4">
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-chart-pie text-primary"></i> Status das Entregas</h5>
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marked-alt text-primary"></i> 
+                            Mapa de Operações
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="mapa" class="map-container"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0" style="font-size: 0.9rem;">
+                            <i class="fas fa-trophy text-warning"></i> 
+                            Top 5 Placas - Melhores
+                        </h5>
+                    </div>
+                    <div class="card-body" id="rankingMelhores" style="max-height: 350px; overflow-y: auto;">
+                        <div class="loading">
+                            <div class="spinner-border" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0" style="font-size: 0.9rem;">
+                            <i class="fas fa-exclamation-circle text-danger"></i> 
+                            Top 5 Placas - Atenção
+                        </h5>
+                    </div>
+                    <div class="card-body" id="rankingPiores" style="max-height: 350px; overflow-y: auto;">
+                        <div class="loading">
+                            <div class="spinner-border" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-weight text-primary"></i> 
+                            Peso por Embarcador - Realizado vs Entregue
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="pesoEmbarcadorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie text-primary"></i> 
+                            Status das Entregas
+                        </h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -229,24 +424,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar text-primary"></i> Entregas por Cidade</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="cidadeChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Tabela de dados -->
+        <!-- Tabela Detalhada -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-table text-primary"></i> Últimas Atualizações</h5>
+                <h5 class="mb-0">
+                    <i class="fas fa-table text-primary"></i> 
+                    Detalhamento de Entregas
+                </h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -257,13 +443,14 @@
                                 <th>Cidade</th>
                                 <th>Cliente</th>
                                 <th>Placa</th>
-                                <th>Transportadora</th>
+                                <th>Embarcador</th>
+                                <th>Peso (kg)</th>
                                 <th>Última Atualização</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaDados">
                             <tr>
-                                <td colspan="6" class="text-center">
+                                <td colspan="7" class="text-center">
                                     <div class="loading">
                                         <div class="spinner-border" role="status">
                                             <span class="visually-hidden">Carregando...</span>
@@ -281,9 +468,11 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let statusChart, cidadeChart;
+        let mapa, statusChart, pesoEmbarcadorChart;
         let dados = [];
+        let dadosFiltrados = [];
 
         // Função para buscar dados
         async function buscarDados() {
@@ -296,6 +485,8 @@
                 
                 if (result.status === 'success') {
                     dados = result.data;
+                    dadosFiltrados = [...dados];
+                    inicializarFiltros();
                     atualizarDashboard();
                     atualizarTimestamp();
                 } else {
@@ -306,64 +497,300 @@
             }
         }
 
+        // Função para inicializar filtros
+        function inicializarFiltros() {
+            // Tipologia
+            const tipologias = [...new Set(dados.map(item => item['Tipo veículo'] || 'Não informado').filter(t => t))];
+            const selectTipologia = document.getElementById('filtroTipologia');
+            selectTipologia.innerHTML = '<option value="">Todas</option>' + 
+                tipologias.map(t => `<option value="${t}">${t}</option>`).join('');
+
+            // Perfil (usando Embarcador)
+            const perfis = [...new Set(dados.map(item => item['Embarcador'] || 'Não informado').filter(p => p))];
+            const selectPerfil = document.getElementById('filtroPerfil');
+            selectPerfil.innerHTML = '<option value="">Todos</option>' + 
+                perfis.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            // Eventos de filtro
+            ['filtroTipologia', 'filtroPerfil', 'filtroMes', 'filtroAno'].forEach(id => {
+                document.getElementById(id).addEventListener('change', aplicarFiltros);
+            });
+        }
+
+        // Função para aplicar filtros
+        function aplicarFiltros() {
+            const tipologia = document.getElementById('filtroTipologia').value;
+            const perfil = document.getElementById('filtroPerfil').value;
+            const mes = document.getElementById('filtroMes').value;
+            const ano = document.getElementById('filtroAno').value;
+
+            dadosFiltrados = dados.filter(item => {
+                if (tipologia && item['Tipo veículo'] !== tipologia) return false;
+                if (perfil && item['Embarcador'] !== perfil) return false;
+                
+                if (mes || ano) {
+                    const dataStr = item['Atualizado em: 2025-10-09 08:56:36\\r'] || '';
+                    if (mes && !dataStr.includes(`-${mes}-`)) return false;
+                    if (ano && !dataStr.includes(`${ano}-`)) return false;
+                }
+                
+                return true;
+            });
+
+            atualizarDashboard();
+        }
+
         // Função para atualizar dashboard
         function atualizarDashboard() {
-            console.log('Atualizando dashboard com', dados.length, 'registros');
+            console.log('Atualizando dashboard com', dadosFiltrados.length, 'registros filtrados');
             
-            // Atualizar métricas
-            atualizarMetricas();
-            
-            // Atualizar gráficos
+            atualizarCards();
+            atualizarMapa();
+            atualizarRankings();
             atualizarGraficos();
-            
-            // Atualizar tabela
             atualizarTabela();
         }
 
-        // Função para atualizar métricas
-        function atualizarMetricas() {
-            const total = dados.length;
+        // Função para atualizar cards
+        function atualizarCards() {
+            const total = dadosFiltrados.length;
             
-            // Contar status
-            const entregues = dados.filter(item => 
-                item['Status viagem'] === 'Entregue' || 
-                item['Status NF'] === 'Entregue'
+            const entregues = dadosFiltrados.filter(item => 
+                item['Status NF'] === 'Entregue' || 
+                item['Status viagem'] === 'Entregue'
             ).length;
             
-            const emEntrega = dados.filter(item => 
+            const emTransito = dadosFiltrados.filter(item => 
                 item['Status viagem']?.includes('Entrega') || 
-                item['Status viagem'] === 'A entregar'
+                item['Status viagem'] === 'A entregar' ||
+                item['Status viagem']?.includes('Viagem')
             ).length;
             
-            const anomalias = dados.filter(item => 
+            const cidades = new Set(dadosFiltrados.map(item => item['Cidade']).filter(c => c)).size;
+            
+            const veiculos = new Set(dadosFiltrados.map(item => item['Placa']).filter(p => p)).size;
+            
+            const anomalias = dadosFiltrados.filter(item => 
                 item['Anomalia'] && item['Anomalia'].trim() !== ''
             ).length;
 
-            // Atualizar elementos
-            document.getElementById('totalRegistros').textContent = total;
+            document.getElementById('totalEntregas').textContent = total;
             document.getElementById('totalEntregues').textContent = entregues;
-            document.getElementById('totalEntrega').textContent = emEntrega;
+            document.getElementById('totalTransito').textContent = emTransito;
+            document.getElementById('totalCidades').textContent = cidades;
+            document.getElementById('totalVeiculos').textContent = veiculos;
             document.getElementById('totalAnomalias').textContent = anomalias;
+        }
+
+        // Função para inicializar mapa
+        function inicializarMapa() {
+            if (mapa) {
+                mapa.remove();
+            }
+            
+            mapa = L.map('mapa').setView([-23.5505, -46.6333], 8); // São Paulo como centro
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(mapa);
+        }
+
+        // Função para atualizar mapa
+        function atualizarMapa() {
+            if (!mapa) {
+                inicializarMapa();
+            }
+
+            // Limpar marcadores existentes
+            mapa.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    mapa.removeLayer(layer);
+                }
+            });
+
+            // Agrupar por cidade com coordenadas válidas
+            const cidadeCoords = {};
+            dadosFiltrados.forEach(item => {
+                const cidade = item['Cidade'];
+                let lat = item['Latitude ReferÃªncia'] || item['Latitude Referência'];
+                let lng = item['Longitude ReferÃªncia'] || item['Longitude Referência'];
+                
+                // Limpar e converter coordenadas
+                if (lat && lng) {
+                    lat = parseFloat(lat.toString().replace(/["\s]/g, '').replace(',', '.'));
+                    lng = parseFloat(lng.toString().replace(/["\s]/g, '').replace(',', '.'));
+                    
+                    if (cidade && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                        if (!cidadeCoords[cidade]) {
+                            cidadeCoords[cidade] = { lat, lng, count: 0, entregas: [] };
+                        }
+                        cidadeCoords[cidade].count++;
+                        cidadeCoords[cidade].entregas.push({
+                            cliente: item['Cliente'] || 'N/A',
+                            status: item['Status viagem'] || 'N/A',
+                            placa: item['Placa'] || 'N/A'
+                        });
+                    }
+                }
+            });
+
+            console.log('Cidades encontradas:', Object.keys(cidadeCoords).length);
+
+            // Adicionar marcadores para cada cidade
+            Object.entries(cidadeCoords).forEach(([cidade, data]) => {
+                const marker = L.marker([data.lat, data.lng]).addTo(mapa);
+                
+                // Criar popup com informações detalhadas
+                const popupContent = `
+                    <div style="max-width: 250px;">
+                        <h6><strong>${cidade}</strong></h6>
+                        <p><strong>Total de entregas:</strong> ${data.count}</p>
+                        <p><strong>Últimas entregas:</strong></p>
+                        <ul style="font-size: 12px; margin: 0; padding-left: 15px;">
+                            ${data.entregas.slice(0, 3).map(e => 
+                                `<li>${e.cliente.substring(0, 25)} - ${e.status}</li>`
+                            ).join('')}
+                            ${data.entregas.length > 3 ? `<li>... e mais ${data.entregas.length - 3}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+            });
+
+            // Ajustar view se houver marcadores
+            if (Object.keys(cidadeCoords).length > 0) {
+                const markers = Object.values(cidadeCoords).map(data => 
+                    L.marker([data.lat, data.lng])
+                );
+                const group = new L.featureGroup(markers);
+                mapa.fitBounds(group.getBounds().pad(0.1));
+            } else {
+                console.log('Nenhuma coordenada válida encontrada');
+                // Manter foco no Brasil se não houver dados
+                mapa.setView([-15.7942, -47.8822], 5);
+            }
+        }
+
+        // Função para atualizar rankings
+        function atualizarRankings() {
+            // Contar entregas por placa
+            const placaStats = {};
+            
+            dadosFiltrados.forEach(item => {
+                const placa = item['Placa'];
+                const statusNF = item['Status NF'];
+                const statusViagem = item['Status viagem'];
+                
+                if (placa && placa.trim() !== '' && placa !== '-' && placa !== 'N/A') {
+                    if (!placaStats[placa]) {
+                        placaStats[placa] = { 
+                            total: 0, 
+                            entregues: 0,
+                            emAndamento: 0,
+                            problemas: 0
+                        };
+                    }
+                    
+                    placaStats[placa].total++;
+                    
+                    // Contar entregues
+                    if (statusNF === 'Entregue' || statusViagem === 'Entregue') {
+                        placaStats[placa].entregues++;
+                    } 
+                    // Contar em andamento
+                    else if (statusViagem?.includes('Entrega') || statusViagem?.includes('Viagem') || statusViagem === 'A entregar') {
+                        placaStats[placa].emAndamento++;
+                    } 
+                    // Contar problemas
+                    else if (item['Anomalia'] && item['Anomalia'].trim() !== '') {
+                        placaStats[placa].problemas++;
+                    }
+                }
+            });
+
+            console.log('Estatísticas de placas:', placaStats);
+
+            // Calcular percentual de eficiência
+            const placasComPercentual = Object.entries(placaStats)
+                .filter(([placa, stats]) => stats.total >= 3) // Mínimo 3 entregas
+                .map(([placa, stats]) => ({
+                    placa,
+                    total: stats.total,
+                    entregues: stats.entregues,
+                    emAndamento: stats.emAndamento,
+                    problemas: stats.problemas,
+                    percentual: stats.total > 0 ? (stats.entregues / stats.total * 100) : 0
+                }));
+
+            // Melhores (maior percentual de sucesso)
+            const melhores = placasComPercentual
+                .sort((a, b) => b.percentual - a.percentual || b.total - a.total)
+                .slice(0, 5);
+
+            // Piores (menor percentual de sucesso, mais problemas)
+            const piores = placasComPercentual
+                .sort((a, b) => a.percentual - b.percentual || b.problemas - a.problemas)
+                .slice(0, 5);
+
+            console.log('Melhores placas:', melhores);
+            console.log('Piores placas:', piores);
+
+            // Renderizar rankings
+            renderizarRanking('rankingMelhores', melhores, true);
+            renderizarRanking('rankingPiores', piores, false);
+        }
+
+        // Função para renderizar ranking
+        function renderizarRanking(containerId, dados, isMelhor) {
+            const container = document.getElementById(containerId);
+            
+            if (dados.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">Dados insuficientes</p>';
+                return;
+            }
+
+            const colors = isMelhor ? 
+                ['text-success', 'text-success', 'text-success', 'text-primary', 'text-info'] :
+                ['text-danger', 'text-warning', 'text-warning', 'text-secondary', 'text-muted'];
+
+            container.innerHTML = dados.map((item, index) => `
+                <div class="ranking-item d-flex align-items-center py-2 border-bottom">
+                    <div class="ranking-position me-3">
+                        <span class="badge ${isMelhor ? 'bg-success' : 'bg-danger'} rounded-circle" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                            ${index + 1}
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold" style="font-size: 0.9rem;">${item.placa}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">
+                            ${item.entregues}/${item.total} entregas${item.problemas > 0 ? ` • ${item.problemas} problema${item.problemas > 1 ? 's' : ''}` : ''}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold ${colors[index]}" style="font-size: 0.9rem;">${item.percentual.toFixed(1)}%</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">eficiência</div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Função para atualizar gráficos
         function atualizarGraficos() {
             atualizarGraficoStatus();
-            atualizarGraficoCidades();
+            atualizarGraficoPesoEmbarcador();
         }
 
         // Gráfico de status
         function atualizarGraficoStatus() {
             const ctx = document.getElementById('statusChart').getContext('2d');
             
-            // Contar status
             const statusCount = {};
-            dados.forEach(item => {
+            dadosFiltrados.forEach(item => {
                 const status = item['Status viagem'] || 'Não informado';
                 statusCount[status] = (statusCount[status] || 0) + 1;
             });
 
-            // Destruir gráfico anterior se existir
             if (statusChart) {
                 statusChart.destroy();
             }
@@ -375,12 +802,8 @@
                     datasets: [{
                         data: Object.values(statusCount),
                         backgroundColor: [
-                            '#28a745',
-                            '#ffc107', 
-                            '#17a2b8',
-                            '#dc3545',
-                            '#6c757d',
-                            '#007bff'
+                            '#28a745', '#ffc107', '#17a2b8', '#dc3545', 
+                            '#6c757d', '#007bff', '#20c997', '#fd7e14'
                         ]
                     }]
                 },
@@ -396,45 +819,79 @@
             });
         }
 
-        // Gráfico de cidades
-        function atualizarGraficoCidades() {
-            const ctx = document.getElementById('cidadeChart').getContext('2d');
+        // Gráfico de peso por embarcador
+        function atualizarGraficoPesoEmbarcador() {
+            const ctx = document.getElementById('pesoEmbarcadorChart').getContext('2d');
             
-            // Contar cidades
-            const cidadeCount = {};
-            dados.forEach(item => {
-                const cidade = item['Cidade'] || 'Não informada';
-                cidadeCount[cidade] = (cidadeCount[cidade] || 0) + 1;
+            const embarcadorStats = {};
+            
+            dadosFiltrados.forEach(item => {
+                const embarcador = item['Embarcador'] || 'Não informado';
+                const pesoStr = item['Peso bruto (NF)'] || '0';
+                const peso = parseFloat(pesoStr.replace(/"/g, '').replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+                const isEntregue = item['Status NF'] === 'Entregue';
+                
+                if (!embarcadorStats[embarcador]) {
+                    embarcadorStats[embarcador] = { total: 0, entregue: 0 };
+                }
+                
+                embarcadorStats[embarcador].total += peso;
+                if (isEntregue) {
+                    embarcadorStats[embarcador].entregue += peso;
+                }
             });
 
-            // Pegar top 10 cidades
-            const cidadesOrdenadas = Object.entries(cidadeCount)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 10);
+            const embarcadores = Object.keys(embarcadorStats).slice(0, 10); // Top 10
+            const pesoTotal = embarcadores.map(e => embarcadorStats[e].total);
+            const pesoEntregue = embarcadores.map(e => embarcadorStats[e].entregue);
 
-            // Destruir gráfico anterior se existir
-            if (cidadeChart) {
-                cidadeChart.destroy();
+            if (pesoEmbarcadorChart) {
+                pesoEmbarcadorChart.destroy();
             }
 
-            cidadeChart = new Chart(ctx, {
+            pesoEmbarcadorChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: cidadesOrdenadas.map(([cidade]) => cidade),
-                    datasets: [{
-                        label: 'Entregas',
-                        data: cidadesOrdenadas.map(([, count]) => count),
-                        backgroundColor: '#667eea',
-                        borderColor: '#5a6fd8',
-                        borderWidth: 1
-                    }]
+                    labels: embarcadores,
+                    datasets: [
+                        {
+                            label: 'Peso Total (kg)',
+                            data: pesoTotal,
+                            backgroundColor: '#2a5298',
+                            borderColor: '#1e3c72',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Peso Entregue (kg)',
+                            data: pesoEntregue,
+                            backgroundColor: '#28a745',
+                            borderColor: '#1e7e34',
+                            borderWidth: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Peso (kg)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const embarcador = context.label;
+                                    const stats = embarcadorStats[embarcador];
+                                    const percentual = stats.total > 0 ? (stats.entregue / stats.total * 100) : 0;
+                                    return `Eficiência: ${percentual.toFixed(1)}%`;
+                                }
+                            }
                         }
                     }
                 }
@@ -445,12 +902,12 @@
         function atualizarTabela() {
             const tbody = document.getElementById('tabelaDados');
             
-            // Pegar últimos 20 registros
-            const ultimosRegistros = dados.slice(0, 20);
+            const ultimosRegistros = dadosFiltrados.slice(0, 20);
             
             tbody.innerHTML = ultimosRegistros.map(item => {
                 const status = item['Status viagem'] || 'Não informado';
                 const statusClass = getStatusClass(status);
+                const peso = item['Peso bruto (NF)'] || '-';
                 
                 return `
                     <tr>
@@ -460,8 +917,9 @@
                         </td>
                         <td>${item['Cidade'] || '-'}</td>
                         <td>${(item['Cliente'] || '-').substring(0, 30)}${(item['Cliente'] || '').length > 30 ? '...' : ''}</td>
-                        <td>${item['Placa'] || '-'}</td>
-                        <td>${(item['Transportadora'] || '-').substring(0, 25)}${(item['Transportadora'] || '').length > 25 ? '...' : ''}</td>
+                        <td><strong>${item['Placa'] || '-'}</strong></td>
+                        <td>${(item['Embarcador'] || '-').substring(0, 20)}${(item['Embarcador'] || '').length > 20 ? '...' : ''}</td>
+                        <td>${peso}</td>
                         <td>${formatarData(item['Atualizado em: 2025-10-09 08:56:36\\r'] || '')}</td>
                     </tr>
                 `;
@@ -502,7 +960,8 @@
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM carregado, iniciando busca de dados...');
+            console.log('DOM carregado, iniciando dashboard...');
+            inicializarMapa();
             buscarDados();
             
             // Atualizar a cada 2 minutos
