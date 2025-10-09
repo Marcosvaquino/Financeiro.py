@@ -624,7 +624,22 @@
                 'São Paulo': 'São Paulo',
                 'São Sebastiao': 'São Sebastião',
                 'São Joao da Boa Vista': 'São João da Boa Vista',
-                'São Joaquim da Barra': 'São Joaquim da Barra'
+                'São Joaquim da Barra': 'São Joaquim da Barra',
+                // Correções de acentos faltantes
+                'Jacarei': 'Jacareí',
+                'Guaratingueta': 'Guaratinguetá',
+                'Aruja': 'Arujá',
+                'Jundiai': 'Jundiaí',
+                'Ribeirao Preto': 'Ribeirão Preto',
+                'Guaruja': 'Guarujá',
+                'Peruibe': 'Peruíbe',
+                'Campos do Jordao': 'Campos do Jordão',
+                'Hortolandia': 'Hortolândia',
+                'Mongagua': 'Mongaguá',
+                'Varzea Paulista': 'Várzea Paulista',
+                'Cubatao': 'Cubatão',
+                'São Bento do Sapucai': 'São Bento do Sapucaí',
+                'Sumare': 'Sumaré'
             };
             
             let cidadeNormalizada = cidade.trim();
@@ -727,7 +742,7 @@
                 
                 if (cidadeOriginal && cidadeOriginal.trim() !== '' && cidadeOriginal !== 'N/A') {
                     const cidadeNormalizada = normalizarNomeCidade(cidadeOriginal);
-                    const cidadeKey = cidadeNormalizada.toUpperCase();
+                    const cidadeKey = cidadeNormalizada; // Usar nome normalizado como chave
                     
                     if (!cidadesOperacao[cidadeKey]) {
                         cidadesOperacao[cidadeKey] = {
@@ -820,7 +835,64 @@
                 'SOCORRO': [-22.5919, -46.5297],
                 'SÃO JOÃO DA BOA VISTA': [-21.9697, -46.7972],
                 'SÃO JOAQUIM DA BARRA': [-20.5825, -47.8586],
-                'VARGEM': [-22.8858, -46.4058]
+                'VARGEM': [-22.8858, -46.4058],
+                // Coordenadas em formato normalizado (Title Case)
+                'São Paulo': [-23.5505, -46.6333],
+                'Taubaté': [-23.0205, -45.5555],
+                'São José dos Campos': [-23.2237, -45.9009],
+                'Jacareí': [-23.3056, -45.9658],
+                'Caçapava': [-23.1058, -45.7058],
+                'São Sebastião': [-23.8129, -45.4044],
+                'Caraguatatuba': [-23.6204, -45.4130],
+                'Ubatuba': [-23.4336, -45.0838],
+                'Guaratinguetá': [-22.8161, -45.1931],
+                'Aparecida': [-22.8458, -45.2306],
+                'Lorena': [-22.7309, -45.1173],
+                'Guarulhos': [-23.4538, -46.5333],
+                'Santos': [-23.9618, -46.3322],
+                'Campinas': [-22.9056, -47.0608],
+                'Ribeirão Preto': [-21.1775, -47.8208],
+                'Suzano': [-23.5426, -46.3116],
+                'Pindamonhangaba': [-22.9244, -45.4618],
+                'Mogi das Cruzes': [-23.5228, -46.1883],
+                'Paraty': [-23.2176, -44.7146],
+                'Bragança Paulista': [-22.9519, -46.5425],
+                'Bertioga': [-23.8543, -46.1376],
+                'Santa Isabel': [-23.3158, -46.2208],
+                'Itaquaquecetuba': [-23.4864, -46.3489],
+                'Arujá': [-23.3964, -46.3200],
+                'Atibaia': [-23.1169, -46.5533],
+                'Jundiaí': [-23.1864, -46.8842],
+                'Cachoeira Paulista': [-22.6658, -45.0058],
+                'Cruzeiro': [-22.5761, -44.9633],
+                'São Vicente': [-23.9632, -46.3919],
+                'Roseira': [-22.9044, -45.3008],
+                'Guarujá': [-24.0139, -46.2564],
+                'Peruíbe': [-24.3200, -46.9978],
+                'Canas': [-22.7058, -45.0458],
+                'Cunha': [-23.0766, -44.9598],
+                'Campos do Jordão': [-22.7399, -45.5917],
+                'Franca': [-20.5386, -47.4006],
+                'Itanhaém': [-24.1828, -46.7889],
+                'Itatiba': [-23.0058, -46.8383],
+                'Piracaia': [-23.0533, -46.3594],
+                'Franco da Rocha': [-23.3289, -46.7272],
+                'Hortolândia': [-22.8583, -47.2200],
+                'Mongaguá': [-24.0889, -46.6119],
+                'Vargem': [-22.8858, -46.4058],
+                'Louveira': [-23.0847, -46.9486],
+                'Várzea Paulista': [-23.2114, -46.8294],
+                'Vinhedo': [-23.0297, -46.9753],
+                'Americana': [-22.7394, -47.3311],
+                'Cubatão': [-23.8950, -46.4253],
+                'Indaiatuba': [-23.0920, -47.2181],
+                'São Bento do Sapucaí': [-22.6859, -45.7253],
+                'Socorro': [-22.5919, -46.5297],
+                'Sumaré': [-22.8219, -47.2669],
+                'Lagoinha': [-23.1158, -45.1758],
+                'Monteiro Lobato': [-22.9579, -45.8376],
+                'Santa Branca': [-23.3977, -45.8863],
+                'Silveiras': [-22.7997, -44.8705]
             };
 
             // Marcar cidades no mapa
