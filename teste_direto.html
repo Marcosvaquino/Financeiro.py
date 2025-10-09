@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🧪 Teste API Direto</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>🧪 Teste de API - Monitoramento</h1>
+    <div id="resultado">⏳ Testando...</div>
+    
+    <script>
+        console.log('🔥 SCRIPT INICIADO!');
+        
+        window.addEventListener('load', async () => {
+            console.log('🌍 WINDOW LOADED!');
+            
+            const div = document.getElementById('resultado');
+            
+            try {
+                console.log('🚀 Fazendo fetch...');
+                div.innerHTML = '📡 Fazendo requisição...';
+                
+                const response = await fetch('http://127.0.0.1:5000/logistica/api/monitoramento/dados');
+                console.log('📦 Response:', response);
+                
+                div.innerHTML = `📦 Status: ${response.status}`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Data:', data);
+                    
+                    div.innerHTML = `
+                        ✅ <strong>SUCESSO!</strong><br>
+                        📊 Status: ${data.status}<br>
+                        🔢 Count: ${data.count}<br>
+                        📋 Dados: ${data.dados ? 'Sim' : 'Não'}<br>
+                        ⏰ ${new Date().toLocaleString()}
+                    `;
+                } else {
+                    div.innerHTML = `❌ Erro HTTP: ${response.status}`;
+                }
+                
+            } catch (error) {
+                console.error('❌ ERRO:', error);
+                div.innerHTML = `❌ Erro: ${error.message}`;
+            }
+        });
+        
+        console.log('🏁 SCRIPT CONFIGURADO!');
+    </script>
+</body>
+</html>

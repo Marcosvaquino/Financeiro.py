@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento Logístico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #6c757d;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-entregue { background-color: #28a745; }
+        .status-entrega { background-color: #ffc107; }
+        .status-agendada { background-color: #17a2b8; }
+        .status-anomalia { background-color: #dc3545; }
+
+        .last-update {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            color: #666;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner-border {
+            color: #667eea;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            padding: 20px;
+        }
+
+        .table-responsive {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            border: none;
+            vertical-align: middle;
+            padding: 12px;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .text-primary { color: #667eea !important; }
+        .text-success { color: #28a745 !important; }
+        .text-warning { color: #ffc107 !important; }
+        .text-info { color: #17a2b8 !important; }
+        .text-danger { color: #dc3545 !important; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="mb-0">
+                        <i class="fas fa-truck text-primary"></i>
+                        Monitoramento Logístico
+                    </h1>
+                    <p class="mb-0 text-muted">Dashboard em tempo real - Atualização automática a cada 2 minutos</p>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" onclick="atualizarDados()">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicador de última atualização -->
+        <div class="last-update" id="lastUpdate">
+            <i class="fas fa-clock"></i> Carregando...
+        </div>
+
+        <!-- Métricas principais -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-primary">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="metric-value text-primary" id="totalRegistros">0</div>
+                        <div class="metric-label">Total de Entregas</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="metric-value text-success" id="totalEntregues">0</div>
+                        <div class="metric-label">Entregues</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-value text-warning" id="totalEntrega">0</div>
+                        <div class="metric-label">Em Entrega</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <div class="metric-icon text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="metric-value text-danger" id="totalAnomalias">0</div>
+                        <div class="metric-label">Anomalias</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie text-primary"></i> Status das Entregas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar text-primary"></i> Entregas por Cidade</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="cidadeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de dados -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-table text-primary"></i> Últimas Atualizações</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Cidade</th>
+                                <th>Cliente</th>
+                                <th>Placa</th>
+                                <th>Transportadora</th>
+                                <th>Última Atualização</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaDados">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="loading">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let statusChart, cidadeChart;
+        let dados = [];
+
+        // Função para buscar dados
+        async function buscarDados() {
+            try {
+                console.log('Buscando dados...');
+                const response = await fetch('/logistica/api/monitoramento/dados');
+                const result = await response.json();
+                
+                console.log('Resposta da API:', result);
+                
+                if (result.status === 'success') {
+                    dados = result.data;
+                    atualizarDashboard();
+                    atualizarTimestamp();
+                } else {
+                    console.error('Erro na resposta:', result);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+            }
+        }
+
+        // Função para atualizar dashboard
+        function atualizarDashboard() {
+            console.log('Atualizando dashboard com', dados.length, 'registros');
+            
+            // Atualizar métricas
+            atualizarMetricas();
+            
+            // Atualizar gráficos
+            atualizarGraficos();
+            
+            // Atualizar tabela
+            atualizarTabela();
+        }
+
+        // Função para atualizar métricas
+        function atualizarMetricas() {
+            const total = dados.length;
+            
+            // Contar status
+            const entregues = dados.filter(item => 
+                item['Status viagem'] === 'Entregue' || 
+                item['Status NF'] === 'Entregue'
+            ).length;
+            
+            const emEntrega = dados.filter(item => 
+                item['Status viagem']?.includes('Entrega') || 
+                item['Status viagem'] === 'A entregar'
+            ).length;
+            
+            const anomalias = dados.filter(item => 
+                item['Anomalia'] && item['Anomalia'].trim() !== ''
+            ).length;
+
+            // Atualizar elementos
+            document.getElementById('totalRegistros').textContent = total;
+            document.getElementById('totalEntregues').textContent = entregues;
+            document.getElementById('totalEntrega').textContent = emEntrega;
+            document.getElementById('totalAnomalias').textContent = anomalias;
+        }
+
+        // Função para atualizar gráficos
+        function atualizarGraficos() {
+            atualizarGraficoStatus();
+            atualizarGraficoCidades();
+        }
+
+        // Gráfico de status
+        function atualizarGraficoStatus() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            // Contar status
+            const statusCount = {};
+            dados.forEach(item => {
+                const status = item['Status viagem'] || 'Não informado';
+                statusCount[status] = (statusCount[status] || 0) + 1;
+            });
+
+            // Destruir gráfico anterior se existir
+            if (statusChart) {
+                statusChart.destroy();
+            }
+
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCount),
+                    datasets: [{
+                        data: Object.values(statusCount),
+                        backgroundColor: [
+                            '#28a745',
+                            '#ffc107', 
+                            '#17a2b8',
+                            '#dc3545',
+                            '#6c757d',
+                            '#007bff'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de cidades
+        function atualizarGraficoCidades() {
+            const ctx = document.getElementById('cidadeChart').getContext('2d');
+            
+            // Contar cidades
+            const cidadeCount = {};
+            dados.forEach(item => {
+                const cidade = item['Cidade'] || 'Não informada';
+                cidadeCount[cidade] = (cidadeCount[cidade] || 0) + 1;
+            });
+
+            // Pegar top 10 cidades
+            const cidadesOrdenadas = Object.entries(cidadeCount)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            // Destruir gráfico anterior se existir
+            if (cidadeChart) {
+                cidadeChart.destroy();
+            }
+
+            cidadeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cidadesOrdenadas.map(([cidade]) => cidade),
+                    datasets: [{
+                        label: 'Entregas',
+                        data: cidadesOrdenadas.map(([, count]) => count),
+                        backgroundColor: '#667eea',
+                        borderColor: '#5a6fd8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para atualizar tabela
+        function atualizarTabela() {
+            const tbody = document.getElementById('tabelaDados');
+            
+            // Pegar últimos 20 registros
+            const ultimosRegistros = dados.slice(0, 20);
+            
+            tbody.innerHTML = ultimosRegistros.map(item => {
+                const status = item['Status viagem'] || 'Não informado';
+                const statusClass = getStatusClass(status);
+                
+                return `
+                    <tr>
+                        <td>
+                            <span class="status-indicator ${statusClass}"></span>
+                            ${status}
+                        </td>
+                        <td>${item['Cidade'] || '-'}</td>
+                        <td>${(item['Cliente'] || '-').substring(0, 30)}${(item['Cliente'] || '').length > 30 ? '...' : ''}</td>
+                        <td>${item['Placa'] || '-'}</td>
+                        <td>${(item['Transportadora'] || '-').substring(0, 25)}${(item['Transportadora'] || '').length > 25 ? '...' : ''}</td>
+                        <td>${formatarData(item['Atualizado em: 2025-10-09 08:56:36\\r'] || '')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Função para obter classe do status
+        function getStatusClass(status) {
+            if (status.includes('Entregue')) return 'status-entregue';
+            if (status.includes('Entrega') || status.includes('entregar')) return 'status-entrega';
+            if (status.includes('Agendada')) return 'status-agendada';
+            if (status.includes('Anomalia')) return 'status-anomalia';
+            return 'status-entrega';
+        }
+
+        // Função para formatar data
+        function formatarData(dataStr) {
+            if (!dataStr) return '-';
+            try {
+                const data = new Date(dataStr.replace('\\r', ''));
+                return data.toLocaleString('pt-BR');
+            } catch {
+                return dataStr.substring(0, 16);
+            }
+        }
+
+        // Função para atualizar timestamp
+        function atualizarTimestamp() {
+            const agora = new Date();
+            document.getElementById('lastUpdate').innerHTML = 
+                `<i class="fas fa-clock"></i> Última atualização: ${agora.toLocaleTimeString('pt-BR')}`;
+        }
+
+        // Função para atualização manual
+        function atualizarDados() {
+            buscarDados();
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, iniciando busca de dados...');
+            buscarDados();
+            
+            // Atualizar a cada 2 minutos
+            setInterval(buscarDados, 120000);
+        });
+    </script>
+</body>
+</html>

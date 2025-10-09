@@ -53,6 +53,7 @@
                     <span class="menu-parent">Logistica</span>
                     <ul class="menu-children">
                         <li class="child-item"><a href="{{ url_for('logistica.index') }}">Logistica</a></li>
+                        <li class="child-item"><a href="{{ url_for('logistica.monitoramento') }}">Monitoramento</a></li>
                     </ul>
                 </li>
             </ul>
@@ -177,7 +178,7 @@
                 // Também considerar a rota /upload como pertencente ao menu Frete
                 'Frete': ['/frete', '/upload'],
                 'Armazem': ['/armazem'], 
-                'Logistica': ['/logistica']
+                'Logistica': ['/logistica', '/logistica/monitoramento']
             };
             
             // Verificar qual menu deve estar expandido baseado na URL atual

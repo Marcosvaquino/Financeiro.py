@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔥 TESTE DIRETO API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 800px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 TESTE DIRETO - API LOGÍSTICA</h1>
+        
+        <div id="status" class="status loading">⏳ Pronto para testar...</div>
+        
+        <button onclick="testarAPI()">🚀 Testar API</button>
+        <button onclick="testarAPIHistorico()">📊 Testar Histórico</button>
+        <button onclick="limparTela()">🧹 Limpar</button>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        console.log('🔥 TESTE SCRIPT CARREGADO!');
+        
+        async function testarAPI() {
+            const statusEl = document.getElementById('status');
+            const resultEl = document.getElementById('resultado');
+            
+            statusEl.className = 'status loading';
+            statusEl.innerHTML = '⏳ Testando API...';
+            
+            try {
+                console.log('📡 Fazendo fetch para: /logistica/api/monitoramento/dados');
+                
+                const response = await fetch('/logistica/api/monitoramento/dados');
+                console.log('📦 Response:', response);
+                
+                statusEl.innerHTML = `📦 Status HTTP: ${response.status} ${response.statusText}`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Data recebida:', data);
+                    
+                    statusEl.className = 'status success';
+                    statusEl.innerHTML = '✅ SUCESSO!';
+                    
+                    resultEl.innerHTML = `
+                        <h3>📊 Resultado da API:</h3>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Count:</strong> ${data.count}</p>
+                        <p><strong>Dados:</strong> ${data.dados ? 'Array com ' + data.dados.length + ' itens' : 'Nenhum'}</p>
+                        <p><strong>Primeira cidade:</strong> ${data.dados && data.dados[0] ? data.dados[0].Cidade : 'N/A'}</p>
+                        <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                        <pre style="max-height: 200px; overflow-y: auto; background: #f0f0f0; padding: 10px;">
+${JSON.stringify(data, null, 2)}
+                        </pre>
+                    `;
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ ERRO:', error);
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `❌ ERRO: ${error.message}`;
+                resultEl.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+        
+        async function testarAPIHistorico() {
+            const statusEl = document.getElementById('status');
+            const resultEl = document.getElementById('resultado');
+            
+            try {
+                const response = await fetch('/logistica/api/monitoramento/historico');
+                const data = await response.json();
+                
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ API Histórico OK!';
+                
+                resultEl.innerHTML = `
+                    <h3>📈 Histórico:</h3>
+                    <p><strong>Registros:</strong> ${data.length}</p>
+                    <pre style="max-height: 200px; overflow-y: auto; background: #f0f0f0; padding: 10px;">
+${JSON.stringify(data, null, 2)}
+                    </pre>
+                `;
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `❌ Erro histórico: ${error.message}`;
+            }
+        }
+        
+        function limparTela() {
+            document.getElementById('status').className = 'status loading';
+            document.getElementById('status').innerHTML = '⏳ Pronto para testar...';
+            document.getElementById('resultado').innerHTML = '';
+        }
+        
+        // Teste automático quando a página carregar
+        window.addEventListener('load', () => {
+            console.log('🌍 PÁGINA CARREGADA - Testando automaticamente...');
+            setTimeout(testarAPI, 1000);
+        });
+    </script>
+</body>
+</html>

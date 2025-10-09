@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Monitoramento</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #d1ecf1; color: #0c5460; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Teste de Monitoramento Logística</h1>
+    
+    <div id="status" class="status loading">⏳ Carregando dados...</div>
+    
+    <div id="results"></div>
+
+    <script>
+        console.log('🚀 Script iniciado!');
+        
+        async function testarAPI() {
+            try {
+                console.log('📡 Fazendo requisição para API...');
+                
+                const response = await fetch('/logistica/api/monitoramento/dados');
+                console.log('📦 Resposta recebida:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Dados parseados:', data);
+                
+                // Atualizar status
+                const statusDiv = document.getElementById('status');
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `✅ Sucesso! ${data.count} registros carregados`;
+                
+                // Mostrar primeiros 10 registros
+                const resultsDiv = document.getElementById('results');
+                if (data.dados && data.dados.length > 0) {
+                    const primeiros10 = data.dados.slice(0, 10);
+                    
+                    let html = '<h3>📊 Primeiros 10 Registros:</h3>';
+                    html += '<table>';
+                    html += '<tr><th>Cidade</th><th>Cliente</th><th>Documento</th><th>Status Viagem</th></tr>';
+                    
+                    primeiros10.forEach(item => {
+                        html += '<tr>';
+                        html += `<td>${item.Cidade || 'N/A'}</td>`;
+                        html += `<td>${item.Cliente || 'N/A'}</td>`;
+                        html += `<td>${item.Documento || 'N/A'}</td>`;
+                        html += `<td>${item['Status viagem'] || 'N/A'}</td>`;
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<p>❌ Nenhum dado encontrado</p>';
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                
+                const statusDiv = document.getElementById('status');
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Erro: ${error.message}`;
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `<p>Erro detalhado: ${error.message}</p>`;
+            }
+        }
+        
+        // Executar teste quando página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 DOM carregado, iniciando teste...');
+            testarAPI();
+        });
+        
+        console.log('🏁 Script configurado!');
+    </script>
+</body>
+</html>
