@@ -166,8 +166,15 @@ except Exception:
 try:
     from .logistica import bp as logistica_bp
     app.register_blueprint(logistica_bp)
-except Exception:
-    pass
+except Exception as e:
+    # Não suprimir: logar exceção para facilitar diagnóstico
+    try:
+        import traceback
+        print("⚠️ Erro ao registrar blueprint 'logistica':")
+        traceback.print_exc()
+    except Exception:
+        # Fallback simples caso traceback falhe
+        print(f"Erro ao registrar blueprint 'logistica': {e}")
 try:
     from .suporte import bp as suporte_bp
     app.register_blueprint(suporte_bp)
