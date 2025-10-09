@@ -415,7 +415,7 @@
                             Top 5 Placas - Melhores
                         </h5>
                     </div>
-                    <div class="card-body" id="rankingMelhores" style="max-height: 350px; overflow-y: auto;">
+                    <div class="card-body" id="rankingMelhores">
                         <div class="loading">
                             <div class="spinner-border" role="status"></div>
                         </div>
@@ -430,7 +430,7 @@
                             Top 5 Placas - Atenção
                         </h5>
                     </div>
-                    <div class="card-body" id="rankingPiores" style="max-height: 350px; overflow-y: auto;">
+                    <div class="card-body" id="rankingPiores">
                         <div class="loading">
                             <div class="spinner-border" role="status"></div>
                         </div>
@@ -590,6 +590,65 @@
             atualizarTabela();
         }
 
+        // Função para normalizar nomes de cidades
+        function normalizarNomeCidade(cidade) {
+            if (!cidade || cidade.trim() === '') return '';
+            
+            // Correções específicas de encoding mais abrangentes
+            const correcoes = {
+                // Padrões comuns de encoding UTF-8 problemático
+                'SÃ£o': 'São',
+                'SÃ¡o': 'São',
+                'JosÃ©': 'José',
+                'TaubatÃ©': 'Taubaté',
+                'CaÃ§apava': 'Caçapava',
+                'BraganÃ§a': 'Bragança',
+                'SebastÃ£o': 'Sebastião',
+                'Ã¡': 'á',
+                'Ã ': 'à',
+                'Ã¢': 'â',
+                'Ã£': 'ã',
+                'Ã©': 'é',
+                'Ãª': 'ê',
+                'Ã­': 'í',
+                'Ã³': 'ó',
+                'Ã´': 'ô',
+                'Ãµ': 'õ',
+                'Ãº': 'ú',
+                'Ã§': 'ç',
+                'Ã±': 'ñ',
+                // Casos específicos identificados
+                'São Josã©': 'São José',
+                'Braganã§a': 'Bragança',
+                'São JosÃ© dos Campos': 'São José dos Campos',
+                'São Paulo': 'São Paulo',
+                'São Sebastiao': 'São Sebastião',
+                'São Joao da Boa Vista': 'São João da Boa Vista',
+                'São Joaquim da Barra': 'São Joaquim da Barra'
+            };
+            
+            let cidadeNormalizada = cidade.trim();
+            
+            // Aplicar correções de encoding
+            Object.entries(correcoes).forEach(([errado, correto]) => {
+                cidadeNormalizada = cidadeNormalizada.replace(new RegExp(errado, 'gi'), correto);
+            });
+            
+            // Capitalização padronizada (primeira letra maiúscula, resto minúscula, exceto preposições)
+            const preposicoes = ['de', 'da', 'das', 'do', 'dos', 'e'];
+            cidadeNormalizada = cidadeNormalizada.toLowerCase()
+                .split(' ')
+                .map(palavra => {
+                    if (preposicoes.includes(palavra)) {
+                        return palavra;
+                    }
+                    return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                })
+                .join(' ');
+            
+            return cidadeNormalizada;
+        }
+
         // Função para atualizar cards
         function atualizarCards() {
             const total = dadosFiltrados.length;
@@ -605,9 +664,18 @@
                 item['Status viagem']?.includes('Viagem')
             ).length;
             
-            const cidades = new Set(dadosFiltrados.map(item => item['Cidade']).filter(c => c)).size;
+            // Normalizar nomes de cidades antes de contar
+            const cidadesNormalizadas = dadosFiltrados
+                .map(item => normalizarNomeCidade(item['Cidade']))
+                .filter(c => c && c.trim() !== '');
             
-            const veiculos = new Set(dadosFiltrados.map(item => item['Placa']).filter(p => p)).size;
+            const cidadesUnicas = [...new Set(cidadesNormalizadas)];
+            console.log('🏙️ DEBUG Cidades normalizadas únicas:', cidadesUnicas);
+            console.log('🏙️ Total de cidades únicas (normalizado):', cidadesUnicas.length);
+            
+            const cidades = cidadesUnicas.length;
+            
+            const veiculos = new Set(dadosFiltrados.map(item => item['Placa']).filter(p => p && p.trim() !== '')).size;
             
             const anomalias = dadosFiltrados.filter(item => 
                 item['Anomalia'] && item['Anomalia'].trim() !== ''
@@ -650,19 +718,20 @@
                 }
             });
 
-            // Agrupar por cidade apenas pelo nome
+            // Agrupar por cidade usando normalização
             const cidadesOperacao = {};
             console.log('🏙️ Processando cidades dos dados:', dadosFiltrados.length, 'registros');
             
             dadosFiltrados.forEach(item => {
-                const cidade = item['Cidade'];
+                const cidadeOriginal = item['Cidade'];
                 
-                if (cidade && cidade.trim() !== '' && cidade !== 'N/A') {
-                    const cidadeLimpa = cidade.trim().toUpperCase();
+                if (cidadeOriginal && cidadeOriginal.trim() !== '' && cidadeOriginal !== 'N/A') {
+                    const cidadeNormalizada = normalizarNomeCidade(cidadeOriginal);
+                    const cidadeKey = cidadeNormalizada.toUpperCase();
                     
-                    if (!cidadesOperacao[cidadeLimpa]) {
-                        cidadesOperacao[cidadeLimpa] = {
-                            nome: cidade.trim(),
+                    if (!cidadesOperacao[cidadeKey]) {
+                        cidadesOperacao[cidadeKey] = {
+                            nome: cidadeNormalizada,
                             count: 0,
                             entregas: [],
                             tipologias: {},
@@ -671,8 +740,8 @@
                         };
                     }
                     
-                    cidadesOperacao[cidadeLimpa].count++;
-                    cidadesOperacao[cidadeLimpa].entregas.push({
+                    cidadesOperacao[cidadeKey].count++;
+                    cidadesOperacao[cidadeKey].entregas.push({
                         cliente: item['Cliente'] || item['Empresa'] || 'N/A',
                         status: item['Status viagem'] || item['Status NF'] || 'N/A',
                         placa: item['Placa'] || 'N/A',
@@ -681,15 +750,15 @@
                     
                     // Contar tipologias
                     const tipologia = item['Tipologia'] || 'Outros';
-                    cidadesOperacao[cidadeLimpa].tipologias[tipologia] = (cidadesOperacao[cidadeLimpa].tipologias[tipologia] || 0) + 1;
+                    cidadesOperacao[cidadeKey].tipologias[tipologia] = (cidadesOperacao[cidadeKey].tipologias[tipologia] || 0) + 1;
                     
                     // Contar status
                     const status = item['Status viagem'] || item['Status NF'] || 'N/A';
-                    cidadesOperacao[cidadeLimpa].status[status] = (cidadesOperacao[cidadeLimpa].status[status] || 0) + 1;
+                    cidadesOperacao[cidadeKey].status[status] = (cidadesOperacao[cidadeKey].status[status] || 0) + 1;
                     
                     // Coletar placas únicas
                     if (item['Placa'] && item['Placa'] !== 'N/A') {
-                        cidadesOperacao[cidadeLimpa].placas.add(item['Placa']);
+                        cidadesOperacao[cidadeKey].placas.add(item['Placa']);
                     }
                 }
             });
@@ -697,7 +766,7 @@
             console.log('🎯 Cidades encontradas:', Object.keys(cidadesOperacao).length);
             console.log('📋 Lista de cidades:', Object.keys(cidadesOperacao));
 
-            // Geocoding das cidades brasileiras (coordenadas aproximadas)
+            // Geocoding das cidades brasileiras (coordenadas expandidas)
             const coordenadasCidades = {
                 'SÃO PAULO': [-23.5505, -46.6333],
                 'TAUBATÉ': [-23.0205, -45.5555],
@@ -733,7 +802,25 @@
                 'CRUZEIRO': [-22.5761, -44.9633],
                 'QUELUZ': [-22.5286, -44.7758],
                 'LAVRINHAS': [-22.5658, -44.9058],
-                'SÃO LUIZ DO PARAITINGA': [-23.2206, -45.3081]
+                'SÃO LUIZ DO PARAITINGA': [-23.2206, -45.3081],
+                // Adicionando cidades que encontramos nos dados
+                'AGUAI': [-22.0548, -46.9821],
+                'CANAS': [-22.7058, -45.0458],
+                'FRANCA': [-20.5386, -47.4006],
+                'GUARÁ': [-15.8131, -47.9725],
+                'ITAQUAQUECETUBA': [-23.4864, -46.3489],
+                'ITUVERAVA': [-20.3386, -47.7761],
+                'LAGOINHA': [-23.1158, -45.1758],
+                'PINDAMONHANGABA': [-22.9244, -45.4618],
+                'PERUÍBE': [-24.3200, -46.9978],
+                'PIQUETE': [-22.6158, -45.1758],
+                'ROSEIRA': [-22.9044, -45.3008],
+                'SANTA ISABEL': [-23.3158, -46.2208],
+                'SANTO ANTÔNIO DE POSSE': [-22.6058, -46.9358],
+                'SOCORRO': [-22.5919, -46.5297],
+                'SÃO JOÃO DA BOA VISTA': [-21.9697, -46.7972],
+                'SÃO JOAQUIM DA BARRA': [-20.5825, -47.8586],
+                'VARGEM': [-22.8858, -46.4058]
             };
 
             // Marcar cidades no mapa
@@ -909,12 +996,13 @@
                     percentual: stats.total > 0 ? (stats.entregues / stats.total * 100) : 0
                 }));
 
-            // Melhores (maior percentual de sucesso)
+            // Melhores (maior percentual de sucesso) - EXCLUIR placas com 0%
             const melhores = placasComPercentual
+                .filter(placa => placa.percentual > 0) // Só mostrar placas com percentual > 0
                 .sort((a, b) => b.percentual - a.percentual || b.total - a.total)
                 .slice(0, 5);
 
-            // Piores (menor percentual de sucesso, mais problemas)
+            // Piores (menor percentual de sucesso, mais problemas) - INCLUIR placas com 0%
             const piores = placasComPercentual
                 .sort((a, b) => a.percentual - b.percentual || b.problemas - a.problemas)
                 .slice(0, 5);
@@ -936,11 +1024,18 @@
                 return;
             }
 
-            const colors = isMelhor ? 
-                ['text-success', 'text-success', 'text-success', 'text-primary', 'text-info'] :
-                ['text-danger', 'text-warning', 'text-warning', 'text-secondary', 'text-muted'];
+            container.innerHTML = dados.map((item, index) => {
+                // Para o ranking de atenção, se percentual for 0, sempre vermelho
+                let corTexto = '';
+                if (isMelhor) {
+                    const coresMelhores = ['text-success', 'text-success', 'text-success', 'text-primary', 'text-info'];
+                    corTexto = coresMelhores[index] || 'text-success';
+                } else {
+                    // Top 5 Atenção: todos vermelhos se percentual for 0,0%
+                    corTexto = item.percentual === 0 ? 'text-danger' : 'text-warning';
+                }
 
-            container.innerHTML = dados.map((item, index) => `
+                return `
                 <div class="ranking-item d-flex align-items-center py-2 border-bottom">
                     <div class="ranking-position me-3">
                         <span class="badge ${isMelhor ? 'bg-success' : 'bg-danger'} rounded-circle" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
@@ -954,11 +1049,12 @@
                         </div>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold ${colors[index]}" style="font-size: 0.9rem;">${item.percentual.toFixed(1)}%</div>
+                        <div class="fw-bold ${corTexto}" style="font-size: 0.9rem;">${item.percentual.toFixed(1)}%</div>
                         <div class="text-muted" style="font-size: 0.7rem;">eficiência</div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Função para atualizar gráficos
