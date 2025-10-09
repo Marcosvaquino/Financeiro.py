@@ -10,13 +10,11 @@
         <button id="sidebarClose" class="sidebar-close" aria-label="Fechar menu">‹</button>
         <h2 class="sidebar-title">Menu</h2>
         
-        <!-- Seção do usuário -->
-        {% if session.user_name %}
+        <!-- Seção do usuário (DESATIVADA) -->
         <div class="user-info">
-            <div class="user-name">👤 {{ session.user_name }}</div>
-            <a href="{{ url_for('logout') }}" class="logout-btn" title="Sair do sistema">🚪 Sair</a>
+            <div class="user-name">👤 Administrador</div>
+            <a href="#" class="logout-btn" title="Sair" style="display: none;">🚪 Sair</a>
         </div>
-        {% endif %}
         
         <nav class="menu">
             <ul class="menu-root">

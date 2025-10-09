@@ -138,13 +138,12 @@ def criar_condicao_clientes_principais(cursor, tabela, condicoes_extras=""):
     
     return condicao, clientes_reais
 
-# --- helper: login required decorator ---
+# --- helper: login required decorator (DESATIVADO) ---
 from functools import wraps
 def login_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
-        if "user_id" not in session:
-            return redirect(url_for('login'))
+        # Sistema de login desativado - permitir acesso direto
         return f(*args, **kwargs)
     return wrapped
 
@@ -236,9 +235,8 @@ def formatar_valor_brasileiro(valor):
 
 @app.route("/")
 def index():
-    if "user_id" in session:
-        return redirect(url_for("planejamento"))
-    return redirect(url_for("login"))
+    # Login desativado - redirecionar diretamente para planejamento
+    return redirect(url_for("planejamento"))
 
 
 @app.route("/login", methods=["GET", "POST"])
