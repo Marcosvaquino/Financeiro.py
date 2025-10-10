@@ -4,10 +4,20 @@
 
 <style>
     :root{
-        --matrix-height: calc(100vh - 180px);
+        --matrix-height: calc(100vh - 120px); /* usar mais espaço da tela */
         /* diminuir linhas para caber mais clientes sem scroll lateral */
-        --row-height: 30px;
-        --input-height: 20px;
+        --row-height: 25px; /* reduzir altura das linhas */
+        --input-height: 18px; /* reduzir altura dos inputs */
+    }
+
+    /* FORÇAR MOSTRAR TODOS OS CLIENTES */
+    .table-container, 
+    .table-container > div,
+    .projecao-table,
+    .projecao-table tbody {
+        max-height: none !important;
+        height: auto !important;
+        overflow-y: visible !important;
     }
 
     /* Faz o card agir como um flex-column para alinhar header + tabela */
@@ -49,16 +59,24 @@
 
     /* wrapper já presente - forçar a usar o espaço restante do card */
     .table-container > div[style*="overflow-x"] {
-        /* o wrapper não força altura do card; limita sua altura para caber na viewport */
-        max-height: var(--matrix-height);
-        height: auto !important; /* ignora o height inline */
-        /* permitir scroll horizontal e vertical quando necessário */
+        /* REMOVER LIMITAÇÃO DE ALTURA */
+        max-height: none !important;
+        min-height: none !important;
+        height: auto !important;
+        /* permitir scroll horizontal apenas */
         overflow-x: auto !important;
-        overflow-y: auto !important;
+        overflow-y: visible !important;
         display: block;
-        padding-bottom: 0 !important; /* remove gap que empurra a scrollbar para baixo */
+        padding-bottom: 0 !important;
         margin-bottom: 0 !important;
-        white-space: nowrap; /* evita que conteúdos quebrem em várias linhas, força scroll */
+        white-space: nowrap;
+    }
+
+    /* Forçar tbody a mostrar todas as linhas */
+    .projecao-table tbody {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
     }
 
         /* reduzir visualmente a barra de rolagem horizontal */

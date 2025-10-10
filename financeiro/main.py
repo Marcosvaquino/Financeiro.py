@@ -1767,28 +1767,20 @@ def projecao():
 
                 # Remove duplicado
                 cur.execute("""
-    
-    # Se o usuário escolheu um MÊS válido (mes != 'Todos'), aplicar filtro por mês (ano pode ser 'Todos')
-    # Se ano for 'Todos' usamos o ano atual como fallback para buscar projeções/lançamentos naquele mês do ano atual.
-    from datetime import datetime
-    now = datetime.now()
-    if mes and mes != 'Todos':
-        # se o ano for 'Todos' ou vazio, usar ano atual
-        ano_param = ano if ano and ano != 'Todos' else str(now.year)
-        data = build_dashboard_data_with_filters(mes, ano_param, status_filter=status_filter, client_filter=client_filter, min_value=min_value, max_value=max_value, search=search)
-    elif ano and ano != 'Todos':
-        # caso apenas ano seja informado, filtrar por ano (mês será vazio e a função tratará)
-        mes_param = mes if mes and mes != 'Todos' else f"{now.month:02d}"
-        data = build_dashboard_data_with_filters(mes_param, ano, status_filter=status_filter, client_filter=client_filter, min_value=min_value, max_value=max_value, search=search)
-    else:
-        # nenhum filtro de mês/ano: usar agregador geral
-        data = build_dashboard_data()
+                    DELETE FROM projecao 
+                    WHERE cliente = ? AND dia = ? AND mes = ? AND ano = ?
+                """, (cliente_id, dia, mes, ano))
+
+                # Insere novo valor
+                cur.execute("""
+                    INSERT INTO projecao (cliente, dia, mes, ano, valor)
+                    VALUES (?, ?, ?, ?, ?)
                 """, (cliente_id, dia, mes, ano, valor))
 
         conn.commit()
         flash("Projeção salva com sucesso!", "success")
 
-    # Lista específica de clientes para a projeção (EXATAMENTE como definido)
+    # Lista de clientes para a projeção
     clientes_permitidos = [
         'ADORO', 'ADORO S.A.', 'ADORO SAO CARLOS', 'AGRA FOODS', 'ALIBEM', 'FRIBOI',
         'GOLDPAO CD SAO JOSE DOS CAMPOS', 'GTFOODS BARUERI', 'JK DISTRIBUIDORA', 
@@ -1797,8 +1789,6 @@ def projecao():
         'PEIXES MEGGS PESCADOS LTDA - SJBV', 'SANTA LUCIA', 'SAUDALI', 'VALENCIO JATAÍ'
     ]
 
-    # Sempre apresentar exatamente os 19 clientes na ordem definida.
-    # Cada cliente recebe um id sequencial (1..19) usado no formulário da matriz.
     clientes = [(i+1, nome) for i, nome in enumerate(clientes_permitidos)]
 
     conn.close()
