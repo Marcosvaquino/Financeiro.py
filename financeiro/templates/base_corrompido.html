@@ -16,92 +16,25 @@
             <a href="#" class="logout-btn" title="Sair" style="display: none;">🚪 Sair</a>
         </div>
         
-        <nav class="menu">
-            <ul class="menu-root">
-                {% if user_menus %}
-                    <!-- CATEGORIA: FINANCEIRO -->
-                    {% if user_menus.financeiro %}
-                    <li class="menu-item has-children">
-                        <span class="menu-parent">Financeiro</span>
-                        <ul class="menu-children">
-                            {% for menu in user_menus.financeiro %}
-                            <li class="child-item">
-                                <a href="{{ menu.rota }}" 
-                                   class="{% if menu.nome in ['Planejamento FRZ', 'Análise Margem'] %}menu-orange{% endif %}{% if menu.nome == 'FRZ LOG' %}menu-highlight{% endif %}">
-                                    {{ menu.nome }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- CATEGORIA: FRETE -->
-                    {% if user_menus.frete %}
-                    <li class="menu-item has-children">
-                        <span class="menu-parent">Frete</span>
-                        <ul class="menu-children">
-                            {% for menu in user_menus.frete %}
-                            <li class="child-item">
-                                <a href="{{ menu.rota }}" 
-                                   class="{% if menu.nome == 'Painel Frete' %}menu-highlight{% endif %}{% if menu.nome == 'Análise de Margem' %}menu-orange{% endif %}">
-                                    {% if menu.nome == 'Painel Frete' %}📊{% elif menu.nome == 'Análise de Margem' %}💰{% elif menu.nome == 'Importação Frete' %}📂{% elif menu.nome == 'Suporte' %}�{% elif menu.nome == 'Custo Frota' %}🚛{% endif %} {{ menu.nome }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- CATEGORIA: ARMAZEM -->
-                    {% if user_menus.armazem %}
-                    <li class="menu-item has-children">
-                        <span class="menu-parent">Armazem</span>
-                        <ul class="menu-children">
-                            {% for menu in user_menus.armazem %}
-                            <li class="child-item">
-                                <a href="{{ menu.rota }}">{{ menu.nome }}</a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- CATEGORIA: LOGISTICA -->
-                    {% if user_menus.logistica %}
-                    <li class="menu-item has-children">
-                        <span class="menu-parent">Logistica</span>
-                        <ul class="menu-children">
-                            {% for menu in user_menus.logistica %}
-                            <li class="child-item">
-                                <a href="{{ menu.rota }}">{{ menu.nome }}</a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- CATEGORIA: ADMIN -->
-                    {% if user_menus.admin %}
-                    <li class="menu-item has-children">
-                        <span class="menu-parent">Admin</span>
-                        <ul class="menu-children">
-                            {% for menu in user_menus.admin %}
-                            <li class="child-item">
-                                <a href="{{ menu.rota }}" class="{% if menu.nome == 'Gestão de Usuários' %}menu-admin{% endif %}">
-                                    🛠️ {{ menu.nome }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                {% else %}
-                    <!-- FALLBACK: Usuário não logado -->
-                    <li class="menu-item">
-                        <a href="/login">🚪 Fazer Login</a>
-                    </li>
-                {% endif %}
+        <ul>
+            <li><a href="/planejamento">Painel</a></li>
+            <li><a href="/projecao">Projeção</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/resumo">Resumo</a></li>
+            <li><a href="/consolidacao">Consolidação</a></li>
+            <li><a href="/importacao">📂 Importação</a></li>
+            <li><a href="/frz_log">🚛 FRZ Log</a></li>
+            <li><a href="/logistica/monitoramento">�️ Monitoramento</a></li>
+            <li><a href="/painel_frete">🚚 Painel Frete</a></li>
+            <li><a href="/margem_analise">📊 Análise Margem</a></li>
+            <li><a href="/manifesto">📋 Manifesto</a></li>
+            <li><a href="/custo_frota">🧮 Custo Frota</a></li>
+            <li><a href="/suporte">🚗 Suporte Veículos</a></li>
+            <!-- NOVO ITEM: Gestão de Usuários (apenas para admin) -->
+            {% if session.user_name == 'Administrador' %}
+                <li><a href="/admin/usuarios" class="menu-admin">🛠️ Gestão de Usuários</a></li>
+            {% endif %}
+        </ul>
             </ul>
         </nav>
     </div>
