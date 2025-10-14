@@ -450,6 +450,127 @@ def api_carregar_ultimo_mapa_calor():
         print(f"❌ Erro ao carregar dados: {e}")
         return jsonify({'error': str(e)}), 500
 
+@bp.route('/api/mapa_calor/poligonos', methods=['POST'])
+def api_buscar_poligonos_cidades():
+    """API para buscar polígonos (limites geográficos) das cidades"""
+    try:
+        data = request.json
+        cidades = data.get('cidades', [])
+        
+        if not cidades:
+            return jsonify({
+                'status': 'error',
+                'message': 'Nenhuma cidade fornecida'
+            }), 400
+        
+        print(f"🗺️ Buscando polígonos para {len(cidades)} cidades...")
+        
+        poligonos = {}
+        cache_file = os.path.join(os.path.dirname(__file__), 'cache_poligonos.json')
+        
+        # Tentar carregar cache
+        cache = {}
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cache = json.load(f)
+            except:
+                cache = {}
+        
+        for cidade_info in cidades:
+            cidade = cidade_info.get('cidade', '')
+            lat = cidade_info.get('lat')
+            lng = cidade_info.get('lng')
+            
+            if not cidade:
+                continue
+            
+            # Verificar cache primeiro
+            if cidade in cache:
+                poligonos[cidade] = cache[cidade]
+                continue
+            
+            # Buscar da API Nominatim
+            try:
+                # Adicionar "Brasil" para melhor precisão
+                query = f"{cidade}, Brasil"
+                
+                url = "https://nominatim.openstreetmap.org/search"
+                params = {
+                    'q': query,
+                    'format': 'json',
+                    'polygon_geojson': 1,
+                    'limit': 1
+                }
+                headers = {
+                    'User-Agent': 'FRZ-Logistica-MapaCalor/1.0'
+                }
+                
+                response = requests.get(url, params=params, headers=headers, timeout=5)
+                
+                if response.ok:
+                    results = response.json()
+                    if results and len(results) > 0:
+                        result = results[0]
+                        if 'geojson' in result:
+                            poligonos[cidade] = result['geojson']
+                            cache[cidade] = result['geojson']
+                            print(f"  ✅ {cidade}: polígono encontrado")
+                        else:
+                            print(f"  ⚠️ {cidade}: sem polígono, usando círculo")
+                            poligonos[cidade] = criar_circulo_geojson(lat, lng, 5000)
+                    else:
+                        print(f"  ❌ {cidade}: não encontrada")
+                        poligonos[cidade] = criar_circulo_geojson(lat, lng, 5000)
+                
+                # Respeitar rate limit da API
+                time.sleep(1)
+                
+            except Exception as e:
+                print(f"  ❌ Erro ao buscar {cidade}: {e}")
+                if lat and lng:
+                    poligonos[cidade] = criar_circulo_geojson(lat, lng, 5000)
+        
+        # Salvar cache atualizado
+        try:
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"⚠️ Erro ao salvar cache: {e}")
+        
+        return jsonify({
+            'status': 'success',
+            'poligonos': poligonos,
+            'total': len(poligonos)
+        })
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar polígonos: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Erro ao buscar polígonos: {str(e)}'
+        }), 500
+
+def criar_circulo_geojson(lat, lng, raio_metros=5000):
+    """Cria um círculo GeoJSON aproximado como fallback"""
+    import math
+    
+    pontos = 64
+    coords = []
+    
+    raio_lat = raio_metros / 111000
+    
+    for i in range(pontos + 1):
+        angulo = (i / pontos) * 2 * math.pi
+        dx = raio_lat * math.cos(angulo)
+        dy = (raio_metros / (111000 * math.cos(math.radians(lat)))) * math.sin(angulo)
+        coords.append([lng + dy, lat + dx])
+    
+    return {
+        'type': 'Polygon',
+        'coordinates': [coords]
+    }
+
 @bp.route('/teste')
 def teste_monitoramento():
     """Página de teste simples para debug"""

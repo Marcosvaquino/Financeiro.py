@@ -369,8 +369,26 @@
         <div class="card-body p-0" style="position: relative;">
             <div id="map" style="height: 500px;"></div>
             
+            <!-- Controle de Setores (Micro/Macro) -->
+            <div class="setor-control" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; color: #333;">
+                    <i class="fas fa-layer-group me-1"></i> Visualização
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="tipoSetor" id="microSetor" value="micro" checked>
+                    <label class="btn btn-outline-primary" for="microSetor" style="font-size: 0.75rem;">
+                        <i class="fas fa-map-marker-alt me-1"></i>Micro Setores
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="tipoSetor" id="macroSetor" value="macro">
+                    <label class="btn btn-outline-primary" for="macroSetor" style="font-size: 0.75rem;">
+                        <i class="fas fa-globe-americas me-1"></i>Macro Setores
+                    </label>
+                </div>
+            </div>
+            
             <!-- Legenda Interativa com Filtros -->
-            <div class="intensity-legend" style="padding: 12px; font-size: 0.85rem;">
+            <div class="intensity-legend" id="microLegend" style="padding: 12px; font-size: 0.85rem;">
                 <h6 style="font-size: 0.85rem; margin-bottom: 10px;">
                     <i class="fas fa-filter me-1"></i>Filtrar por Intensidade
                 </h6>
@@ -401,6 +419,54 @@
                 
                 <div style="margin-top: 8px; font-size: 0.7rem; color: #666; text-align: center;">
                     <span id="filterInfo">Mostrando todas as cidades</span>
+                </div>
+            </div>
+            
+            <!-- Legenda de Macro-Regiões (aparece só no modo Macro) -->
+            <div class="macro-legend" id="macroLegend" style="padding: 12px; font-size: 0.85rem; display: none;">
+                <h6 style="font-size: 0.85rem; margin-bottom: 10px;">
+                    <i class="fas fa-palette me-1"></i>Macro-Regiões
+                </h6>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7rem;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #FF6B6B; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Vale do Paraíba
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #4ECDC4; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Litoral Norte
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #45B7D1; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Litoral Sul
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #FFA07A; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        SP Capital e RM
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #98D8C8; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        ABC Paulista
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #F7DC6F; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Campinas e Região
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #BB8FCE; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Sorocaba e Região
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #F8B500; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Interior SP
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="width: 12px; height: 12px; background: #AED6F1; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
+                        Outras Capitais
+                    </div>
+                </div>
+                <div style="margin-top: 8px; font-size: 0.7rem; color: #666; text-align: center;">
+                    <span id="macroInfo">Cidades agrupadas por região</span>
                 </div>
             </div>
         </div>
@@ -506,6 +572,214 @@
     let dadosAtuais = [];
     let progressInterval = null;
     let filtroAtivo = 'all'; // Filtro ativo
+    let tipoVisualizacao = 'micro'; // micro ou macro
+    let poligonosCache = {}; // Cache dos polígonos das cidades
+
+    // Função para buscar polígonos das cidades
+    async function buscarPoligonosCidades(dados) {
+        console.log('🗺️ Buscando polígonos das cidades...');
+        
+        const cidadesParaBuscar = dados.map(item => ({
+            cidade: item.cidade,
+            lat: item.lat,
+            lng: item.lng
+        }));
+        
+        try {
+            const response = await fetch('/logistica/api/mapa_calor/poligonos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cidades: cidadesParaBuscar
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                poligonosCache = result.poligonos;
+                console.log(`✅ ${result.total} polígonos carregados`);
+                return true;
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar polígonos:', error);
+        }
+        
+        return false;
+    }
+
+    // Função para classificar cidade em macro-região
+    function classificarMacroRegiao(cidade, lat, lng) {
+        const cidadeUpper = cidade.toUpperCase();
+        
+        // Outras Capitais (fora de SP)
+        const outrasCapitais = ['RIO DE JANEIRO', 'BELO HORIZONTE', 'BRASÍLIA', 'SALVADOR', 
+                               'FORTALEZA', 'RECIFE', 'PORTO ALEGRE', 'CURITIBA', 'GUARÁ'];
+        if (outrasCapitais.includes(cidadeUpper)) {
+            return 'Outras Capitais';
+        }
+        
+        // Vale do Paraíba
+        if (lat >= -23.4 && lat <= -22.5 && lng >= -46.0 && lng <= -44.7) {
+            return 'Vale do Paraíba';
+        }
+        
+        // Litoral Norte
+        if (lat < -23.3 && lng >= -46.0 && lng <= -44.7) {
+            return 'Litoral Norte';
+        }
+        
+        // Litoral Sul
+        if (lat < -23.8 && lng > -47.0) {
+            return 'Litoral Sul';
+        }
+        
+        // ABC Paulista
+        if (lat >= -23.8 && lat <= -23.5 && lng >= -46.8 && lng <= -46.3) {
+            return 'ABC Paulista';
+        }
+        
+        // SP Capital e Região Metropolitana
+        if (lat >= -23.8 && lat <= -23.1 && lng >= -46.9 && lng <= -46.0) {
+            return 'SP Capital e Região Metropolitana';
+        }
+        
+        // Campinas e Região
+        if (lat >= -23.3 && lat <= -22.5 && lng >= -47.5 && lng <= -46.3) {
+            return 'Campinas e Região';
+        }
+        
+        // Sorocaba e Região
+        if (lat >= -23.8 && lat <= -23.3 && lng >= -47.8 && lng <= -47.2) {
+            return 'Sorocaba e Região';
+        }
+        
+        // Interior SP
+        if (lat >= -25.0 && lat <= -19.0 && lng >= -52.0 && lng <= -44.0) {
+            return 'Interior SP';
+        }
+        
+        return 'Outras Regiões';
+    }
+
+    // Cores distintas para cada macro-região
+    const coresMacroRegioes = {
+        'Vale do Paraíba': '#FF6B6B',           // Vermelho suave
+        'Litoral Norte': '#4ECDC4',             // Turquesa
+        'Litoral Sul': '#45B7D1',               // Azul claro
+        'SP Capital e Região Metropolitana': '#FFA07A', // Laranja claro
+        'ABC Paulista': '#98D8C8',              // Verde água
+        'Campinas e Região': '#F7DC6F',         // Amarelo
+        'Sorocaba e Região': '#BB8FCE',         // Roxo claro
+        'Interior SP': '#F8B500',               // Laranja escuro
+        'Outras Capitais': '#AED6F1',           // Azul pastel
+        'Outras Regiões': '#D5DBDB'             // Cinza claro
+    };
+
+    // Função para preparar dados no modo Macro
+    // Mantém todas as cidades, mas adiciona info da região
+    function prepararDadosMacro(dados) {
+        const regioes = {};
+        const dadosComRegiao = [];
+        
+        // Primeiro, calcular totais por região
+        dados.forEach(item => {
+            const regiao = classificarMacroRegiao(item.cidade, item.lat, item.lng);
+            
+            if (!regioes[regiao]) {
+                regioes[regiao] = {
+                    nome: regiao,
+                    totalValor: 0,
+                    cidades: [],
+                    cor: coresMacroRegioes[regiao] || '#999999'
+                };
+            }
+            
+            regioes[regiao].totalValor += item.valor;
+            regioes[regiao].cidades.push(item.cidade);
+        });
+        
+        // Depois, adicionar info da região a cada cidade
+        dados.forEach(item => {
+            const regiao = classificarMacroRegiao(item.cidade, item.lat, item.lng);
+            const infoRegiao = regioes[regiao];
+            
+            dadosComRegiao.push({
+                ...item,
+                regiao: regiao,
+                totalRegiao: infoRegiao.totalValor,
+                cidadesRegiao: infoRegiao.cidades,
+                corRegiao: infoRegiao.cor
+            });
+        });
+        
+        return { dadosComRegiao, regioes };
+    }
+
+    // Event listeners para mudança de tipo de visualização
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[name="tipoSetor"]').forEach(radio => {
+            radio.addEventListener('change', async function() {
+                tipoVisualizacao = this.value;
+                console.log('🔄 Mudando visualização para:', tipoVisualizacao);
+                
+                // Alternar legendas
+                const microLegend = document.getElementById('microLegend');
+                const macroLegend = document.getElementById('macroLegend');
+                
+                if (tipoVisualizacao === 'macro') {
+                    microLegend.style.display = 'none';
+                    macroLegend.style.display = 'block';
+                } else {
+                    microLegend.style.display = 'block';
+                    macroLegend.style.display = 'none';
+                }
+                
+                if (dadosAtuais.length > 0) {
+                    if (tipoVisualizacao === 'macro') {
+                        // Buscar polígonos se ainda não tiver
+                        if (Object.keys(poligonosCache).length === 0) {
+                            const loadingOverlay = document.getElementById('loadingOverlay');
+                            const processStatus = document.getElementById('processStatus');
+                            const statusMessage = document.getElementById('statusMessage');
+                            
+                            loadingOverlay.classList.add('show');
+                            statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando limites das cidades...';
+                            processStatus.className = 'alert alert-info mt-3';
+                            processStatus.style.display = 'block';
+                            
+                            await buscarPoligonosCidades(dadosAtuais);
+                            
+                            loadingOverlay.classList.remove('show');
+                            processStatus.style.display = 'none';
+                        }
+                        
+                        const { dadosComRegiao, regioes } = prepararDadosMacro(dadosAtuais);
+                        atualizarMapa(dadosComRegiao, true);
+                        
+                        const dadosRegioes = Object.values(regioes).map(r => ({
+                            nome: r.nome,
+                            valor: r.totalValor
+                        }));
+                        atualizarEstatisticas(dadosRegioes);
+                        
+                        const totalRegioes = Object.keys(regioes).length;
+                        document.getElementById('macroInfo').innerHTML = 
+                            `<i class="fas fa-map-marked-alt me-1"></i>${dadosComRegiao.length} cidades em ${totalRegioes} regiões`;
+                    } else {
+                        if (filtroAtivo !== 'all') {
+                            filtrarPorCor(filtroAtivo);
+                        } else {
+                            atualizarMapa(dadosAtuais, false);
+                            atualizarEstatisticas(dadosAtuais);
+                        }
+                    }
+                }
+            });
+        });
+    });
 
     // Função para filtrar dados por faixa de valor
     function filtrarPorCor(range) {
@@ -698,7 +972,7 @@
                 document.getElementById('filterInfo').innerHTML = 
                     `<i class="fas fa-map-marked-alt me-1"></i>Mostrando <strong>${result.dados.length}</strong> cidades`;
                 
-                atualizarMapa(result.dados);
+                atualizarMapa(result.dados, false); // false = modo micro
                 atualizarEstatisticas(result.dados);
                 
                 // Mostrar status de sucesso com detalhes
@@ -744,7 +1018,7 @@
         }
     }
 
-    function atualizarMapa(dados) {
+    function atualizarMapa(dados, isMacro = false) {
         // Limpar camadas anteriores
         if (heatLayer) {
             map.removeLayer(heatLayer);
@@ -755,58 +1029,112 @@
             return;
         }
 
-        // Preparar dados para o heatmap
-        const heatData = dados.map(item => [
-            item.lat,
-            item.lng,
-            item.valor // Intensidade
-        ]);
-
-        // Criar camada de calor com ESCALA FIXA 0-100
-        heatLayer = L.heatLayer(heatData, {
-            radius: 25,
-            blur: 15,
-            maxZoom: 13,
-            max: 100,  // ← ESCALA FIXA: máximo sempre 100
-            gradient: {
-                0.0: '#00ff00',    // 0-25: Verde
-                0.25: '#ffff00',   // 25-50: Amarelo
-                0.50: '#ff7700',   // 50-75: Laranja
-                0.75: '#ff0000',   // 75-100: Vermelho
-                1.0: '#ff0000'     // >100: Vermelho
-            }
-        }).addTo(map);
-
-        // Adicionar marcadores com popups
-        dados.forEach(item => {
-            const marker = L.circleMarker([item.lat, item.lng], {
-                radius: 8,
-                fillColor: getColor(item.valor, Math.max(...dados.map(d => d.valor))),
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
+        // MODO MACRO: Polígonos das cidades (SEM marcadores)
+        if (isMacro) {
+            dados.forEach(item => {
+                const poligono = poligonosCache[item.cidade];
+                
+                if (poligono) {
+                    // Desenhar polígono GeoJSON
+                    const geoJsonLayer = L.geoJSON(poligono, {
+                        style: {
+                            color: item.corRegiao,
+                            weight: 3,
+                            opacity: 0.9,
+                            fillColor: item.corRegiao,
+                            fillOpacity: 0.25,
+                            dashArray: '8, 12' // Linha pontilhada
+                        }
+                    });
+                    
+                    // Popup ao clicar no polígono
+                    const top5Cidades = item.cidadesRegiao.slice(0, 5).join(', ');
+                    const maisCidades = item.cidadesRegiao.length > 5 ? ` e mais ${item.cidadesRegiao.length - 5}` : '';
+                    
+                    geoJsonLayer.bindPopup(`
+                        <div style="text-align: center; min-width: 220px;">
+                            <div style="background: ${item.corRegiao}; color: white; padding: 8px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
+                                <h6 style="margin: 0; font-weight: bold;">
+                                    <i class="fas fa-globe-americas"></i> ${item.regiao}
+                                </h6>
+                            </div>
+                            <div style="padding: 5px;">
+                                <p style="margin: 5px 0; font-size: 13px;">
+                                    <strong>🏙️ Esta cidade:</strong> ${item.cidade}<br>
+                                    <strong>📊 Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
+                                </p>
+                                <hr style="margin: 8px 0; border-color: #ddd;">
+                                <p style="margin: 5px 0; font-size: 13px;">
+                                    <strong>🗺️ Total da Região:</strong> ${item.totalRegiao.toLocaleString('pt-BR')}<br>
+                                    <strong>📍 Cidades na Região:</strong> ${item.cidadesRegiao.length}
+                                </p>
+                                <p style="margin: 8px 0 0 0; font-size: 10px; color: #666; line-height: 1.3;">
+                                    ${top5Cidades}${maisCidades}
+                                </p>
+                            </div>
+                        </div>
+                    `);
+                    
+                    geoJsonLayer.addTo(markersLayer);
+                } else {
+                    console.warn(`⚠️ Polígono não encontrado para: ${item.cidade}`);
+                }
             });
+            
+        } else {
+            // MODO MICRO: Mapa de calor normal
+            const heatData = dados.map(item => [
+                item.lat,
+                item.lng,
+                item.valor
+            ]);
 
-            marker.bindPopup(`
-                <div style="text-align: center;">
-                    <h6 style="margin: 0 0 10px 0; color: #2a5298;">
-                        <i class="fas fa-map-marker-alt"></i> ${item.cidade}
-                    </h6>
-                    <p style="margin: 0; font-size: 14px;">
-                        <strong>Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
-                    </p>
-                </div>
-            `);
+            heatLayer = L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 13,
+                max: 100,
+                gradient: {
+                    0.0: '#00ff00',
+                    0.25: '#ffff00',
+                    0.50: '#ff7700',
+                    0.75: '#ff0000',
+                    1.0: '#ff0000'
+                }
+            }).addTo(map);
 
-            marker.addTo(markersLayer);
-        });
+            // Marcadores normais
+            dados.forEach(item => {
+                const marker = L.circleMarker([item.lat, item.lng], {
+                    radius: 8,
+                    fillColor: getColor(item.valor, Math.max(...dados.map(d => d.valor))),
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+
+                marker.bindPopup(`
+                    <div style="text-align: center;">
+                        <h6 style="margin: 0 0 10px 0; color: #2a5298;">
+                            <i class="fas fa-map-marker-alt"></i> ${item.cidade || item.nome}
+                        </h6>
+                        <p style="margin: 0; font-size: 14px;">
+                            <strong>Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
+                        </p>
+                    </div>
+                `);
+
+                marker.addTo(markersLayer);
+            });
+        }
 
         // Ajustar zoom para mostrar todos os pontos
         const bounds = L.latLngBounds(dados.map(d => [d.lat, d.lng]));
         map.fitBounds(bounds, { padding: [50, 50] });
 
-        console.log('✅ Mapa atualizado com', dados.length, 'locais');
+        const tipoMapa = isMacro ? 'cidades com círculos por região' : 'cidades com mapa de calor';
+        console.log(`✅ Mapa atualizado: ${dados.length} ${tipoMapa}`);
     }
 
     function getColor(valor, maxValor) {
@@ -886,7 +1214,7 @@
                 document.getElementById('filterInfo').innerHTML = 
                     `<i class="fas fa-map-marked-alt me-1"></i>Mostrando <strong>${result.dados.length}</strong> cidades`;
                 
-                atualizarMapa(result.dados);
+                atualizarMapa(result.dados, false); // false = modo micro
                 atualizarEstatisticas(result.dados);
                 
                 const dataUpload = new Date(result.info.data_upload).toLocaleString('pt-BR');
