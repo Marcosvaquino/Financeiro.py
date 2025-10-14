@@ -245,6 +245,40 @@
         width: 200px;
     }
 
+    /* Filter Buttons */
+    .filter-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-btn {
+        border: 2px solid transparent;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .filter-btn:hover {
+        transform: translateX(5px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+
+    .filter-btn.active {
+        border-color: #2a5298;
+        box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.3);
+        transform: scale(1.05);
+    }
+
+    .filter-btn i {
+        margin-right: 4px;
+    }
+
     /* Fullscreen Styles */
     .fullscreen {
         position: fixed !important;
@@ -334,14 +368,39 @@
         </div>
         <div class="card-body p-0" style="position: relative;">
             <div id="map" style="height: 500px;"></div>
-            <div class="intensity-legend" style="padding: 10px; font-size: 0.85rem;">
-                <h6 style="font-size: 0.85rem; margin-bottom: 8px;"><i class="fas fa-thermometer-half me-1"></i>Intensidade</h6>
-                <div class="legend-gradient" style="height: 15px; width: 180px;"></div>
-                <div class="legend-labels" style="width: 180px; font-size: 0.65rem;">
-                    <span>0-25</span>
-                    <span>26-50</span>
-                    <span>51-75</span>
-                    <span>76-100+</span>
+            
+            <!-- Legenda Interativa com Filtros -->
+            <div class="intensity-legend" style="padding: 12px; font-size: 0.85rem;">
+                <h6 style="font-size: 0.85rem; margin-bottom: 10px;">
+                    <i class="fas fa-filter me-1"></i>Filtrar por Intensidade
+                </h6>
+                
+                <!-- Filtros Clicáveis -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-range="all" onclick="filtrarPorCor('all')" 
+                            style="background: linear-gradient(to right, #00ff00, #ffff00, #ff7700, #ff0000); color: #333; font-weight: bold;">
+                        <i class="fas fa-layer-group me-1"></i> Todos
+                    </button>
+                    <button class="filter-btn" data-range="0-25" onclick="filtrarPorCor('0-25')" 
+                            style="background: #00ff00; color: #333;">
+                        0-25
+                    </button>
+                    <button class="filter-btn" data-range="26-50" onclick="filtrarPorCor('26-50')" 
+                            style="background: #ffff00; color: #333;">
+                        26-50
+                    </button>
+                    <button class="filter-btn" data-range="51-75" onclick="filtrarPorCor('51-75')" 
+                            style="background: #ff7700; color: white;">
+                        51-75
+                    </button>
+                    <button class="filter-btn" data-range="76-100" onclick="filtrarPorCor('76-100')" 
+                            style="background: #ff0000; color: white;">
+                        76-100+
+                    </button>
+                </div>
+                
+                <div style="margin-top: 8px; font-size: 0.7rem; color: #666; text-align: center;">
+                    <span id="filterInfo">Mostrando todas as cidades</span>
                 </div>
             </div>
         </div>
@@ -469,6 +528,58 @@
     let markersLayer;
     let dadosAtuais = [];
     let progressInterval = null;
+    let filtroAtivo = 'all'; // Filtro ativo
+
+    // Função para filtrar dados por faixa de valor
+    function filtrarPorCor(range) {
+        filtroAtivo = range;
+        
+        // Atualizar botões ativos
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-range="${range}"]`).classList.add('active');
+        
+        // Filtrar dados
+        let dadosFiltrados = dadosAtuais;
+        let rangeText = 'todas as cidades';
+        let count = dadosAtuais.length;
+        
+        if (range !== 'all') {
+            dadosFiltrados = dadosAtuais.filter(item => {
+                const valor = item.valor;
+                switch(range) {
+                    case '0-25':
+                        rangeText = '0-25 ocorrências';
+                        return valor >= 0 && valor <= 25;
+                    case '26-50':
+                        rangeText = '26-50 ocorrências';
+                        return valor >= 26 && valor <= 50;
+                    case '51-75':
+                        rangeText = '51-75 ocorrências';
+                        return valor >= 51 && valor <= 75;
+                    case '76-100':
+                        rangeText = '76-100+ ocorrências';
+                        return valor >= 76;
+                    default:
+                        return true;
+                }
+            });
+            count = dadosFiltrados.length;
+        }
+        
+        // Atualizar info do filtro
+        document.getElementById('filterInfo').innerHTML = 
+            `<i class="fas fa-map-marked-alt me-1"></i>Mostrando <strong>${count}</strong> ${count === 1 ? 'cidade' : 'cidades'} (${rangeText})`;
+        
+        // Atualizar mapa com dados filtrados
+        atualizarMapa(dadosFiltrados);
+        
+        // Atualizar estatísticas com dados filtrados
+        atualizarEstatisticas(dadosFiltrados);
+        
+        console.log(`🎨 Filtro aplicado: ${range} (${count} cidades)`);
+    }
 
     // Função para atualizar a barra de progresso
     async function atualizarProgresso() {
@@ -602,6 +713,14 @@
 
             if (response.ok && result.status === 'success') {
                 dadosAtuais = result.dados;
+                
+                // Resetar filtro para "Todos" quando carregar novos dados
+                filtroAtivo = 'all';
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[data-range="all"]').classList.add('active');
+                document.getElementById('filterInfo').innerHTML = 
+                    `<i class="fas fa-map-marked-alt me-1"></i>Mostrando <strong>${result.dados.length}</strong> cidades`;
+                
                 atualizarMapa(result.dados);
                 atualizarEstatisticas(result.dados);
                 
@@ -782,6 +901,14 @@
             
             if (response.ok && result.status === 'success') {
                 dadosAtuais = result.dados;
+                
+                // Resetar filtro para "Todos" quando carregar dados salvos
+                filtroAtivo = 'all';
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('[data-range="all"]').classList.add('active');
+                document.getElementById('filterInfo').innerHTML = 
+                    `<i class="fas fa-map-marked-alt me-1"></i>Mostrando <strong>${result.dados.length}</strong> cidades`;
+                
                 atualizarMapa(result.dados);
                 atualizarEstatisticas(result.dados);
                 
