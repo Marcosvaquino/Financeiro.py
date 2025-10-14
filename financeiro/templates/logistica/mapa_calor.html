@@ -370,11 +370,11 @@
             <div id="map" style="height: 500px;"></div>
             
             <!-- Controle de Setores (Micro/Macro) -->
-            <div class="setor-control" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            <div class="setor-control" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); min-width: 280px;">
                 <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; color: #333;">
                     <i class="fas fa-layer-group me-1"></i> Visualização
                 </div>
-                <div class="btn-group btn-group-sm" role="group">
+                <div class="btn-group btn-group-sm mb-2" role="group" style="width: 100%;">
                     <input type="radio" class="btn-check" name="tipoSetor" id="microSetor" value="micro" checked>
                     <label class="btn btn-outline-primary" for="microSetor" style="font-size: 0.75rem;">
                         <i class="fas fa-map-marker-alt me-1"></i>Micro Setores
@@ -384,6 +384,24 @@
                     <label class="btn btn-outline-primary" for="macroSetor" style="font-size: 0.75rem;">
                         <i class="fas fa-globe-americas me-1"></i>Macro Setores
                     </label>
+                </div>
+                
+                <!-- Dropdown de Regiões (só aparece no modo Macro) -->
+                <div id="regiaoSelector" style="display: none;">
+                    <label style="font-size: 0.75rem; font-weight: 600; color: #555; margin-bottom: 4px; display: block;">
+                        <i class="fas fa-map-marked-alt me-1"></i>Selecione a Região:
+                    </label>
+                    <select id="selectRegiao" class="form-select form-select-sm" onchange="filtrarMacroRegioes()" style="font-size: 0.75rem;">
+                        <option value="Vale do Paraíba" style="background: #FF6B6B20;">📍 Vale do Paraíba</option>
+                        <option value="Litoral Norte" style="background: #4ECDC420;">🏖️ Litoral Norte</option>
+                        <option value="Litoral Sul" style="background: #45B7D120;">🌊 Litoral Sul</option>
+                        <option value="SP Capital e RM" style="background: #FFA07A20;">🏙️ SP Capital e RM</option>
+                        <option value="ABC Paulista" style="background: #98D8C820;">🏭 ABC Paulista</option>
+                        <option value="Campinas e Região" style="background: #F7DC6F20;">🌆 Campinas e Região</option>
+                        <option value="Sorocaba e Região" style="background: #BB8FCE20;">🏘️ Sorocaba e Região</option>
+                        <option value="Interior SP" style="background: #F8B50020;">🌾 Interior SP</option>
+                        <option value="Outras Capitais" style="background: #AED6F120;">🌎 Outras Capitais</option>
+                    </select>
                 </div>
             </div>
             
@@ -424,49 +442,11 @@
             
             <!-- Legenda de Macro-Regiões (aparece só no modo Macro) -->
             <div class="macro-legend" id="macroLegend" style="padding: 12px; font-size: 0.85rem; display: none;">
-                <h6 style="font-size: 0.85rem; margin-bottom: 10px;">
-                    <i class="fas fa-palette me-1"></i>Macro-Regiões
-                </h6>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7rem;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #FF6B6B; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Vale do Paraíba
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #4ECDC4; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Litoral Norte
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #45B7D1; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Litoral Sul
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #FFA07A; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        SP Capital e RM
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #98D8C8; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        ABC Paulista
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #F7DC6F; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Campinas e Região
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #BB8FCE; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Sorocaba e Região
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #F8B500; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Interior SP
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <span style="width: 12px; height: 12px; background: #AED6F1; border-radius: 50%; display: inline-block; margin-right: 5px;"></span>
-                        Outras Capitais
-                    </div>
-                </div>
-                <div style="margin-top: 8px; font-size: 0.7rem; color: #666; text-align: center;">
-                    <span id="macroInfo">Cidades agrupadas por região</span>
+                <div style="font-size: 0.75rem; color: #666; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                    <i class="fas fa-map-marked-alt me-1"></i>
+                    <span id="macroInfo">
+                        <span id="regioesCount">9</span> regiões disponíveis
+                    </span>
                 </div>
             </div>
         </div>
@@ -570,6 +550,7 @@
     let heatLayer;
     let markersLayer;
     let dadosAtuais = [];
+    let dadosMacroGlobal = []; // Armazena dados macro para filtros
     let progressInterval = null;
     let filtroAtivo = 'all'; // Filtro ativo
     let tipoVisualizacao = 'micro'; // micro ou macro
@@ -708,6 +689,7 @@
             
             dadosComRegiao.push({
                 ...item,
+                macroRegiao: regiao,  // Nome consistente
                 regiao: regiao,
                 totalRegiao: infoRegiao.totalValor,
                 cidadesRegiao: infoRegiao.cidades,
@@ -725,28 +707,31 @@
                 tipoVisualizacao = this.value;
                 console.log('🔄 Mudando visualização para:', tipoVisualizacao);
                 
-                // Alternar legendas
+                // Alternar legendas E seletor de região
                 const microLegend = document.getElementById('microLegend');
                 const macroLegend = document.getElementById('macroLegend');
+                const regiaoSelector = document.getElementById('regiaoSelector');
                 
                 if (tipoVisualizacao === 'macro') {
                     microLegend.style.display = 'none';
                     macroLegend.style.display = 'block';
+                    regiaoSelector.style.display = 'block';
                 } else {
                     microLegend.style.display = 'block';
                     macroLegend.style.display = 'none';
+                    regiaoSelector.style.display = 'none';
                 }
                 
                 if (dadosAtuais.length > 0) {
                     if (tipoVisualizacao === 'macro') {
-                        // Buscar polígonos se ainda não tiver
+                        // Buscar polígonos se ainda não tiver (CACHE PERMANENTE)
                         if (Object.keys(poligonosCache).length === 0) {
                             const loadingOverlay = document.getElementById('loadingOverlay');
                             const processStatus = document.getElementById('processStatus');
                             const statusMessage = document.getElementById('statusMessage');
                             
                             loadingOverlay.classList.add('show');
-                            statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando limites das cidades...';
+                            statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando limites das cidades pela primeira vez...<br><small>Aguarde ~1-2 minutos. Próximas vezes será INSTANTÂNEO!</small>';
                             processStatus.className = 'alert alert-info mt-3';
                             processStatus.style.display = 'block';
                             
@@ -757,17 +742,12 @@
                         }
                         
                         const { dadosComRegiao, regioes } = prepararDadosMacro(dadosAtuais);
-                        atualizarMapa(dadosComRegiao, true);
                         
-                        const dadosRegioes = Object.values(regioes).map(r => ({
-                            nome: r.nome,
-                            valor: r.totalValor
-                        }));
-                        atualizarEstatisticas(dadosRegioes);
+                        // Salvar dados macro globalmente para uso nos filtros
+                        dadosMacroGlobal = dadosComRegiao;
                         
-                        const totalRegioes = Object.keys(regioes).length;
-                        document.getElementById('macroInfo').innerHTML = 
-                            `<i class="fas fa-map-marked-alt me-1"></i>${dadosComRegiao.length} cidades em ${totalRegioes} regiões`;
+                        // Aplicar filtro da região selecionada
+                        filtrarMacroRegioes();
                     } else {
                         if (filtroAtivo !== 'all') {
                             filtrarPorCor(filtroAtivo);
@@ -830,6 +810,39 @@
         atualizarEstatisticas(dadosFiltrados);
         
         console.log(`🎨 Filtro aplicado: ${range} (${count} cidades)`);
+    }
+
+    // Função para filtrar macro-regiões
+    function filtrarMacroRegioes() {
+        const regiaoSelecionada = document.getElementById('selectRegiao').value;
+        
+        console.log(`🎯 Filtrando região: ${regiaoSelecionada}`);
+        console.log(`📊 Total de dados macro: ${dadosMacroGlobal.length}`);
+        
+        if (dadosMacroGlobal.length === 0) {
+            console.warn('⚠️ Nenhum dado macro disponível ainda!');
+            return;
+        }
+        
+        // Filtrar dados macro pela região selecionada
+        const dadosFiltrados = dadosMacroGlobal.filter(item => {
+            // Normalizar nome da região
+            let regiao = item.macroRegiao;
+            if (regiao === 'SP Capital e Região Metropolitana') {
+                regiao = 'SP Capital e RM';
+            }
+            return regiao === regiaoSelecionada;
+        });
+        
+        console.log(`🗺️ Região "${regiaoSelecionada}": ${dadosFiltrados.length} cidades`);
+        
+        if (dadosFiltrados.length === 0) {
+            console.warn(`⚠️ Nenhuma cidade encontrada para a região "${regiaoSelecionada}"`);
+            console.log('Regiões disponíveis:', [...new Set(dadosMacroGlobal.map(d => d.macroRegiao))]);
+        }
+        
+        // Atualizar mapa
+        atualizarMapa(dadosFiltrados, true);
     }
 
     // Função para atualizar a barra de progresso
@@ -927,6 +940,10 @@
             alert('Selecione um arquivo primeiro!');
             return;
         }
+
+        // LIMPAR CACHE DE POLÍGONOS ao importar novo arquivo
+        poligonosCache = {};
+        console.log('🗑️ Cache de polígonos limpo - novo arquivo sendo importado');
 
         const loadingOverlay = document.getElementById('loadingOverlay');
         const processStatus = document.getElementById('processStatus');
@@ -1031,45 +1048,39 @@
 
         // MODO MACRO: Polígonos das cidades (SEM marcadores)
         if (isMacro) {
+            // Cor única padrão para todas as cidades da região selecionada
+            const corPadrao = '#2E86DE'; // Azul vibrante que destaca no mapa
+            
             dados.forEach(item => {
                 const poligono = poligonosCache[item.cidade];
                 
                 if (poligono) {
-                    // Desenhar polígono GeoJSON
+                    // Desenhar polígono GeoJSON com cor única
                     const geoJsonLayer = L.geoJSON(poligono, {
                         style: {
-                            color: item.corRegiao,
-                            weight: 3,
-                            opacity: 0.9,
-                            fillColor: item.corRegiao,
-                            fillOpacity: 0.25,
-                            dashArray: '8, 12' // Linha pontilhada
+                            color: corPadrao,
+                            weight: 2.5,
+                            opacity: 0.8,
+                            fillColor: corPadrao,
+                            fillOpacity: 0.3
                         }
                     });
                     
                     // Popup ao clicar no polígono
-                    const top5Cidades = item.cidadesRegiao.slice(0, 5).join(', ');
-                    const maisCidades = item.cidadesRegiao.length > 5 ? ` e mais ${item.cidadesRegiao.length - 5}` : '';
-                    
                     geoJsonLayer.bindPopup(`
-                        <div style="text-align: center; min-width: 220px;">
-                            <div style="background: ${item.corRegiao}; color: white; padding: 8px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
+                        <div style="text-align: center; min-width: 200px;">
+                            <div style="background: ${corPadrao}; color: white; padding: 8px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
                                 <h6 style="margin: 0; font-weight: bold;">
-                                    <i class="fas fa-globe-americas"></i> ${item.regiao}
+                                    <i class="fas fa-map-marker-alt"></i> ${item.cidade}
                                 </h6>
                             </div>
                             <div style="padding: 5px;">
                                 <p style="margin: 5px 0; font-size: 13px;">
-                                    <strong>🏙️ Esta cidade:</strong> ${item.cidade}<br>
                                     <strong>📊 Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
                                 </p>
                                 <hr style="margin: 8px 0; border-color: #ddd;">
-                                <p style="margin: 5px 0; font-size: 13px;">
-                                    <strong>🗺️ Total da Região:</strong> ${item.totalRegiao.toLocaleString('pt-BR')}<br>
-                                    <strong>📍 Cidades na Região:</strong> ${item.cidadesRegiao.length}
-                                </p>
-                                <p style="margin: 8px 0 0 0; font-size: 10px; color: #666; line-height: 1.3;">
-                                    ${top5Cidades}${maisCidades}
+                                <p style="margin: 5px 0; font-size: 12px; color: #666;">
+                                    <strong>�️ Região:</strong> ${item.macroRegiao}
                                 </p>
                             </div>
                         </div>
