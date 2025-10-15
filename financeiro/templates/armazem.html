@@ -1,5 +1,611 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Armazem - Página Placeholder</h2>
-<p>Página inicial do módulo Armazem. Aqui vamos adicionar funcionalidades relacionadas ao armazém.</p>
+<style>
+    .armazem-container {
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .armazem-header {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .armazem-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .filtros-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .filtros-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .filtro-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filtro-group label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 0.9rem;
+    }
+    
+    .filtro-group input,
+    .filtro-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .filtro-group input:focus,
+    .filtro-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-filtrar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        font-size: 1rem;
+    }
+    
+    .btn-filtrar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    .stat-card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .stat-card-icon.purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card-icon.blue {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card-icon.green {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stat-card-icon.orange {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stat-card-label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .stat-card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .stat-card-subtitle {
+        font-size: 0.85rem;
+        color: #999;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .chart-card h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .chart-container {
+        height: 350px;
+        position: relative;
+    }
+    
+    .table-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        margin-bottom: 25px;
+    }
+    
+    .table-card h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .data-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+    
+    .data-table td {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+        color: #333;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        font-size: 1.2rem;
+        color: white;
+    }
+    
+    .error-message {
+        background: #ff4444;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .filtros-row {
+            flex-direction: column;
+        }
+        
+        .filtro-group {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="armazem-container">
+    <!-- Header -->
+    <div class="armazem-header">
+        <h1 class="armazem-title">
+            <span>🏭</span>
+            Dashboard de Armazém
+            <span style="font-size: 1rem; font-weight: 400; color: #666; margin-left: auto;">Análise Operacional</span>
+        </h1>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filtros-container">
+        <div class="filtros-row">
+            <div class="filtro-group">
+                <label>📅 Data Inicial</label>
+                <input type="date" id="dataInicio" class="form-control">
+            </div>
+            <div class="filtro-group">
+                <label>📅 Data Final</label>
+                <input type="date" id="dataFim" class="form-control">
+            </div>
+            <div class="filtro-group">
+                <label>🏢 Filial</label>
+                <select id="filial" class="form-control">
+                    <option value="TODAS">Todas as Filiais</option>
+                    <option value="SJC" selected>São José dos Campos (SJC)</option>
+                    <option value="JAC">Jacareí (JAC)</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <button class="btn-filtrar" onclick="carregarDados()">
+                    🔍 Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div id="loading" class="loading" style="display: none;">
+        <div>⏳ Carregando dados...</div>
+    </div>
+    
+    <!-- Error -->
+    <div id="error" class="error-message" style="display: none;"></div>
+    
+    <!-- Cards de Estatísticas -->
+    <div class="cards-grid" id="cardsGrid">
+        <div class="stat-card">
+            <div class="stat-card-icon purple">🚛</div>
+            <div class="stat-card-label">Total de Carros</div>
+            <div class="stat-card-value" id="totalCarros">-</div>
+            <div class="stat-card-subtitle" id="diasOperacao">-</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-icon blue">⚖️</div>
+            <div class="stat-card-label">Peso Total (Toneladas)</div>
+            <div class="stat-card-value" id="totalPeso">-</div>
+            <div class="stat-card-subtitle">Movimentação total</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-icon green">📊</div>
+            <div class="stat-card-label">Média Diária (Carros)</div>
+            <div class="stat-card-value" id="mediaDiariaCarros">-</div>
+            <div class="stat-card-subtitle">Por dia útil</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-icon orange">🎯</div>
+            <div class="stat-card-label">Média Diária (Peso)</div>
+            <div class="stat-card-value" id="mediaDiariaPeso">-</div>
+            <div class="stat-card-subtitle">Toneladas/dia</div>
+        </div>
+    </div>
+    
+    <!-- Gráficos -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>📈 Evolução Diária de Carros</h3>
+            <div class="chart-container">
+                <canvas id="chartEvolucaoCarros"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>🥧 Distribuição por Cliente</h3>
+            <div class="chart-container">
+                <canvas id="chartClientes"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>📊 Análise Mensal</h3>
+            <div class="chart-container">
+                <canvas id="chartMensal"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>📅 Operações por Dia da Semana</h3>
+            <div class="chart-container">
+                <canvas id="chartDiaSemana"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabela Detalhada -->
+    <div class="table-card">
+        <h3>📋 Detalhamento Diário (Últimos 30 dias)</h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Carros</th>
+                        <th>Peso (kg)</th>
+                        <th>Mafrig Foods</th>
+                        <th>Gold Pão</th>
+                        <th>Friboi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaDetalhes">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 30px;">Carregando dados...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let chartEvolucao, chartClientes, chartMensal, chartDiaSemana;
+
+// Configuração padrão de datas (último mês)
+window.addEventListener('load', function() {
+    const hoje = new Date();
+    const umMesAtras = new Date();
+    umMesAtras.setMonth(umMesAtras.getMonth() - 1);
+    
+    document.getElementById('dataInicio').valueAsDate = umMesAtras;
+    document.getElementById('dataFim').valueAsDate = hoje;
+    
+    carregarDados();
+});
+
+function formatarNumero(num) {
+    return num.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+}
+
+function formatarPeso(peso) {
+    const toneladas = peso / 1000;
+    return toneladas.toFixed(1) + 't';
+}
+
+async function carregarDados() {
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    
+    loading.style.display = 'block';
+    error.style.display = 'none';
+    
+    try {
+        const dataInicio = document.getElementById('dataInicio').value;
+        const dataFim = document.getElementById('dataFim').value;
+        const filial = document.getElementById('filial').value;
+        
+        const params = new URLSearchParams();
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (filial) params.append('filial', filial);
+        
+        const response = await fetch(`/armazem/api/dados?${params}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        atualizarCards(data.resumo);
+        atualizarGraficos(data);
+        atualizarTabela(data.tabela);
+        
+    } catch (err) {
+        error.textContent = '❌ ' + err.message;
+        error.style.display = 'block';
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function atualizarCards(resumo) {
+    document.getElementById('totalCarros').textContent = formatarNumero(resumo.total_carros);
+    document.getElementById('totalPeso').textContent = formatarPeso(resumo.total_peso);
+    document.getElementById('mediaDiariaCarros').textContent = formatarNumero(resumo.media_diaria_carros);
+    document.getElementById('mediaDiariaPeso').textContent = formatarPeso(resumo.media_diaria_peso);
+    document.getElementById('diasOperacao').textContent = `${resumo.dias_operacao} dias de operação`;
+}
+
+function atualizarGraficos(data) {
+    // Gráfico de Evolução
+    if (chartEvolucao) chartEvolucao.destroy();
+    
+    const ctxEvolucao = document.getElementById('chartEvolucaoCarros').getContext('2d');
+    chartEvolucao = new Chart(ctxEvolucao, {
+        type: 'line',
+        data: {
+            labels: data.evolucao.map(d => new Date(d.data).toLocaleDateString('pt-BR')),
+            datasets: [{
+                label: 'Carros',
+                data: data.evolucao.map(d => d.carros),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    // Gráfico de Clientes
+    if (chartClientes) chartClientes.destroy();
+    
+    const ctxClientes = document.getElementById('chartClientes').getContext('2d');
+    const clientesNomes = Object.keys(data.clientes);
+    const clientesCarros = Object.values(data.clientes).map(c => c.carros);
+    
+    chartClientes = new Chart(ctxClientes, {
+        type: 'doughnut',
+        data: {
+            labels: clientesNomes,
+            datasets: [{
+                data: clientesCarros,
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#4facfe',
+                    '#43e97b',
+                    '#fa709a'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+    
+    // Gráfico Mensal
+    if (chartMensal) chartMensal.destroy();
+    
+    const ctxMensal = document.getElementById('chartMensal').getContext('2d');
+    chartMensal = new Chart(ctxMensal, {
+        type: 'bar',
+        data: {
+            labels: data.mensal.map(d => d.mes),
+            datasets: [{
+                label: 'Carros',
+                data: data.mensal.map(d => d.carros),
+                backgroundColor: 'rgba(102, 126, 234, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    // Gráfico Dia da Semana
+    if (chartDiaSemana) chartDiaSemana.destroy();
+    
+    const ctxDiaSemana = document.getElementById('chartDiaSemana').getContext('2d');
+    chartDiaSemana = new Chart(ctxDiaSemana, {
+        type: 'bar',
+        data: {
+            labels: data.por_dia_semana.map(d => d.dia),
+            datasets: [{
+                label: 'Carros',
+                data: data.por_dia_semana.map(d => d.carros),
+                backgroundColor: [
+                    '#667eea', '#764ba2', '#4facfe', '#43e97b', '#fa709a', '#fee140', '#f093fb'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function atualizarTabela(tabela) {
+    const tbody = document.getElementById('tabelaDetalhes');
+    tbody.innerHTML = '';
+    
+    if (!tabela || tabela.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;">Nenhum dado encontrado</td></tr>';
+        return;
+    }
+    
+    tabela.reverse().forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${row.data}</strong></td>
+            <td>${formatarNumero(row.carros)}</td>
+            <td>${formatarNumero(row.peso)}</td>
+            <td>${row.mafrig_foods}</td>
+            <td>${row.gold_pao}</td>
+            <td>${row.friboi}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+</script>
 {% endblock %}

@@ -1,0 +1,801 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    .dashboard-armazem {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .header-dashboard {
+        background: white;
+        border-radius: 15px;
+        padding: 25px 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .header-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .filtros-section {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .filtros-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .filtro-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filtro-item label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 5px;
+    }
+    
+    .filtro-item select {
+        padding: 10px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filtro-item select:hover {
+        border-color: #667eea;
+    }
+    
+    .filtro-item select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-filtrar {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-filtrar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .cards-resumo {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .card-stat {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .card-stat:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+    }
+    
+    .card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .card-label {
+        font-size: 0.875rem;
+        color: #777;
+        margin-bottom: 5px;
+    }
+    
+    .card-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 350px;
+    }
+    
+    .tabela-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        overflow-x: auto;
+    }
+    
+    .tabela-dados {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+    
+    .tabela-dados thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .tabela-dados th {
+        padding: 15px 10px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .tabela-dados td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .tabela-dados tbody tr:hover {
+        background: #f5f5f5;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 50px;
+        font-size: 1.25rem;
+        color: #667eea;
+    }
+    
+    .chart-pizza {
+        height: 400px !important;
+    }
+</style>
+
+<div class="dashboard-armazem">
+    <!-- Header -->
+    <div class="header-dashboard">
+        <div class="header-title">
+            📦 Dashboard de Armazém
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filtros-section">
+        <div class="filtros-grid">
+            <div class="filtro-item">
+                <label for="filtro-dia">📅 Dia</label>
+                <select id="filtro-dia">
+                    <option value="TODOS">Todos os dias</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-mes">📆 Mês</label>
+                <select id="filtro-mes">
+                    <option value="TODOS">Todos os meses</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-ano">🗓️ Ano</label>
+                <select id="filtro-ano">
+                    <option value="TODOS">Todos os anos</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtro-filial">🏢 Filial</label>
+                <select id="filtro-filial">
+                    <option value="TODAS">Todas as filiais</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-filtrar" onclick="carregarDados()">
+            🔍 Filtrar
+        </button>
+    </div>
+    
+    <!-- Cards de Resumo -->
+    <div class="cards-resumo">
+        <div class="card-stat">
+            <div class="card-icon">🚚</div>
+            <div class="card-label">Total de Carros</div>
+            <div class="card-value" id="total-carros">-</div>
+        </div>
+        <div class="card-stat">
+            <div class="card-icon">⚖️</div>
+            <div class="card-label">Peso Total (toneladas)</div>
+            <div class="card-value" id="total-peso">-</div>
+        </div>
+        <div class="card-stat">
+            <div class="card-icon">📊</div>
+            <div class="card-label">Média Diária (Carros)</div>
+            <div class="card-value" id="media-carros">-</div>
+        </div>
+        <div class="card-stat">
+            <div class="card-icon">📈</div>
+            <div class="card-label">Média Diária (Peso)</div>
+            <div class="card-value" id="media-peso">-</div>
+        </div>
+    </div>
+    
+    <!-- Gráficos Principais -->
+    <div class="charts-grid">
+        <!-- Gráfico de Embarcadores -->
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">📊 Embarcadores - JAC e SJC</div>
+            <div class="chart-container">
+                <canvas id="grafico-embarcadores"></canvas>
+            </div>
+        </div>
+        
+        <!-- Gráfico Mensal (Barras + Linha) -->
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-title">📈 Análise Mensal - Peso e Carros</div>
+            <div class="chart-container">
+                <canvas id="grafico-mensal"></canvas>
+            </div>
+        </div>
+        
+        <!-- Gráfico Pizza (Peso por Filial) -->
+        <div class="chart-card">
+            <div class="chart-title">🥧 Peso x Bases - Anual</div>
+            <div class="chart-container chart-pizza">
+                <canvas id="grafico-pizza-filiais"></canvas>
+            </div>
+        </div>
+        
+        <!-- Gráfico Evolução Diária -->
+        <div class="chart-card">
+            <div class="chart-title">📈 Evolução Diária de Carros</div>
+            <div class="chart-container">
+                <canvas id="grafico-evolucao-diaria"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabela Detalhada -->
+    <div class="tabela-section">
+        <div class="chart-title">📋 Detalhamento Diário (Últimos 30 dias)</div>
+        <table class="tabela-dados">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Filial</th>
+                    <th>Total Carros</th>
+                    <th>Peso (t)</th>
+                    <th>MIEGGS (SJC)</th>
+                    <th>FRIBOI</th>
+                    <th>MINERVA (SJC)</th>
+                    <th>GOLD PÃO</th>
+                    <th>VALENCIO</th>
+                    <th>ALIBEM</th>
+                    <th>SAUDALI</th>
+                    <th>PAMPLONA</th>
+                    <th>GT FOODS</th>
+                    <th>SANTA LUCIA</th>
+                    <th>MAFRIG</th>
+                    <th>ADORO (JAC)</th>
+                    <th>VISTA FOODS (JAC)</th>
+                    <th>MIEGGS (JAC)</th>
+                    <th>MINERVA (JAC)</th>
+                    <th>FRZ LOG</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-corpo">
+                <tr>
+                    <td colspan="17" class="loading">Carregando dados...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let chartEmbarcadores = null;
+let chartMensal = null;
+let chartPizzaFiliais = null;
+let chartEvolucaoDiaria = null;
+
+const mesesNomes = {
+    1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril',
+    5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+    9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
+};
+
+async function carregarDados() {
+    try {
+        const dia = document.getElementById('filtro-dia').value;
+        const mes = document.getElementById('filtro-mes').value;
+        const ano = document.getElementById('filtro-ano').value;
+        const filial = document.getElementById('filtro-filial').value;
+        
+        const params = new URLSearchParams({
+            dia: dia,
+            mes: mes,
+            ano: ano,
+            filial: filial
+        });
+        
+        const response = await fetch(`/armazem/api/dados?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            atualizarResumo(data.resumo);
+            atualizarGraficoEmbarcadores(data.embarcadores);
+            atualizarGraficoMensal(data.mensal);
+            atualizarGraficoPizzaFiliais(data.peso_filiais);
+            atualizarGraficoEvolucaoDiaria(data.evolucao_diaria);
+            atualizarTabela(data.tabela);
+            
+            // Atualiza filtros na primeira carga
+            if (!document.getElementById('filtro-dia').hasAttribute('data-loaded')) {
+                popularFiltros(data.filtros);
+                document.getElementById('filtro-dia').setAttribute('data-loaded', 'true');
+            }
+        } else {
+            alert('Erro ao carregar dados: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar dados');
+    }
+}
+
+function popularFiltros(filtros) {
+    // Dias
+    const selectDia = document.getElementById('filtro-dia');
+    filtros.dias.forEach(dia => {
+        const option = document.createElement('option');
+        option.value = dia;
+        option.textContent = dia;
+        selectDia.appendChild(option);
+    });
+    
+    // Meses
+    const selectMes = document.getElementById('filtro-mes');
+    filtros.meses.forEach(mes => {
+        const option = document.createElement('option');
+        option.value = mes;
+        option.textContent = mesesNomes[mes];
+        selectMes.appendChild(option);
+    });
+    
+    // Anos
+    const selectAno = document.getElementById('filtro-ano');
+    filtros.anos.forEach(ano => {
+        const option = document.createElement('option');
+        option.value = ano;
+        option.textContent = ano;
+        selectAno.appendChild(option);
+    });
+    
+    // Filiais
+    const selectFilial = document.getElementById('filtro-filial');
+    filtros.filiais.forEach(filial => {
+        const option = document.createElement('option');
+        option.value = filial;
+        option.textContent = filial;
+        selectFilial.appendChild(option);
+    });
+}
+
+function atualizarResumo(resumo) {
+    document.getElementById('total-carros').textContent = resumo.total_carros.toLocaleString('pt-BR');
+    document.getElementById('total-peso').textContent = (resumo.total_peso / 1000).toFixed(2);
+    document.getElementById('media-carros').textContent = resumo.media_diaria_carros.toFixed(0);
+    document.getElementById('media-peso').textContent = (resumo.media_diaria_peso / 1000).toFixed(2) + 't';
+}
+
+function atualizarGraficoEmbarcadores(embarcadores) {
+    const ctx = document.getElementById('grafico-embarcadores').getContext('2d');
+    
+    const labels = Object.keys(embarcadores);
+    const carros = labels.map(key => embarcadores[key].carros);
+    const pesos = labels.map(key => embarcadores[key].peso); // já vem em toneladas do backend
+    
+    if (chartEmbarcadores) {
+        chartEmbarcadores.destroy();
+    }
+    
+    chartEmbarcadores = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Carros',
+                    data: carros,
+                    backgroundColor: '#FF6B35',
+                    borderColor: '#FF6B35',
+                    borderWidth: 2,
+                    order: 2
+                },
+                {
+                    label: 'Peso (t)',
+                    data: pesos,
+                    backgroundColor: '#004E89',
+                    borderColor: '#004E89',
+                    borderWidth: 2,
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.parsed.y.toLocaleString('pt-BR');
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarGraficoMensal(mensal) {
+    const ctx = document.getElementById('grafico-mensal').getContext('2d');
+    
+    const labels = mensal.map(item => item.mes);
+    const carros = mensal.map(item => item.carros);
+    const pesos = mensal.map(item => item.peso / 1000); // em toneladas
+    
+    if (chartMensal) {
+        chartMensal.destroy();
+    }
+    
+    chartMensal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Peso (t)',
+                    data: pesos,
+                    backgroundColor: '#FF6B35',
+                    borderColor: '#FF6B35',
+                    borderWidth: 2,
+                    order: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Carros',
+                    data: carros,
+                    type: 'line',
+                    borderColor: '#004E89',
+                    backgroundColor: 'rgba(0, 78, 137, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    order: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.parsed.y.toLocaleString('pt-BR');
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Peso (toneladas)',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('pt-BR');
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Carros',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarGraficoPizzaFiliais(pesoFiliais) {
+    const ctx = document.getElementById('grafico-pizza-filiais').getContext('2d');
+    
+    const labels = Object.keys(pesoFiliais);
+    const dados = labels.map(key => pesoFiliais[key] / 1000); // em toneladas
+    
+    // Cores diferentes para cada filial
+    const cores = {
+        'SJC': '#004E89',
+        'JAC': '#1A936F'
+    };
+    
+    const backgroundColor = labels.map(key => cores[key] || '#666');
+    
+    if (chartPizzaFiliais) {
+        chartPizzaFiliais.destroy();
+    }
+    
+    chartPizzaFiliais = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dados,
+                backgroundColor: backgroundColor,
+                borderColor: '#fff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value.toLocaleString('pt-BR')}t (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarGraficoEvolucaoDiaria(evolucao) {
+    const ctx = document.getElementById('grafico-evolucao-diaria').getContext('2d');
+    
+    const labels = evolucao.map(item => item.dia);
+    const carros = evolucao.map(item => item.carros);
+    
+    if (chartEvolucaoDiaria) {
+        chartEvolucaoDiaria.destroy();
+    }
+    
+    chartEvolucaoDiaria = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Carros',
+                data: carros,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Carros: ' + context.parsed.y.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarTabela(dados) {
+    const tbody = document.getElementById('tabela-corpo');
+    tbody.innerHTML = '';
+    
+    if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="20" style="text-align: center; padding: 30px;">Nenhum dado encontrado</td></tr>';
+        return;
+    }
+    
+    dados.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.data}</td>
+            <td><strong>${row.filial}</strong></td>
+            <td><strong>${row.carros}</strong></td>
+            <td>${(row.peso / 1000).toFixed(2)}</td>
+            <td>${row.mafrig_foods}</td>
+            <td>${row.friboi}</td>
+            <td>${row.mafrig_atacado}</td>
+            <td>${row.gold_pao}</td>
+            <td>${row.valencio}</td>
+            <td>${row.alibem}</td>
+            <td>${row.saudali}</td>
+            <td>${row.pamplona}</td>
+            <td>${row.gt_foods}</td>
+            <td>${row.santa_lucia}</td>
+            <td>${row.compartilhado}</td>
+            <td>${row.adoro}</td>
+            <td>${row.vista_foods}</td>
+            <td>${row.mieggs}</td>
+            <td>${row.minerva_jac}</td>
+            <td>${row.frz_log}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Carregar dados ao iniciar
+document.addEventListener('DOMContentLoaded', function() {
+    carregarDados();
+});
+</script>
+
+{% endblock %}
