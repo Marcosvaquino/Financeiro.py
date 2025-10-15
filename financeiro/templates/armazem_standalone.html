@@ -38,111 +38,115 @@
             gap: 12px;
         }
         
-        .filtros-section {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .filtros-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .filtro-item {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filtro-item label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .filtro-item select {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .filtro-item select:hover {
-            border-color: #667eea;
-        }
-        
-        .filtro-item select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .btn-filtrar {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-filtrar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .cards-resumo {
+    .filtros-section {
+        background: white;
+        border-radius: 15px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .filtros-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
+    
+    .filtro-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filtro-item label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 4px;
+    }
+    
+    .filtro-item select {
+        padding: 6px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filtro-item select:hover {
+        border-color: #667eea;
+    }
+    
+    .filtro-item select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }        .cards-resumo {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
         }
         
-        .card-stat {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            transition: all 0.3s ease;
-        }
-        
-        .card-stat:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0,0,0,0.2);
-        }
-        
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .card-label {
-            font-size: 0.875rem;
-            color: #777;
-            margin-bottom: 5px;
-        }
-        
-        .card-value {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .charts-grid {
+    .card-stat {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        border-radius: 12px;
+        padding: 15px 20px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-stat::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+    }
+    
+    .card-stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+        border-left-color: #764ba2;
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .card-icon {
+        font-size: 1.5rem;
+        filter: drop-shadow(2px 2px 4px rgba(102, 126, 234, 0.3));
+    }
+    
+    .card-label {
+        font-size: 0.75rem;
+        color: #667eea;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .card-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        position: relative;
+        z-index: 1;
+    }        .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -160,6 +164,14 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-card.two-cols {
+            grid-column: span 2;
+        }
+        
         .chart-title {
             font-size: 1.25rem;
             font-weight: 700;
@@ -173,6 +185,11 @@
         .chart-container {
             position: relative;
             height: 350px;
+        }
+        
+        .chart-container-tall {
+            position: relative;
+            height: 450px;
         }
         
         .tabela-section {
@@ -194,19 +211,29 @@
             color: white;
         }
         
-        .tabela-dados th {
-            padding: 15px 10px;
-            text-align: left;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .tabela-dados td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .tabela-dados tbody tr:hover {
+    .tabela-dados th {
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .tabela-dados td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: center;
+    }
+    
+    .tabela-dados td:first-child,
+    .tabela-dados th:first-child {
+        text-align: left;
+    }
+    
+    .tabela-dados td:nth-child(2),
+    .tabela-dados th:nth-child(2) {
+        text-align: center;
+        font-weight: 600;
+    }        .tabela-dados tbody tr:hover {
             background: #f5f5f5;
         }
         
@@ -240,54 +267,59 @@
             <div class="filtros-grid">
                 <div class="filtro-item">
                     <label for="filtro-dia">📅 Dia</label>
-                    <select id="filtro-dia">
+                    <select id="filtro-dia" onchange="carregarDados()">
                         <option value="TODOS">Todos os dias</option>
                     </select>
                 </div>
                 <div class="filtro-item">
                     <label for="filtro-mes">📆 Mês</label>
-                    <select id="filtro-mes">
+                    <select id="filtro-mes" onchange="carregarDados()">
                         <option value="TODOS">Todos os meses</option>
                     </select>
                 </div>
                 <div class="filtro-item">
                     <label for="filtro-ano">🗓️ Ano</label>
-                    <select id="filtro-ano">
+                    <select id="filtro-ano" onchange="carregarDados()">
                         <option value="TODOS">Todos os anos</option>
                     </select>
                 </div>
                 <div class="filtro-item">
                     <label for="filtro-filial">🏢 Filial</label>
-                    <select id="filtro-filial">
+                    <select id="filtro-filial" onchange="carregarDados()">
                         <option value="TODAS">Todas as filiais</option>
                     </select>
                 </div>
             </div>
-            <button class="btn-filtrar" onclick="carregarDados()">
-                🔍 Filtrar
-            </button>
         </div>
         
         <!-- Cards de Resumo -->
         <div class="cards-resumo">
             <div class="card-stat">
-                <div class="card-icon">🚚</div>
-                <div class="card-label">Total de Carros</div>
+                <div class="card-header">
+                    <div class="card-icon">🚚</div>
+                    <div class="card-label">Total de Carros</div>
+                </div>
                 <div class="card-value" id="total-carros">-</div>
             </div>
             <div class="card-stat">
-                <div class="card-icon">⚖️</div>
-                <div class="card-label">Peso Total (toneladas)</div>
+                <div class="card-header">
+                    <div class="card-icon">⚖️</div>
+                    <div class="card-label">Peso Total (toneladas)</div>
+                </div>
                 <div class="card-value" id="total-peso">-</div>
             </div>
             <div class="card-stat">
-                <div class="card-icon">📊</div>
-                <div class="card-label">Média Diária (Carros)</div>
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div class="card-label">Média Diária (Carros)</div>
+                </div>
                 <div class="card-value" id="media-carros">-</div>
             </div>
             <div class="card-stat">
-                <div class="card-icon">📈</div>
-                <div class="card-label">Média Diária (Peso)</div>
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <div class="card-label">Média Diária (Peso)</div>
+                </div>
                 <div class="card-value" id="media-peso">-</div>
             </div>
         </div>
@@ -313,13 +345,13 @@
             <!-- Gráfico Pizza (Peso por Filial) -->
             <div class="chart-card">
                 <div class="chart-title">🥧 Peso x Bases - Anual</div>
-                <div class="chart-container chart-pizza">
+                <div class="chart-container">
                     <canvas id="grafico-pizza-filiais"></canvas>
                 </div>
             </div>
             
             <!-- Gráfico Evolução Diária -->
-            <div class="chart-card">
+            <div class="chart-card two-cols">
                 <div class="chart-title">📈 Evolução Diária de Carros</div>
                 <div class="chart-container">
                     <canvas id="grafico-evolucao-diaria"></canvas>
@@ -459,9 +491,19 @@
         function atualizarGraficoEmbarcadores(embarcadores) {
             const ctx = document.getElementById('grafico-embarcadores').getContext('2d');
             
-            const labels = Object.keys(embarcadores);
-            const carros = labels.map(key => embarcadores[key].carros);
-            const pesos = labels.map(key => embarcadores[key].peso);
+            // Ordena os embarcadores do maior para o menor peso
+            const embarcadoresArray = Object.entries(embarcadores).map(([nome, dados]) => ({
+                nome: nome,
+                carros: dados.carros,
+                peso: dados.peso
+            }));
+            
+            // Ordena por peso (decrescente)
+            embarcadoresArray.sort((a, b) => b.peso - a.peso);
+            
+            const labels = embarcadoresArray.map(item => item.nome);
+            const carros = embarcadoresArray.map(item => item.carros);
+            const pesos = embarcadoresArray.map(item => item.peso);
             
             if (chartEmbarcadores) {
                 chartEmbarcadores.destroy();
@@ -473,20 +515,128 @@
                     labels: labels,
                     datasets: [
                         {
+                            label: 'Peso (t)',
+                            data: pesos,
+                            backgroundColor: '#ff6600',
+                            borderColor: '#ff6600',
+                            borderWidth: 2,
+                            order: 1
+                        },
+                        {
                             label: 'Carros',
                             data: carros,
-                            backgroundColor: '#FF6B35',
-                            borderColor: '#FF6B35',
+                            backgroundColor: '#004E89',
+                            borderColor: '#004E89',
                             borderWidth: 2,
                             order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toLocaleString('pt-BR');
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.datasets.forEach(function(dataset, i) {
+                            const meta = chart.getDatasetMeta(i);
+                            if (!meta.hidden) {
+                                meta.data.forEach(function(element, index) {
+                                    ctx.fillStyle = '#000';
+                                    ctx.font = 'bold 11px Arial';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    
+                                    const dataValue = dataset.data[index];
+                                    if (dataValue > 0) {
+                                        const x = element.x;
+                                        const y = element.y - 5;
+                                        ctx.fillText(dataValue.toLocaleString('pt-BR'), x, y);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }]
+            });
+        }
+
+        function atualizarGraficoMensal(mensal) {
+            const ctx = document.getElementById('grafico-mensal').getContext('2d');
+            
+            const labels = mensal.map(item => item.mes);
+            const carros = mensal.map(item => item.carros);
+            const pesos = mensal.map(item => item.peso / 1000);
+            
+            // Calcula os valores máximos para ajustar as escalas
+            const maxPeso = Math.max(...pesos);
+            const maxCarros = Math.max(...carros);
+            
+            if (chartMensal) {
+                chartMensal.destroy();
+            }
+            
+            chartMensal = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Carros',
+                            data: carros,
+                            type: 'line',
+                            borderColor: '#004E89',
+                            backgroundColor: 'rgba(0, 78, 137, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            yAxisID: 'y1',
+                            order: 1
                         },
                         {
                             label: 'Peso (t)',
                             data: pesos,
-                            backgroundColor: '#004E89',
-                            borderColor: '#004E89',
+                            backgroundColor: '#ff6600',
+                            borderColor: '#ff6600',
                             borderWidth: 2,
-                            order: 1
+                            yAxisID: 'y',
+                            order: 2
                         }
                     ]
                 },
@@ -506,64 +656,91 @@
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function atualizarGraficoMensal(mensal) {
-            const ctx = document.getElementById('grafico-mensal').getContext('2d');
-            
-            const labels = mensal.map(item => item.mes);
-            const carros = mensal.map(item => item.carros);
-            const pesos = mensal.map(item => item.peso / 1000);
-            
-            if (chartMensal) {
-                chartMensal.destroy();
-            }
-            
-            chartMensal = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Peso (t)',
-                            data: pesos,
-                            backgroundColor: '#FF6B35',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Carros',
-                            data: carros,
-                            type: 'line',
-                            borderColor: '#004E89',
-                            borderWidth: 3,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
                             type: 'linear',
                             position: 'left',
-                            beginAtZero: true
+                            beginAtZero: true,
+                            max: maxPeso * 1.5,
+                            title: {
+                                display: true,
+                                text: 'Peso (toneladas)',
+                                font: {
+                                    weight: 'bold',
+                                    size: 13
+                                },
+                                color: '#ff6600'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
+                            }
                         },
                         y1: {
                             type: 'linear',
                             position: 'right',
-                            beginAtZero: true,
+                            min: 0,
+                            max: maxCarros * 1.15,
+                            title: {
+                                display: true,
+                                text: 'Carros',
+                                font: {
+                                    weight: 'bold',
+                                    size: 13
+                                },
+                                color: '#004E89'
+                            },
                             grid: {
                                 drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    afterDatasetsDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        
+                        // Desenha valores nos pontos da linha (Carros) - ordem 0
+                        const metaLine = chart.getDatasetMeta(0);
+                        if (!metaLine.hidden) {
+                            metaLine.data.forEach(function(element, index) {
+                                ctx.fillStyle = '#004E89';
+                                ctx.font = 'bold 10px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                
+                                const dataValue = carros[index];
+                                if (dataValue > 0) {
+                                    const x = element.x;
+                                    const y = element.y - 8;
+                                    ctx.fillText(dataValue.toLocaleString('pt-BR'), x, y);
+                                }
+                            });
+                        }
+                        
+                        // Desenha valores nas barras (Peso) - ordem 1
+                        const metaBar = chart.getDatasetMeta(1);
+                        if (!metaBar.hidden) {
+                            metaBar.data.forEach(function(element, index) {
+                                ctx.fillStyle = '#000';
+                                ctx.font = 'bold 10px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                
+                                const dataValue = pesos[index];
+                                if (dataValue > 0) {
+                                    const x = element.x;
+                                    const y = element.y - 5;
+                                    ctx.fillText(dataValue.toLocaleString('pt-BR'), x, y);
+                                }
+                            });
+                        }
+                    }
+                }]
             });
         }
 

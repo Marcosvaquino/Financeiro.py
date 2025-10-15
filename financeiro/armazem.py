@@ -152,55 +152,68 @@ def api_dados():
         media_diaria_peso = float(df_filtrado['Geral_Peso'].mean()) if len(df_filtrado) > 0 else 0
         
         # === DADOS POR EMBARCADOR (TODOS, incluindo compartilhados) ===
+        # IMPORTANTE: Ignora o filtro de FILIAL para mostrar sempre todas as filiais
+        # Aplica apenas filtros de dia, mês e ano
+        df_embarcadores = df.copy()
+        
+        if dia and dia != 'TODOS':
+            df_embarcadores = df_embarcadores[df_embarcadores['Dia'] == int(dia)]
+        
+        if mes and mes != 'TODOS':
+            df_embarcadores = df_embarcadores[df_embarcadores['Mes_Num'] == int(mes)]
+        
+        if ano and ano != 'TODOS':
+            df_embarcadores = df_embarcadores[df_embarcadores['Ano'] == int(ano)]
+        
         # SJC: Mafrig Foods, Friboi, Mafrig Atacado, Gold Pão, Compartilhados
         # JAC: Adoro, Vista Foods, Mieggs, Minerva
         embarcadores = {
             'MIEGGS (SJC)': {
-                'carros': int(df_filtrado[df_filtrado['Filial'] == 'SJC']['Mafrig_Foods_Carros'].sum()),
-                'peso': float(df_filtrado[df_filtrado['Filial'] == 'SJC']['Mafrig_Foods_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores[df_embarcadores['Filial'] == 'SJC']['Mafrig_Foods_Carros'].sum()),
+                'peso': float(df_embarcadores[df_embarcadores['Filial'] == 'SJC']['Mafrig_Foods_Peso'].sum() / 1000)
             },
             'MIEGGS (JAC)': {
-                'carros': int(df_filtrado[df_filtrado['Filial'] == 'JAC']['Mieggs_Carros'].sum()),
-                'peso': float(df_filtrado[df_filtrado['Filial'] == 'JAC']['Mieggs_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores[df_embarcadores['Filial'] == 'JAC']['Mieggs_Carros'].sum()),
+                'peso': float(df_embarcadores[df_embarcadores['Filial'] == 'JAC']['Mieggs_Peso'].sum() / 1000)
             },
             'FRIBOI': {
-                'carros': int(df_filtrado['Friboi_Carros'].sum()),
-                'peso': float(df_filtrado['Friboi_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores['Friboi_Carros'].sum()),
+                'peso': float(df_embarcadores['Friboi_Peso'].sum() / 1000)
             },
             'MINERVA (SJC)': {
-                'carros': int(df_filtrado[df_filtrado['Filial'] == 'SJC']['Mafrig_Atacado_Carros'].sum()),
-                'peso': float(df_filtrado[df_filtrado['Filial'] == 'SJC']['Mafrig_Atacado_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores[df_embarcadores['Filial'] == 'SJC']['Mafrig_Atacado_Carros'].sum()),
+                'peso': float(df_embarcadores[df_embarcadores['Filial'] == 'SJC']['Mafrig_Atacado_Peso'].sum() / 1000)
             },
             'MINERVA (JAC)': {
-                'carros': int(df_filtrado[df_filtrado['Filial'] == 'JAC']['Minerva_JAC_Carros'].sum()),
-                'peso': float(df_filtrado[df_filtrado['Filial'] == 'JAC']['Minerva_JAC_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores[df_embarcadores['Filial'] == 'JAC']['Minerva_JAC_Carros'].sum()),
+                'peso': float(df_embarcadores[df_embarcadores['Filial'] == 'JAC']['Minerva_JAC_Peso'].sum() / 1000)
             },
             'GOLD PÃO': {
-                'carros': int(df_filtrado['Gold_Pao_Carros'].sum()),
-                'peso': float(df_filtrado['Gold_Pao_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores['Gold_Pao_Carros'].sum()),
+                'peso': float(df_embarcadores['Gold_Pao_Peso'].sum() / 1000)
             },
             'MAFRIG (Compart)': {
-                'carros': int(df_filtrado['Compartilhado_Carros'].sum()),
+                'carros': int(df_embarcadores['Compartilhado_Carros'].sum()),
                 'peso': float((
-                    df_filtrado['Valencio_Peso'].sum() +
-                    df_filtrado['Alibem_Agra_Peso'].sum() +
-                    df_filtrado['Saudali_Peso'].sum() +
-                    df_filtrado['Pamplona_Peso'].sum() +
-                    df_filtrado['GT_Foods_Peso'].sum() +
-                    df_filtrado['Santa_Lucia_Peso'].sum()
+                    df_embarcadores['Valencio_Peso'].sum() +
+                    df_embarcadores['Alibem_Agra_Peso'].sum() +
+                    df_embarcadores['Saudali_Peso'].sum() +
+                    df_embarcadores['Pamplona_Peso'].sum() +
+                    df_embarcadores['GT_Foods_Peso'].sum() +
+                    df_embarcadores['Santa_Lucia_Peso'].sum()
                 ) / 1000)
             },
             'FRZ LOG (Compart)': {
-                'carros': int(df_filtrado['Compartilhado_Carros'].sum()),
-                'peso': float(df_filtrado['Compartilhado_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores['Compartilhado_Carros'].sum()),
+                'peso': float(df_embarcadores['Compartilhado_Peso'].sum() / 1000)
             },
             'ADORO': {
-                'carros': int(df_filtrado['Adoro_Carros'].sum()),
-                'peso': float(df_filtrado['Adoro_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores['Adoro_Carros'].sum()),
+                'peso': float(df_embarcadores['Adoro_Peso'].sum() / 1000)
             },
             'VISTA FOODS': {
-                'carros': int(df_filtrado['Vista_Foods_Carros'].sum()),
-                'peso': float(df_filtrado['Vista_Foods_Peso'].sum() / 1000)
+                'carros': int(df_embarcadores['Vista_Foods_Carros'].sum()),
+                'peso': float(df_embarcadores['Vista_Foods_Peso'].sum() / 1000)
             }
         }
         
