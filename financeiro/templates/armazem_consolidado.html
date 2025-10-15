@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block title %}Consolidado Bases - Armazém{% endblock %}
+
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+    }
+
+    .consolidado-container {
+        padding: 20px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .logo-title {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo-frz {
+        width: 120px;
+        height: auto;
+    }
+
+    .filtro-mes-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .filtro-mes {
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        min-width: 200px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filtro-mes:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(255, 107, 53, 0.4);
+    }
+
+    .filtro-mes::after {
+        content: '▼';
+        margin-left: 10px;
+        font-size: 12px;
+    }
+
+    .dropdown-meses {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 5px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+
+    .dropdown-meses.active {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        padding: 12px 20px;
+        cursor: pointer;
+        color: #2c3e50;
+        transition: background 0.2s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .dropdown-item:hover {
+        background: #f8f9fa;
+    }
+
+    .dropdown-item.selected {
+        background: #fff3e0;
+        color: #ff6b35;
+        font-weight: bold;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Cards de Métricas */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .metric-card {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .metric-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        opacity: 0.9;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    /* Gráfico */
+    .chart-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .chart-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 500px;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-size: 16px;
+    }
+
+    .error-message {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    @media (max-width: 1400px) {
+        .metrics-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .header-section {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+
+<div class="consolidado-container">
+    <!-- Header com Logo e Filtro de Mês -->
+    <div class="header-section">
+        <div class="logo-title">
+            <img src="{{ url_for('static', filename='logo-frz.png') }}" alt="FRZ Logística" class="logo-frz" onerror="this.style.display='none'">
+        </div>
+        <div class="filtro-mes-container">
+            <button class="filtro-mes" id="mesBadge" onclick="toggleDropdown()">
+                <span id="mesTexto">Carregando...</span>
+            </button>
+            <div class="dropdown-meses" id="dropdownMeses">
+                <!-- Os meses serão inseridos dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas -->
+    <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card">
+            <div class="metric-label">Peso Acumulado</div>
+            <div class="metric-value" id="pesoAcumulado">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Carros acumulado</div>
+            <div class="metric-value" id="carrosAcumulado">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Média peso por carro</div>
+            <div class="metric-value" id="mediaPesoCarro">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Média peso por dia</div>
+            <div class="metric-value" id="mediaPesoDia">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Média carros por dia</div>
+            <div class="metric-value" id="mediaCarrosDia">-</div>
+        </div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="chart-section">
+        <h2 class="chart-title">Consolidado Bases</h2>
+        <div class="chart-container">
+            <canvas id="chartConsolidado"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let chartInstance = null;
+    let mesAtual = null;
+    let anoAtual = null;
+    let mesesDisponiveis = [];
+
+    // Formata números com separador de milhar
+    function formatNumber(num) {
+        return new Intl.NumberFormat('pt-BR').format(Math.round(num));
+    }
+
+    // Nomes dos meses
+    const nomesMeses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    // Toggle do dropdown
+    function toggleDropdown() {
+        const dropdown = document.getElementById('dropdownMeses');
+        dropdown.classList.toggle('active');
+    }
+
+    // Fecha dropdown ao clicar fora
+    document.addEventListener('click', function(event) {
+        const container = document.querySelector('.filtro-mes-container');
+        if (!container.contains(event.target)) {
+            document.getElementById('dropdownMeses').classList.remove('active');
+        }
+    });
+
+    // Carrega meses disponíveis
+    async function carregarMesesDisponiveis() {
+        try {
+            const response = await fetch('/armazem/api/meses-disponiveis');
+            const data = await response.json();
+            
+            if (data.meses) {
+                mesesDisponiveis = data.meses;
+                renderizarDropdown();
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar meses:', error);
+            // Fallback: cria últimos 12 meses
+            const hoje = new Date();
+            for (let i = 11; i >= 0; i--) {
+                const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+                mesesDisponiveis.push({
+                    mes: data.getMonth() + 1,
+                    ano: data.getFullYear(),
+                    nome: nomesMeses[data.getMonth() + 1],
+                    label: `${nomesMeses[data.getMonth() + 1]} ${data.getFullYear()}`
+                });
+            }
+            renderizarDropdown();
+        }
+    }
+
+    // Renderiza o dropdown de meses
+    function renderizarDropdown() {
+        const dropdown = document.getElementById('dropdownMeses');
+        dropdown.innerHTML = '';
+        
+        mesesDisponiveis.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'dropdown-item';
+            div.textContent = item.label;
+            div.onclick = () => selecionarMes(item.mes, item.ano, item.nome);
+            
+            // Marca o mês atual como selecionado
+            if (item.mes === mesAtual && item.ano === anoAtual) {
+                div.classList.add('selected');
+            }
+            
+            dropdown.appendChild(div);
+        });
+    }
+
+    // Seleciona um mês
+    function selecionarMes(mes, ano, nome) {
+        mesAtual = mes;
+        anoAtual = ano;
+        document.getElementById('mesTexto').textContent = `${nome} ${ano}`;
+        document.getElementById('dropdownMeses').classList.remove('active');
+        
+        // Atualiza os itens selecionados
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.target.classList.add('selected');
+        
+        // Recarrega os dados
+        carregarDados(mes, ano);
+    }
+
+    // Carrega dados da API
+    async function carregarDados(mes = null, ano = null) {
+        try {
+            let url = '/armazem/api/consolidado';
+            if (mes && ano) {
+                url += `?mes=${mes}&ano=${ano}`;
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Erro ao carregar dados');
+            }
+
+            const data = await response.json();
+            
+            // Atualiza variáveis globais
+            mesAtual = data.filtro.mes;
+            anoAtual = data.filtro.ano;
+
+            // Atualiza badge do mês
+            document.getElementById('mesTexto').textContent = `${data.filtro.nome_mes} ${data.filtro.ano}`;
+            
+            // Atualiza dropdown
+            renderizarDropdown();
+
+            // Atualiza cards
+            document.getElementById('pesoAcumulado').textContent = formatNumber(data.cards.peso_acumulado);
+            document.getElementById('carrosAcumulado').textContent = formatNumber(data.cards.carros_acumulado);
+            document.getElementById('mediaPesoCarro').textContent = formatNumber(data.cards.media_peso_carro);
+            document.getElementById('mediaPesoDia').textContent = formatNumber(data.cards.media_peso_dia);
+            document.getElementById('mediaCarrosDia').textContent = formatNumber(data.cards.media_carros_dia);
+
+            // Atualiza gráfico
+            renderizarGrafico(data.grafico);
+
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            alert('Erro ao carregar dados do consolidado');
+        }
+    }
+
+    // Renderiza o gráfico
+    function renderizarGrafico(dados) {
+        const ctx = document.getElementById('chartConsolidado');
+        
+        // Destroi gráfico anterior se existir
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dados.dias,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'PESO CARREGADO',
+                        data: dados.pesos,
+                        backgroundColor: '#1e3a5f',
+                        borderColor: '#1e3a5f',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'CARROS CARREGADO',
+                        data: dados.carros,
+                        borderColor: '#ff6b35',
+                        backgroundColor: '#ff6b35',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ff6b35',
+                        tension: 0.4,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += formatNumber(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: false
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 11,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Peso (kg)',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            },
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Carros',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatNumber(value);
+                            },
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Carrega dados ao iniciar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarMesesDisponiveis();
+        carregarDados();
+    });
+</script>
+
+{% endblock %}

@@ -115,6 +115,12 @@ def index():
     return render_template('armazem_standalone.html')
 
 
+@bp.route('/consolidado')
+def consolidado():
+    """Página do painel consolidado de bases (SJC + JAC)"""
+    return render_template('armazem_consolidado.html')
+
+
 @bp.route('/importacao', methods=['GET', 'POST'])
 def importacao():
     """Página e processamento de importação de arquivos do armazém"""
@@ -412,6 +418,124 @@ def api_dados():
         })
         
     except Exception as e:
+        print(f"Erro na API de dados: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/consolidado', methods=['GET'])
+def api_consolidado():
+    """API para dados consolidados (SJC + JAC)"""
+    try:
+        df = carregar_dados_armazem()
+        if df is None or df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Pega filtro de mês (padrão: mês atual)
+        mes_filtro = request.args.get('mes', type=int)
+        ano_filtro = request.args.get('ano', type=int)
+        
+        # Se não especificado, usa mês/ano da última data disponível
+        if not mes_filtro or not ano_filtro:
+            ultima_data = df['Data'].max()
+            mes_filtro = ultima_data.month
+            ano_filtro = ultima_data.year
+        
+        # Filtra por mês/ano
+        df_filtrado = df[(df['Mes_Num'] == mes_filtro) & (df['Ano'] == ano_filtro)].copy()
+        
+        if df_filtrado.empty:
+            return jsonify({'error': 'Nenhum dado para o período selecionado'}), 404
+        
+        # Agrupa por dia (soma SJC + JAC)
+        consolidado_dia = df_filtrado.groupby('Dia').agg({
+            'Geral_Peso': 'sum',
+            'Geral_Carros': 'sum'
+        }).reset_index()
+        
+        # Ordena por dia
+        consolidado_dia = consolidado_dia.sort_values('Dia')
+        
+        # Calcula acumulados
+        peso_acumulado = float(consolidado_dia['Geral_Peso'].sum())
+        carros_acumulado = float(consolidado_dia['Geral_Carros'].sum())
+        
+        # Calcula médias
+        dias_operacao = len(consolidado_dia[consolidado_dia['Geral_Peso'] > 0])
+        media_peso_carro = float(peso_acumulado / carros_acumulado if carros_acumulado > 0 else 0)
+        media_peso_dia = float(peso_acumulado / dias_operacao if dias_operacao > 0 else 0)
+        media_carros_dia = float(carros_acumulado / dias_operacao if dias_operacao > 0 else 0)
+        
+        # Prepara dados do gráfico (converte para tipos nativos do Python)
+        dias = [int(x) for x in consolidado_dia['Dia'].tolist()]
+        pesos = [float(x) for x in consolidado_dia['Geral_Peso'].tolist()]
+        carros = [int(x) for x in consolidado_dia['Geral_Carros'].tolist()]
+        
+        # Nome do mês
+        meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        nome_mes = meses[mes_filtro]
+        
+        return jsonify({
+            'cards': {
+                'peso_acumulado': round(peso_acumulado, 0),
+                'carros_acumulado': round(carros_acumulado, 0),
+                'media_peso_carro': round(media_peso_carro, 0),
+                'media_peso_dia': round(media_peso_dia, 0),
+                'media_carros_dia': round(media_carros_dia, 0)
+            },
+            'grafico': {
+                'dias': dias,
+                'pesos': pesos,
+                'carros': carros
+            },
+            'filtro': {
+                'mes': mes_filtro,
+                'ano': ano_filtro,
+                'nome_mes': nome_mes
+            }
+        })
+        
+    except Exception as e:
+        print(f"Erro na API consolidado: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/meses-disponiveis', methods=['GET'])
+def api_meses_disponiveis():
+    """API para retornar os meses disponíveis nos dados"""
+    try:
+        df = carregar_dados_armazem()
+        if df is None or df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Agrupa por ano e mês
+        meses = df.groupby(['Ano', 'Mes_Num']).size().reset_index()[['Ano', 'Mes_Num']]
+        meses = meses.sort_values(['Ano', 'Mes_Num'], ascending=[False, False])
+        
+        # Nomes dos meses
+        nomes_meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        
+        # Prepara lista de meses
+        lista_meses = []
+        for _, row in meses.iterrows():
+            ano = int(row['Ano'])
+            mes = int(row['Mes_Num'])
+            lista_meses.append({
+                'mes': mes,
+                'ano': ano,
+                'nome': nomes_meses[mes],
+                'label': f"{nomes_meses[mes]} {ano}"
+            })
+        
+        return jsonify({'meses': lista_meses})
+        
+    except Exception as e:
+        print(f"Erro na API meses disponíveis: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500

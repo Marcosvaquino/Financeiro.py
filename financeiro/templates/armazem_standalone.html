@@ -371,14 +371,14 @@
             <div class="card-stat">
                 <div class="card-header">
                     <div class="card-icon">📊</div>
-                    <div class="card-label">Média Diária (Carros)</div>
+                    <div class="card-label">Média Diária (carros)</div>
                 </div>
                 <div class="card-value" id="media-carros">-</div>
             </div>
             <div class="card-stat">
                 <div class="card-header">
                     <div class="card-icon">📈</div>
-                    <div class="card-label">Média Diária (Peso)</div>
+                    <div class="card-label">Peso Médio (por carro)</div>
                 </div>
                 <div class="card-value" id="media-peso">-</div>
             </div>
@@ -543,10 +543,14 @@
         }
 
         function atualizarResumo(resumo) {
+            // Formatar números no padrão brasileiro
             document.getElementById('total-carros').textContent = resumo.total_carros.toLocaleString('pt-BR');
-            document.getElementById('total-peso').textContent = (resumo.total_peso / 1000).toFixed(2);
-            document.getElementById('media-carros').textContent = resumo.media_diaria_carros.toFixed(0);
-            document.getElementById('media-peso').textContent = (resumo.media_diaria_peso / 1000).toFixed(2) + 't';
+            document.getElementById('total-peso').textContent = (resumo.total_peso / 1000).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('media-carros').textContent = Math.round(resumo.media_diaria_carros).toLocaleString('pt-BR');
+            
+            // Calcular peso médio por carro em QUILOS (kg)
+            const pesoMedioPorCarroKg = resumo.total_carros > 0 ? resumo.total_peso / resumo.total_carros : 0;
+            document.getElementById('media-peso').textContent = Math.round(pesoMedioPorCarroKg).toLocaleString('pt-BR');
         }
 
         function atualizarGraficoEmbarcadores(embarcadores) {
