@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 import pandas as pd
 import os
 import calendar
 from datetime import datetime, timedelta
 from collections import defaultdict
+from werkzeug.utils import secure_filename
 
 bp = Blueprint('armazem', __name__, url_prefix='/armazem')
 
@@ -112,6 +113,58 @@ def carregar_dados_armazem():
 @bp.route('/')
 def index():
     return render_template('armazem_standalone.html')
+
+
+@bp.route('/importacao', methods=['GET', 'POST'])
+def importacao():
+    """Página e processamento de importação de arquivos do armazém"""
+    if request.method == 'POST':
+        # Verifica se o arquivo foi enviado
+        if 'arquivo' not in request.files:
+            flash('Nenhum arquivo foi selecionado', 'error')
+            return redirect(request.url)
+        
+        file = request.files['arquivo']
+        
+        # Verifica se um arquivo foi realmente selecionado
+        if file.filename == '':
+            flash('Nenhum arquivo foi selecionado', 'error')
+            return redirect(request.url)
+        
+        # Verifica a extensão do arquivo
+        if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+            flash('Formato de arquivo inválido. Use apenas .xlsx ou .xls', 'error')
+            return redirect(request.url)
+        
+        try:
+            # Garante que o diretório existe
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.makedirs(UPLOAD_FOLDER)
+            
+            # Salva o arquivo com nome fixo
+            filepath = os.path.join(UPLOAD_FOLDER, 'ARMAZEM.xlsx')
+            file.save(filepath)
+            
+            # Tenta carregar o arquivo para validar
+            df = carregar_dados_armazem()
+            if df is None or df.empty:
+                flash('Erro ao processar o arquivo. Verifique o formato.', 'error')
+                return redirect(request.url)
+            
+            flash(f'✅ Arquivo importado com sucesso! {len(df)} registros carregados.', 'success')
+            return redirect(url_for('armazem.index'))
+            
+        except Exception as e:
+            flash(f'Erro ao importar arquivo: {str(e)}', 'error')
+            return redirect(request.url)
+    
+    # GET - mostra o formulário
+    ultima_importacao = None
+    if os.path.exists(ARMAZEM_FILE):
+        timestamp = os.path.getmtime(ARMAZEM_FILE)
+        ultima_importacao = datetime.fromtimestamp(timestamp).strftime('%d/%m/%Y às %H:%M')
+    
+    return render_template('armazem_importacao.html', ultima_importacao=ultima_importacao)
 
 
 @bp.route('/api/dados', methods=['GET'])
