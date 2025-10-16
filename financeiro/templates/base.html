@@ -45,7 +45,8 @@
                     <span class="menu-parent">Armazem</span>
                     <ul class="menu-children">
                         <li class="child-item"><a href="{{ url_for('armazem.index') }}">📦 Painel</a></li>
-                        <li class="child-item"><a class="menu-highlight" href="{{ url_for('armazem.consolidado') }}">📊 Consolidado</a></li>
+                        <li class="child-item"><a href="{{ url_for('armazem.consolidado') }}">📊 Consolidado</a></li>
+                        <li class="child-item"><a href="{{ url_for('armazem.frz_log') }}">🚚 FRZ LOG</a></li>
                         <li class="child-item"><a href="{{ url_for('armazem.importacao') }}">📂 Importação</a></li>
                     </ul>
                 </li>
@@ -155,10 +156,10 @@
             
             // Mapear caminhos para seus menus pais
             const menuMappings = {
-                'Financeiro': ['/planejamento', '/projecao', '/dashboard', '/resumo', '/consolidacao', '/importacao'],
-                'Frete': ['/frete', '/upload'],
-                'Armazem': ['/armazem'], 
-                'Logistica': ['/logistica', '/logistica/monitoramento']
+                'Financeiro': ['/planejamento', '/projecao', '/dashboard', '/resumo', '/consolidacao', '/importacao', '/frz_log'],
+                'Frete': ['/frete', '/upload', '/margem', '/suporte', '/custo_frota'],
+                'Armazem': ['/armazem'],
+                'Logistica': ['/logistica']
             };
             
             // Função para verificar se o menu deve estar expandido
@@ -174,9 +175,8 @@
                     menuParents.forEach(parent => {
                         if (parent.textContent.trim() === menuName) {
                             const menuItem = parent.parentElement;
-                            // Adiciona AMBAS as classes: expanded E keep-expanded
+                            // Apenas adiciona expanded (sem keep-expanded) para permitir fechar
                             menuItem.classList.add('expanded');
-                            menuItem.classList.add('keep-expanded');
                         }
                     });
                 }
@@ -186,12 +186,6 @@
             parents.forEach(p => {
                 p.addEventListener('click', function(e){
                     const item = this.parentElement;
-                    const menuName = this.textContent.trim();
-                    
-                    // Se tem a classe keep-expanded, não permitir fechar
-                    if (item.classList.contains('keep-expanded')) {
-                        return; // Bloqueia qualquer ação de fechar
-                    }
                     
                     // Toggle: se já está expandido, feche; senão, abra
                     if (item.classList.contains('expanded')) {
@@ -199,12 +193,10 @@
                         return;
                     }
                     
-                    // Fechar todos os outros menus primeiro (exceto os keep-expanded)
+                    // Fechar todos os outros menus primeiro
                     const allMenuItems = document.querySelectorAll('.menu-item');
                     allMenuItems.forEach(menuItem => {
-                        if (!menuItem.classList.contains('keep-expanded')) {
-                            menuItem.classList.remove('expanded');
-                        }
+                        menuItem.classList.remove('expanded');
                     });
                     
                     // Abrir o menu clicado

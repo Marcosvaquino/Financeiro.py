@@ -121,6 +121,12 @@ def consolidado():
     return render_template('armazem_consolidado.html')
 
 
+@bp.route('/frz-log')
+def frz_log():
+    """Página do painel FRZ LOG - Embarcadores Compartilhados"""
+    return render_template('armazem_frz_log.html')
+
+
 @bp.route('/importacao', methods=['GET', 'POST'])
 def importacao():
     """Página e processamento de importação de arquivos do armazém"""
@@ -499,6 +505,92 @@ def api_consolidado():
         
     except Exception as e:
         print(f"Erro na API consolidado: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/frz-log', methods=['GET'])
+def api_frz_log():
+    """API para dados dos embarcadores compartilhados (FRZ LOG)"""
+    try:
+        df = carregar_dados_armazem()
+        if df is None or df.empty:
+            return jsonify({'error': 'Nenhum dado disponível'}), 404
+        
+        # Pega filtro de mês (padrão: mês atual)
+        mes_filtro = request.args.get('mes', type=int)
+        ano_filtro = request.args.get('ano', type=int)
+        
+        # Se não especificado, usa mês/ano da última data disponível
+        if not mes_filtro or not ano_filtro:
+            ultima_data = df['Data'].max()
+            mes_filtro = ultima_data.month
+            ano_filtro = ultima_data.year
+        
+        # Filtra por mês/ano
+        df_filtrado = df[(df['Mes_Num'] == mes_filtro) & (df['Ano'] == ano_filtro)].copy()
+        
+        if df_filtrado.empty:
+            return jsonify({'error': 'Nenhum dado para o período selecionado'}), 404
+        
+        # Lista de embarcadores compartilhados
+        embarcadores = {
+            'GT Foods': 'GT_Foods_Peso',
+            'Valencio': 'Valencio_Peso',
+            'Pamplona': 'Pamplona_Peso',
+            'Alibem/Agra': 'Alibem_Agra_Peso',
+            'Saudali': 'Saudali_Peso',
+            'Santa Lucia': 'Santa_Lucia_Peso'
+        }
+        
+        # Calcula totais por embarcador
+        totais_embarcadores = {}
+        for nome, coluna in embarcadores.items():
+            if coluna in df_filtrado.columns:
+                total = float(df_filtrado[coluna].sum())
+                totais_embarcadores[nome] = round(total, 0)
+            else:
+                totais_embarcadores[nome] = 0
+        
+        # Ordena por peso (maior para menor)
+        totais_ordenados = sorted(totais_embarcadores.items(), key=lambda x: x[1], reverse=True)
+        
+        # Calcula total geral compartilhado
+        total_compartilhado = float(df_filtrado['Compartilhado_Peso'].sum())
+        carros_compartilhado = float(df_filtrado['Compartilhado_Carros'].sum())
+        
+        # Calcula médias
+        dias_operacao = len(df_filtrado[df_filtrado['Compartilhado_Peso'] > 0])
+        media_peso_dia = float(total_compartilhado / dias_operacao if dias_operacao > 0 else 0)
+        media_carros_dia = float(carros_compartilhado / dias_operacao if dias_operacao > 0 else 0)
+        
+        # Nome do mês
+        meses = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        nome_mes = meses[mes_filtro]
+        
+        return jsonify({
+            'cards': {
+                'peso_total': round(total_compartilhado, 0),
+                'carros_total': round(carros_compartilhado, 0),
+                'media_peso_dia': round(media_peso_dia, 0),
+                'media_carros_dia': round(media_carros_dia, 0),
+                'num_embarcadores': len([v for v in totais_embarcadores.values() if v > 0])
+            },
+            'grafico': {
+                'labels': [nome for nome, peso in totais_ordenados],
+                'valores': [peso for nome, peso in totais_ordenados]
+            },
+            'filtro': {
+                'mes': mes_filtro,
+                'ano': ano_filtro,
+                'nome_mes': nome_mes
+            }
+        })
+        
+    except Exception as e:
+        print(f"Erro na API FRZ LOG: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
