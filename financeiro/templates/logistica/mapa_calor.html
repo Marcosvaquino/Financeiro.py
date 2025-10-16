@@ -83,20 +83,20 @@
     .stats-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 12px;
-        border-radius: 10px;
+        padding: 8px;
+        border-radius: 8px;
         text-align: center;
         margin-bottom: 0;
     }
 
     .stats-value {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: bold;
-        margin: 5px 0;
+        margin: 3px 0;
     }
 
     .stats-label {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         opacity: 0.9;
     }
 
@@ -324,31 +324,31 @@
     <!-- Stats Row Compacta -->
     <div class="row mb-3" id="statsRow" style="display: none;">
         <div class="col-md-3 mb-2">
-            <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px;">
-                <i class="fas fa-map-marker-alt" style="font-size: 1.5rem;"></i>
-                <div class="stats-value" id="totalLocais" style="font-size: 1.5rem;">0</div>
-                <div class="stats-label" style="font-size: 0.75rem;">Cidades</div>
+            <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px;">
+                <i class="fas fa-map-marker-alt" style="font-size: 1.2rem;"></i>
+                <div class="stats-value" id="totalLocais" style="font-size: 1.2rem;">0</div>
+                <div class="stats-label" style="font-size: 0.7rem;">Cidades</div>
             </div>
         </div>
         <div class="col-md-3 mb-2">
-            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 12px;">
-                <i class="fas fa-chart-line" style="font-size: 1.5rem;"></i>
-                <div class="stats-value" id="totalValor" style="font-size: 1.5rem;">0</div>
-                <div class="stats-label" style="font-size: 0.75rem;">Ocorrências</div>
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 8px;">
+                <i class="fas fa-chart-line" style="font-size: 1.2rem;"></i>
+                <div class="stats-value" id="totalValor" style="font-size: 1.2rem;">0</div>
+                <div class="stats-label" style="font-size: 0.7rem;">Ocorrências</div>
             </div>
         </div>
         <div class="col-md-3 mb-2">
-            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 12px;">
-                <i class="fas fa-calculator" style="font-size: 1.5rem;"></i>
-                <div class="stats-value" id="mediaValor" style="font-size: 1.5rem;">0</div>
-                <div class="stats-label" style="font-size: 0.75rem;">Média</div>
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 8px;">
+                <i class="fas fa-calculator" style="font-size: 1.2rem;"></i>
+                <div class="stats-value" id="mediaValor" style="font-size: 1.2rem;">0</div>
+                <div class="stats-label" style="font-size: 0.7rem;">Média</div>
             </div>
         </div>
         <div class="col-md-3 mb-2">
-            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 12px;">
-                <i class="fas fa-fire" style="font-size: 1.5rem;"></i>
-                <div class="stats-value" id="maiorValor" style="font-size: 1.5rem;">0</div>
-                <div class="stats-label" style="font-size: 0.75rem;">Máximo</div>
+            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 8px;">
+                <i class="fas fa-fire" style="font-size: 1.2rem;"></i>
+                <div class="stats-value" id="maiorValor" style="font-size: 1.2rem;">0</div>
+                <div class="stats-label" style="font-size: 0.7rem;">Máximo</div>
             </div>
         </div>
     </div>
@@ -415,7 +415,7 @@
                         <option value="Vale do Paraíba" style="background: #FF6B6B20;">📍 Vale do Paraíba</option>
                         <option value="Litoral Norte" style="background: #4ECDC420;">🏖️ Litoral Norte</option>
                         <option value="Litoral Sul" style="background: #45B7D120;">🌊 Litoral Sul</option>
-                        <option value="SP Capital e RM" style="background: #FFA07A20;">🏙️ SP Capital e RM</option>
+                        <option value="Grande São Paulo" style="background: #FFA07A20;">🏙️ Grande São Paulo</option>
                         <option value="ABC Paulista" style="background: #98D8C820;">🏭 ABC Paulista</option>
                         <option value="Campinas e Região" style="background: #F7DC6F20;">🌆 Campinas e Região</option>
                         <option value="Sorocaba e Região" style="background: #BB8FCE20;">🏘️ Sorocaba e Região</option>
@@ -631,6 +631,19 @@
             return 'Outras Capitais';
         }
         
+        // ABC Paulista (ESPECÍFICO - apenas por nome da cidade)
+        const cidadesABC = ['SANTO ANDRÉ', 'SÃO BERNARDO DO CAMPO', 'SÃO CAETANO DO SUL', 
+                           'DIADEMA', 'MAUÁ', 'RIBEIRÃO PIRES', 'RIO GRANDE DA SERRA'];
+        if (cidadesABC.includes(cidadeUpper)) {
+            return 'ABC Paulista';
+        }
+        
+        // Grande São Paulo (SP Capital + Região Metropolitana)
+        // Coordenadas amplas para pegar toda a região metropolitana
+        if (lat >= -23.9 && lat <= -23.0 && lng >= -47.0 && lng <= -46.0) {
+            return 'Grande São Paulo';
+        }
+        
         // Vale do Paraíba
         if (lat >= -23.4 && lat <= -22.5 && lng >= -46.0 && lng <= -44.7) {
             return 'Vale do Paraíba';
@@ -644,16 +657,6 @@
         // Litoral Sul
         if (lat < -23.8 && lng > -47.0) {
             return 'Litoral Sul';
-        }
-        
-        // ABC Paulista
-        if (lat >= -23.8 && lat <= -23.5 && lng >= -46.8 && lng <= -46.3) {
-            return 'ABC Paulista';
-        }
-        
-        // SP Capital e Região Metropolitana
-        if (lat >= -23.8 && lat <= -23.1 && lng >= -46.9 && lng <= -46.0) {
-            return 'SP Capital e Região Metropolitana';
         }
         
         // Campinas e Região
@@ -679,7 +682,7 @@
         'Vale do Paraíba': '#FF6B6B',           // Vermelho suave
         'Litoral Norte': '#4ECDC4',             // Turquesa
         'Litoral Sul': '#45B7D1',               // Azul claro
-        'SP Capital e Região Metropolitana': '#FFA07A', // Laranja claro
+        'Grande São Paulo': '#FFA07A',          // Laranja claro (renomeado)
         'ABC Paulista': '#98D8C8',              // Verde água
         'Campinas e Região': '#F7DC6F',         // Amarelo
         'Sorocaba e Região': '#BB8FCE',         // Roxo claro
@@ -920,10 +923,10 @@
         
         // Filtrar dados macro pela região selecionada
         const dadosFiltrados = dadosMacroGlobal.filter(item => {
-            // Normalizar nome da região
+            // Normalizar nome da região (legado)
             let regiao = item.macroRegiao;
             if (regiao === 'SP Capital e Região Metropolitana') {
-                regiao = 'SP Capital e RM';
+                regiao = 'Grande São Paulo';
             }
             return regiao === regiaoSelecionada;
         });
@@ -1332,12 +1335,6 @@
 
         // Formatar números - usar separador de milhar apenas para valores grandes
         function formatarNumero(num) {
-            if (tipoMetrica === 'peso') {
-                return num.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
             if (num >= 1000) {
                 return num.toLocaleString('pt-BR', {
                     minimumFractionDigits: 0,
@@ -1349,12 +1346,6 @@
 
         // Formatar com decimais para média se necessário
         function formatarMedia(num) {
-            if (tipoMetrica === 'peso') {
-                return num.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
             if (num >= 1000) {
                 return num.toLocaleString('pt-BR', {
                     minimumFractionDigits: 0,
