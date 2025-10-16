@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Financeiro{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
 </head>
 <body>
     <div class="sidebar" id="sidebar">
@@ -149,26 +149,6 @@
         // Menu pai/filho: alterna submenus ao clicar no item pai
         (function(){
             const parents = document.querySelectorAll('.menu-parent');
-            parents.forEach(p => {
-                p.addEventListener('click', function(){
-                    const item = this.parentElement;
-                    
-                    // Se o menu já está expandido, apenas feche
-                    if (item.classList.contains('expanded')) {
-                        item.classList.remove('expanded');
-                        return;
-                    }
-                    
-                    // Fechar todos os outros menus primeiro
-                    const allMenuItems = document.querySelectorAll('.menu-item');
-                    allMenuItems.forEach(menuItem => {
-                        menuItem.classList.remove('expanded');
-                    });
-                    
-                    // Abrir apenas o menu clicado
-                    item.classList.add('expanded');
-                });
-            });
             
             // Manter submenu aberto se estamos em uma de suas páginas filhas
             const currentPath = window.location.pathname;
@@ -176,26 +156,60 @@
             // Mapear caminhos para seus menus pais
             const menuMappings = {
                 'Financeiro': ['/planejamento', '/projecao', '/dashboard', '/resumo', '/consolidacao', '/importacao'],
-                // Também considerar a rota /upload como pertencente ao menu Frete
                 'Frete': ['/frete', '/upload'],
                 'Armazem': ['/armazem'], 
                 'Logistica': ['/logistica', '/logistica/monitoramento']
             };
             
-            // Verificar qual menu deve estar expandido baseado na URL atual
-            Object.keys(menuMappings).forEach(menuName => {
+            // Função para verificar se o menu deve estar expandido
+            function isMenuActive(menuName) {
                 const paths = menuMappings[menuName];
-                const isCurrentMenu = paths.some(path => currentPath.startsWith(path));
-                
-                if (isCurrentMenu) {
-                    // Encontrar o menu pai correspondente e expandir
+                return paths && paths.some(path => currentPath.startsWith(path));
+            }
+            
+            // Expandir o menu correto baseado na URL atual ao carregar
+            Object.keys(menuMappings).forEach(menuName => {
+                if (isMenuActive(menuName)) {
                     const menuParents = document.querySelectorAll('.menu-parent');
                     menuParents.forEach(parent => {
                         if (parent.textContent.trim() === menuName) {
-                            parent.parentElement.classList.add('expanded');
+                            const menuItem = parent.parentElement;
+                            // Adiciona AMBAS as classes: expanded E keep-expanded
+                            menuItem.classList.add('expanded');
+                            menuItem.classList.add('keep-expanded');
                         }
                     });
                 }
+            });
+            
+            // Adicionar evento de clique nos menus pais
+            parents.forEach(p => {
+                p.addEventListener('click', function(e){
+                    const item = this.parentElement;
+                    const menuName = this.textContent.trim();
+                    
+                    // Se tem a classe keep-expanded, não permitir fechar
+                    if (item.classList.contains('keep-expanded')) {
+                        return; // Bloqueia qualquer ação de fechar
+                    }
+                    
+                    // Toggle: se já está expandido, feche; senão, abra
+                    if (item.classList.contains('expanded')) {
+                        item.classList.remove('expanded');
+                        return;
+                    }
+                    
+                    // Fechar todos os outros menus primeiro (exceto os keep-expanded)
+                    const allMenuItems = document.querySelectorAll('.menu-item');
+                    allMenuItems.forEach(menuItem => {
+                        if (!menuItem.classList.contains('keep-expanded')) {
+                            menuItem.classList.remove('expanded');
+                        }
+                    });
+                    
+                    // Abrir o menu clicado
+                    item.classList.add('expanded');
+                });
             });
         })();
     </script>

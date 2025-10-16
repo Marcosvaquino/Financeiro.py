@@ -1,0 +1,143 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║        🤖 AUTOMAÇÃO ESL CLOUD - CONTAS A RECEBER                    ║
+║                                                                      ║
+║        Sistema de extração automática de relatórios                 ║
+║        Desenvolvido para FRZ Logística                              ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+📋 O QUE FOI CRIADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ automacao_eslcloud.py      - Script principal de automação
+✅ .env                        - Arquivo de configuração (CONFIGURE!)
+✅ .env.example                - Template de configuração
+✅ instalar_automacao.ps1      - Instalador automático
+✅ AUTOMACAO_README.md         - Documentação completa
+✅ GUIA_RAPIDO.md             - Guia de início rápido
+
+
+🚀 COMO USAR (3 PASSOS):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  CONFIGURAR CREDENCIAIS
+   
+   Abra o arquivo: .env
+   
+   Preencha com seus dados:
+   ┌─────────────────────────────────────────┐
+   │ ESL_EMAIL=seu_email@empresa.com         │
+   │ ESL_SENHA=sua_senha_aqui                │
+   └─────────────────────────────────────────┘
+
+   ⚠️  IMPORTANTE: Nunca compartilhe este arquivo!
+
+
+2️⃣  EXECUTAR O SCRIPT
+   
+   No PowerShell, digite:
+   
+   python automacao_eslcloud.py
+
+
+3️⃣  AGUARDAR O DOWNLOAD
+   
+   O arquivo Excel será baixado automaticamente
+   em: C:\Users\SEU_USUARIO\Downloads
+
+
+📊 O QUE O SCRIPT FAZ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ 1. Acessa: https://friozer.eslcloud.com.br
+ 2. Faz login com suas credenciais
+ 3. Navega: ESL Cloud → Financeiro → Relatórios
+ 4. Abre: Contas a Receber
+ 5. Limpa filtro de Filial
+ 6. Define período: 01/01/2025 - 31/12/2025
+ 7. Busca os dados
+ 8. Exporta para Excel
+ 9. Confirma e baixa o arquivo
+
+⏱️  Tempo médio: 30-60 segundos
+
+
+⚙️ PERSONALIZAÇÕES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📅 ALTERAR PERÍODO
+
+   Edite automacao_eslcloud.py na linha 285:
+   
+   automacao.executar(
+       data_inicio="01/06/2025",  ← Altere aqui
+       data_fim="30/06/2025"      ← Altere aqui
+   )
+
+
+📁 ALTERAR PASTA DE DOWNLOAD
+
+   Edite automacao_eslcloud.py na linha 282:
+   
+   automacao = ESLCloudAutomation(
+       download_path="C:/MeusRelatorios"
+   )
+
+
+🔇 RODAR SEM ABRIR NAVEGADOR
+
+   Edite automacao_eslcloud.py na linha 52:
+   
+   chrome_options.add_argument('--headless')  ← Descomente
+
+
+🆘 PROBLEMAS COMUNS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ "Credenciais não configuradas"
+   → Verifique se o arquivo .env está preenchido
+
+❌ "ChromeDriver não encontrado"
+   → Execute: pip install webdriver-manager
+
+❌ "Modal não aparece"
+   → Verifique sua pasta Downloads
+   → O arquivo pode já estar lá
+
+❌ "Elemento não encontrado"
+   → O site pode ter mudado
+   → Entre em contato para atualizar
+
+
+📚 DOCUMENTAÇÃO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 GUIA_RAPIDO.md          - Início rápido
+📖 AUTOMACAO_README.md     - Documentação completa
+
+
+🔒 SEGURANÇA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Credenciais em arquivo .env (não versionado)
+✅ Sem senhas no código
+✅ Protegido pelo .gitignore
+
+
+📦 DEPENDÊNCIAS INSTALADAS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ selenium              - Automação de navegador
+✅ python-dotenv         - Gerenciamento de variáveis
+✅ webdriver-manager     - ChromeDriver automático
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Desenvolvido com ❤️ para FRZ Logística
+  
+  Outubro 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

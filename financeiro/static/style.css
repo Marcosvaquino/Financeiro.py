@@ -324,6 +324,14 @@ body {
     background: #e3e3e3;
     box-shadow: none;
 }
+/* Forçar menu a permanecer expandido quando está ativo */
+.menu-item.keep-expanded > .menu-children {
+    max-height: 480px !important;
+    opacity: 1 !important;
+}
+.menu-item.keep-expanded > .menu-parent::after {
+    transform: translateY(-50%) rotate(180deg) !important;
+}
 .menu-children .child-item { margin: 6px 0; }
 .menu-children .child-item a {
     color: #f0f0f0;
