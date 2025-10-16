@@ -268,7 +268,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
+    // Registra o plugin DataLabels
+    Chart.register(ChartDataLabels);
+    
     let chartInstance = null;
     let mesAtual = null;
     let anoAtual = null;
@@ -425,7 +429,20 @@
                         borderColor: '#1e3a5f',
                         borderWidth: 1,
                         yAxisID: 'y',
-                        order: 2
+                        order: 2,
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#1e3a5f',
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            },
+                            formatter: function(value) {
+                                if (value === 0 || value === null) return '';
+                                return formatNumber(value);
+                            }
+                        }
                     },
                     {
                         type: 'line',
@@ -438,7 +455,21 @@
                         pointBackgroundColor: '#ff6b35',
                         tension: 0.4,
                         yAxisID: 'y1',
-                        order: 1
+                        order: 1,
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#ff6b35',
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            },
+                            formatter: function(value) {
+                                if (value === 0 || value === null) return '';
+                                return formatNumber(value);
+                            },
+                            offset: 8
+                        }
                     }
                 ]
             },
@@ -482,8 +513,7 @@
                                 return label;
                             }
                         }
-                    },
-                    datalabels: false
+                    }
                 },
                 scales: {
                     x: {
@@ -520,6 +550,10 @@
                         },
                         grid: {
                             color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        // Aumenta a escala para criar espaço visual entre barras e linha
+                        afterDataLimits: function(scale) {
+                            scale.max = scale.max * 1.5; // Aumenta 50% para abaixar as barras
                         }
                     },
                     y1: {
