@@ -361,9 +361,11 @@
                     <i class="fas fa-globe-americas me-2"></i>
                     Mapa de Calor
                 </h6>
-                <button class="btn btn-sm btn-light" onclick="toggleFullscreen()" title="Tela Cheia">
-                    <i class="fas fa-expand" id="fullscreenIcon"></i>
-                </button>
+                <div class="ms-auto">
+                    <button class="btn btn-sm btn-light" onclick="toggleFullscreen()" title="Tela Cheia">
+                        <i class="fas fa-expand" id="fullscreenIcon"></i>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="card-body p-0" style="position: relative;">
@@ -384,6 +386,24 @@
                     <label class="btn btn-outline-primary" for="macroSetor" style="font-size: 0.75rem;">
                         <i class="fas fa-globe-americas me-1"></i>Macro Setores
                     </label>
+                </div>
+                
+                <!-- Alternador Ocorrência/Peso -->
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                    <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; color: #333;">
+                        <i class="fas fa-balance-scale me-1"></i> Métrica de Análise
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group" style="width: 100%;">
+                        <input type="radio" class="btn-check" name="tipoMetrica" id="metricaOcorrencia" value="ocorrencia" checked>
+                        <label class="btn btn-outline-success" for="metricaOcorrencia" style="font-size: 0.7rem;">
+                            <i class="fas fa-hashtag me-1"></i>Ocorrências
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="tipoMetrica" id="metricaPeso" value="peso">
+                        <label class="btn btn-outline-warning" for="metricaPeso" style="font-size: 0.7rem;">
+                            <i class="fas fa-weight me-1"></i>Peso (ton)
+                        </label>
+                    </div>
                 </div>
                 
                 <!-- Dropdown de Regiões (só aparece no modo Macro) -->
@@ -554,7 +574,16 @@
     let progressInterval = null;
     let filtroAtivo = 'all'; // Filtro ativo
     let tipoVisualizacao = 'micro'; // micro ou macro
+    let tipoMetrica = 'ocorrencia'; // ocorrencia ou peso
     let poligonosCache = {}; // Cache dos polígonos das cidades
+
+    // Função auxiliar para obter valor baseado na métrica selecionada
+    function getValorMetrica(item) {
+        if (tipoMetrica === 'peso') {
+            return item.peso || 0;
+        }
+        return item.valor || 0;
+    }
 
     // Função para buscar polígonos das cidades
     async function buscarPoligonosCidades(dados) {
@@ -665,7 +694,7 @@
         const regioes = {};
         const dadosComRegiao = [];
         
-        // Primeiro, calcular totais por região
+        // Primeiro, calcular totais por região (valor E peso)
         dados.forEach(item => {
             const regiao = classificarMacroRegiao(item.cidade, item.lat, item.lng);
             
@@ -673,12 +702,14 @@
                 regioes[regiao] = {
                     nome: regiao,
                     totalValor: 0,
+                    totalPeso: 0,
                     cidades: [],
                     cor: coresMacroRegioes[regiao] || '#999999'
                 };
             }
             
             regioes[regiao].totalValor += item.valor;
+            regioes[regiao].totalPeso += (item.peso || 0);
             regioes[regiao].cidades.push(item.cidade);
         });
         
@@ -692,6 +723,7 @@
                 macroRegiao: regiao,  // Nome consistente
                 regiao: regiao,
                 totalRegiao: infoRegiao.totalValor,
+                totalPesoRegiao: infoRegiao.totalPeso,
                 cidadesRegiao: infoRegiao.cidades,
                 corRegiao: infoRegiao.cor
             });
@@ -702,6 +734,7 @@
 
     // Event listeners para mudança de tipo de visualização
     document.addEventListener('DOMContentLoaded', function() {
+        // Listener para mudança de Setor (Micro/Macro)
         document.querySelectorAll('input[name="tipoSetor"]').forEach(radio => {
             radio.addEventListener('change', async function() {
                 tipoVisualizacao = this.value;
@@ -759,7 +792,43 @@
                 }
             });
         });
+        
+        // Listener para mudança de Métrica (Ocorrência/Peso)
+        document.querySelectorAll('input[name="tipoMetrica"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                tipoMetrica = this.value;
+                console.log('📊 Mudando métrica para:', tipoMetrica);
+                
+                // Atualizar mapa e estatísticas com nova métrica
+                if (dadosAtuais.length > 0) {
+                    if (tipoVisualizacao === 'macro') {
+                        filtrarMacroRegioes();
+                    } else {
+                        if (filtroAtivo !== 'all') {
+                            filtrarPorCor(filtroAtivo);
+                        } else {
+                            atualizarMapa(dadosAtuais, false);
+                            atualizarEstatisticas(dadosAtuais);
+                        }
+                    }
+                }
+            });
+        });
     });
+
+    // Função para calcular percentis APENAS para PESO
+    function calcularPercentilsPeso(dados) {
+        const valores = dados.map(item => item.peso || 0).filter(v => v > 0).sort((a, b) => a - b);
+        const n = valores.length;
+        
+        if (n === 0) return { p25: 0, p50: 0, p75: 0 };
+        
+        const p25 = valores[Math.floor(n * 0.25)];
+        const p50 = valores[Math.floor(n * 0.50)];
+        const p75 = valores[Math.floor(n * 0.75)];
+        
+        return { p25, p50, p75 };
+    }
 
     // Função para filtrar dados por faixa de valor
     function filtrarPorCor(range) {
@@ -777,25 +846,50 @@
         let count = dadosAtuais.length;
         
         if (range !== 'all') {
-            dadosFiltrados = dadosAtuais.filter(item => {
-                const valor = item.valor;
-                switch(range) {
-                    case '0-25':
-                        rangeText = '0-25 ocorrências';
-                        return valor >= 0 && valor <= 25;
-                    case '26-50':
-                        rangeText = '26-50 ocorrências';
-                        return valor >= 26 && valor <= 50;
-                    case '51-75':
-                        rangeText = '51-75 ocorrências';
-                        return valor >= 51 && valor <= 75;
-                    case '76-100':
-                        rangeText = '76-100+ ocorrências';
-                        return valor >= 76;
-                    default:
-                        return true;
-                }
-            });
+            if (tipoMetrica === 'peso') {
+                // PESO: Usar percentis
+                const percentis = calcularPercentilsPeso(dadosAtuais);
+                dadosFiltrados = dadosAtuais.filter(item => {
+                    const peso = item.peso || 0;
+                    switch(range) {
+                        case '0-25':
+                            rangeText = `0-${percentis.p25.toFixed(1)} ton`;
+                            return peso >= 0 && peso <= percentis.p25;
+                        case '26-50':
+                            rangeText = `${percentis.p25.toFixed(1)}-${percentis.p50.toFixed(1)} ton`;
+                            return peso > percentis.p25 && peso <= percentis.p50;
+                        case '51-75':
+                            rangeText = `${percentis.p50.toFixed(1)}-${percentis.p75.toFixed(1)} ton`;
+                            return peso > percentis.p50 && peso <= percentis.p75;
+                        case '76-100':
+                            rangeText = `${percentis.p75.toFixed(1)}+ ton`;
+                            return peso > percentis.p75;
+                        default:
+                            return true;
+                    }
+                });
+            } else {
+                // OCORRÊNCIAS: Usar valores FIXOS (lógica original)
+                dadosFiltrados = dadosAtuais.filter(item => {
+                    const valor = item.valor;
+                    switch(range) {
+                        case '0-25':
+                            rangeText = '0-25 ocorrências';
+                            return valor >= 0 && valor <= 25;
+                        case '26-50':
+                            rangeText = '26-50 ocorrências';
+                            return valor >= 26 && valor <= 50;
+                        case '51-75':
+                            rangeText = '51-75 ocorrências';
+                            return valor >= 51 && valor <= 75;
+                        case '76-100':
+                            rangeText = '76-100+ ocorrências';
+                            return valor >= 76;
+                        default:
+                            return true;
+                    }
+                });
+            }
             count = dadosFiltrados.length;
         }
         
@@ -839,6 +933,22 @@
         if (dadosFiltrados.length === 0) {
             console.warn(`⚠️ Nenhuma cidade encontrada para a região "${regiaoSelecionada}"`);
             console.log('Regiões disponíveis:', [...new Set(dadosMacroGlobal.map(d => d.macroRegiao))]);
+        }
+        
+        // NOVO: Identificar cidade com maior peso (ou valor se não houver peso)
+        if (dadosFiltrados.length > 0) {
+            const cidadeMaiorPeso = dadosFiltrados.reduce((max, cidade) => {
+                const valorAtual = getValorMetrica(cidade);
+                const valorMax = getValorMetrica(max);
+                return valorAtual > valorMax ? cidade : max;
+            });
+            
+            // Marcar a cidade com maior peso
+            dadosFiltrados.forEach(cidade => {
+                cidade.isMaiorPeso = (cidade.cidade === cidadeMaiorPeso.cidade);
+            });
+            
+            console.log(`🏆 Cidade com maior ${tipoMetrica}: ${cidadeMaiorPeso.cidade} (${getValorMetrica(cidadeMaiorPeso).toFixed(2)})`);
         }
         
         // Atualizar mapa
@@ -1051,36 +1161,57 @@
 
         // MODO MACRO: Polígonos das cidades (SEM marcadores)
         if (isMacro) {
-            // Cor única padrão para todas as cidades da região selecionada
-            const corPadrao = '#2E86DE'; // Azul vibrante que destaca no mapa
+            // Cor padrão (azul) e cor de destaque (laranja) para cidade com maior peso
+            const corPadrao = '#2E86DE'; // Azul vibrante
+            const corDestaque = '#FF7700'; // Laranja para maior peso
             
             dados.forEach(item => {
                 const poligono = poligonosCache[item.cidade];
                 
                 if (poligono) {
-                    // Desenhar polígono GeoJSON com cor única
+                    // Escolher cor: laranja se for a cidade com maior peso, azul caso contrário
+                    const cor = item.isMaiorPeso ? corDestaque : corPadrao;
+                    const peso = item.isMaiorPeso ? 3.5 : 2.5;
+                    const fillOpacity = item.isMaiorPeso ? 0.5 : 0.3;
+                    
+                    // Desenhar polígono GeoJSON
                     const geoJsonLayer = L.geoJSON(poligono, {
                         style: {
-                            color: corPadrao,
-                            weight: 2.5,
-                            opacity: 0.8,
-                            fillColor: corPadrao,
-                            fillOpacity: 0.3
+                            color: cor,
+                            weight: peso,
+                            opacity: 0.9,
+                            fillColor: cor,
+                            fillOpacity: fillOpacity
                         }
                     });
+                    
+                    // Popup dinâmico baseado na métrica
+                    const valorPrincipalMacro = tipoMetrica === 'peso' 
+                        ? `<strong>⚖️ Peso:</strong> ${(item.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ton`
+                        : `<strong>📊 Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}`;
+                    
+                    const valorSecundarioMacro = tipoMetrica === 'peso'
+                        ? `<p style="margin: 5px 0; font-size: 12px; color: #666;">
+                            📊 Ocorrências: ${item.valor.toLocaleString('pt-BR')}
+                        </p>`
+                        : (item.peso ? `<p style="margin: 5px 0; font-size: 12px; color: #666;">
+                            ⚖️ Peso: ${item.peso.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ton
+                        </p>` : '');
                     
                     // Popup ao clicar no polígono
                     geoJsonLayer.bindPopup(`
                         <div style="text-align: center; min-width: 200px;">
-                            <div style="background: ${corPadrao}; color: white; padding: 8px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
+                            <div style="background: ${cor}; color: white; padding: 8px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
                                 <h6 style="margin: 0; font-weight: bold;">
                                     <i class="fas fa-map-marker-alt"></i> ${item.cidade}
+                                    ${item.isMaiorPeso ? ' 🏆' : ''}
                                 </h6>
                             </div>
                             <div style="padding: 5px;">
                                 <p style="margin: 5px 0; font-size: 13px;">
-                                    <strong>📊 Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
+                                    ${valorPrincipalMacro}
                                 </p>
+                                ${valorSecundarioMacro}
                                 <hr style="margin: 8px 0; border-color: #ddd;">
                                 <p style="margin: 5px 0; font-size: 12px; color: #666;">
                                     <strong>�️ Região:</strong> ${item.macroRegiao}
@@ -1097,17 +1228,19 @@
             
         } else {
             // MODO MICRO: Mapa de calor normal
+            const maxMetrica = Math.max(...dados.map(d => getValorMetrica(d)));
+            
             const heatData = dados.map(item => [
                 item.lat,
                 item.lng,
-                item.valor
+                getValorMetrica(item)
             ]);
 
             heatLayer = L.heatLayer(heatData, {
                 radius: 25,
                 blur: 15,
                 maxZoom: 13,
-                max: 100,
+                max: maxMetrica,
                 gradient: {
                     0.0: '#00ff00',
                     0.25: '#ffff00',
@@ -1121,21 +1254,35 @@
             dados.forEach(item => {
                 const marker = L.circleMarker([item.lat, item.lng], {
                     radius: 8,
-                    fillColor: getColor(item.valor, Math.max(...dados.map(d => d.valor))),
+                    fillColor: getColor(item, dados),
                     color: '#fff',
                     weight: 2,
                     opacity: 1,
                     fillOpacity: 0.8
                 });
 
+                // Popup dinâmico baseado na métrica
+                const valorPrincipal = tipoMetrica === 'peso' 
+                    ? `<strong>⚖️ Peso:</strong> ${(item.peso || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ton`
+                    : `<strong>📊 Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}`;
+                
+                const valorSecundario = tipoMetrica === 'peso'
+                    ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+                        📊 Ocorrências: ${item.valor.toLocaleString('pt-BR')}
+                    </p>`
+                    : (item.peso ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+                        ⚖️ Peso: ${item.peso.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ton
+                    </p>` : '');
+                
                 marker.bindPopup(`
                     <div style="text-align: center;">
                         <h6 style="margin: 0 0 10px 0; color: #2a5298;">
                             <i class="fas fa-map-marker-alt"></i> ${item.cidade || item.nome}
                         </h6>
                         <p style="margin: 0; font-size: 14px;">
-                            <strong>Ocorrências:</strong> ${item.valor.toLocaleString('pt-BR')}
+                            ${valorPrincipal}
                         </p>
+                        ${valorSecundario}
                     </div>
                 `);
 
@@ -1151,14 +1298,26 @@
         console.log(`✅ Mapa atualizado: ${dados.length} ${tipoMapa}`);
     }
 
-    function getColor(valor, maxValor) {
-        // ESCALA FIXA: 0-100 dividida em 4 partes (25 cada)
-        // Acima de 100 = vermelho sempre
-        if (valor > 100) return '#ff0000';      // VERMELHO: > 100
-        if (valor > 75) return '#ff0000';       // VERMELHO: 76-100
-        if (valor > 50) return '#ff7700';       // LARANJA: 51-75
-        if (valor > 25) return '#ffff00';       // AMARELO: 26-50
-        return '#00ff00';                       // VERDE: 1-25
+    function getColor(item, dados) {
+        if (tipoMetrica === 'peso') {
+            // PESO: Usar percentis
+            const percentis = calcularPercentilsPeso(dados || dadosAtuais);
+            const peso = item.peso || 0;
+            
+            if (peso > percentis.p75) return '#ff0000';      // VERMELHO: > 75º percentil
+            if (peso > percentis.p50) return '#ff7700';      // LARANJA: 50-75º percentil
+            if (peso > percentis.p25) return '#ffff00';      // AMARELO: 25-50º percentil
+            return '#00ff00';                                 // VERDE: 0-25º percentil
+        } else {
+            // OCORRÊNCIAS: Usar valores FIXOS (lógica original)
+            const valor = item.valor;
+            
+            if (valor > 100) return '#ff0000';      // VERMELHO: > 100
+            if (valor > 75) return '#ff0000';       // VERMELHO: 76-100
+            if (valor > 50) return '#ff7700';       // LARANJA: 51-75
+            if (valor > 25) return '#ffff00';       // AMARELO: 26-50
+            return '#00ff00';                       // VERDE: 1-25
+        }
     }
 
     function atualizarEstatisticas(dados) {
@@ -1166,13 +1325,19 @@
         statsRow.style.display = 'flex';
 
         const totalLocais = dados.length;
-        const valores = dados.map(d => d.valor);
+        const valores = dados.map(d => getValorMetrica(d));
         const totalValor = valores.reduce((a, b) => a + b, 0);
         const mediaValor = totalValor / totalLocais;
         const maiorValor = Math.max(...valores);
 
         // Formatar números - usar separador de milhar apenas para valores grandes
         function formatarNumero(num) {
+            if (tipoMetrica === 'peso') {
+                return num.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
             if (num >= 1000) {
                 return num.toLocaleString('pt-BR', {
                     minimumFractionDigits: 0,
@@ -1184,6 +1349,12 @@
 
         // Formatar com decimais para média se necessário
         function formatarMedia(num) {
+            if (tipoMetrica === 'peso') {
+                return num.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
             if (num >= 1000) {
                 return num.toLocaleString('pt-BR', {
                     minimumFractionDigits: 0,
@@ -1198,10 +1369,20 @@
             }
         }
 
+        // Atualizar labels baseado na métrica
+        const labelTotal = tipoMetrica === 'peso' ? 'Total (ton)' : 'Ocorrências';
+        const labelMedia = tipoMetrica === 'peso' ? 'Média (ton)' : 'Média';
+        const labelMaximo = tipoMetrica === 'peso' ? 'Máx (ton)' : 'Máximo';
+        
         document.getElementById('totalLocais').textContent = formatarNumero(totalLocais);
         document.getElementById('totalValor').textContent = formatarNumero(totalValor);
         document.getElementById('mediaValor').textContent = formatarMedia(mediaValor);
         document.getElementById('maiorValor').textContent = formatarNumero(maiorValor);
+        
+        // Atualizar labels dos cards
+        document.querySelectorAll('.stats-label')[1].textContent = labelTotal;
+        document.querySelectorAll('.stats-label')[2].textContent = labelMedia;
+        document.querySelectorAll('.stats-label')[3].textContent = labelMaximo;
     }
 
     async function carregarUltimoUpload() {

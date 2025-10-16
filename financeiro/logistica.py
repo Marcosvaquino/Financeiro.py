@@ -67,6 +67,7 @@ def criar_tabela_mapa_calor():
                     latitude REAL NOT NULL,
                     longitude REAL NOT NULL,
                     valor REAL DEFAULT 0,
+                    peso REAL DEFAULT 0,
                     FOREIGN KEY (upload_id) REFERENCES mapa_calor_uploads(id)
                 )
             ''')
@@ -101,10 +102,11 @@ def salvar_dados_mapa_calor(nome_arquivo, dados, total_linhas, total_erros):
             
             # Inserir dados
             for dado in dados:
+                peso = dado.get('peso', 0)  # Pega peso se existir, senão usa 0
                 cursor.execute('''
-                    INSERT INTO mapa_calor_dados (upload_id, cidade, latitude, longitude, valor)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (upload_id, dado['cidade'], dado['lat'], dado['lng'], dado['valor']))
+                    INSERT INTO mapa_calor_dados (upload_id, cidade, latitude, longitude, valor, peso)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (upload_id, dado['cidade'], dado['lat'], dado['lng'], dado['valor'], peso))
             
             conn.commit()
             
@@ -146,7 +148,7 @@ def carregar_ultimo_mapa_calor():
             
             # Buscar dados do upload
             cursor.execute('''
-                SELECT cidade, latitude, longitude, valor
+                SELECT cidade, latitude, longitude, valor, peso
                 FROM mapa_calor_dados
                 WHERE upload_id = ?
             ''', (upload_id,))
@@ -157,7 +159,8 @@ def carregar_ultimo_mapa_calor():
                     'cidade': row[0],
                     'lat': row[1],
                     'lng': row[2],
-                    'valor': row[3]
+                    'valor': row[3],
+                    'peso': row[4] if len(row) > 4 else 0  # Compatibilidade com dados antigos
                 })
             
             return {
@@ -819,6 +822,7 @@ def api_upload_mapa_calor():
         col_lat = None
         col_lng = None
         col_valor = None
+        col_peso = None
         
         for col in colunas:
             col_lower = col.lower()
@@ -840,6 +844,8 @@ def api_upload_mapa_calor():
                 col_lng = col
             elif 'valor' in col_lower or 'qtd' in col_lower or 'quantidade' in col_lower or 'total' in col_lower or 'count' in col_lower:
                 col_valor = col
+            elif 'peso' in col_lower or 'weight' in col_lower:
+                col_peso = col
         
         print(f"🔍 Colunas identificadas:")
         print(f"   Cidade: {col_cidade}")
@@ -849,6 +855,7 @@ def api_upload_mapa_calor():
         print(f"   Latitude: {col_lat}")
         print(f"   Longitude: {col_lng}")
         print(f"   Valor: {col_valor}")
+        print(f"   Peso: {col_peso}")
         
         dados_processados = []
         erros = []
@@ -908,11 +915,20 @@ def api_upload_mapa_calor():
                     cidades_agrupadas[cidade_upper] = {
                         'cidade': cidade,
                         'count': 0,
+                        'peso_total': 0.0,
                         'endereco': str(row[col_endereco]).strip() if col_endereco and pd.notna(row[col_endereco]) else None,
                         'bairro': str(row[col_bairro]).strip() if col_bairro and pd.notna(row[col_bairro]) else None,
                         'estado': str(row[col_estado]).strip() if col_estado and pd.notna(row[col_estado]) else 'SP'
                     }
                 cidades_agrupadas[cidade_upper]['count'] += 1
+                
+                # Somar peso se a coluna existir
+                if col_peso and pd.notna(row[col_peso]):
+                    try:
+                        peso_valor = float(row[col_peso])
+                        cidades_agrupadas[cidade_upper]['peso_total'] += peso_valor
+                    except (ValueError, TypeError):
+                        pass  # Ignora valores inválidos
         
         print(f"✅ Total de cidades únicas: {len(cidades_agrupadas)}")
         
@@ -962,7 +978,8 @@ def api_upload_mapa_calor():
                     'cidade': info['cidade'],
                     'lat': lat,
                     'lng': lng,
-                    'valor': info['count']  # ← USAR CONTAGEM COMO VALOR
+                    'valor': info['count'],  # ← USAR CONTAGEM COMO VALOR
+                    'peso': info.get('peso_total', 0.0)  # ← ADICIONAR PESO TOTAL
                 })
             else:
                 erros.append(f"{info['cidade']} ({info['count']} ocorrências)")
@@ -998,7 +1015,8 @@ def api_upload_mapa_calor():
                 'bairro': col_bairro,
                 'latitude': col_lat,
                 'longitude': col_lng,
-                'valor': col_valor
+                'valor': col_valor,
+                'peso': col_peso
             }
         })
         
